@@ -1,0 +1,155 @@
+name: Device Build
+
+on:
+  push:
+    branches: [main, 'codex/kernel-*']
+    paths:
+      - 'target/**'
+      - 'package/**'
+      - 'include/**'
+      - 'tools/**'
+      - 'toolchain/**'
+      - 'config/**'
+      - 'configs/**'
+      - 'scripts/**'
+      - 'feeds.conf.release'
+      - '.github/workflows/device-build.yml'
+  pull_request:
+    paths:
+      - 'target/**'
+      - 'package/**'
+      - 'include/**'
+      - 'tools/**'
+      - 'toolchain/**'
+      - 'config/**'
+      - 'configs/**'
+      - 'scripts/**'
+      - 'feeds.conf.release'
+      - '.github/workflows/device-build.yml'
+  workflow_dispatch:
+    inputs:
+      device:
+        description: Device or default three-device set
+        type: choice
+        default: all
+        options: [all, ax3000t, tr3000, tr1200, ax3000t-ubootmod, tr3000-256mb, tr3000-ubootmod]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: device-build-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}-${{ inputs.device || 'all' }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check source and select devices
+        id: plan
+        env:
+          DEVICE: ${{ inputs.device || 'all' }}
+        run: |
+          python3 scripts/device-build.py check-source
+          python3 -m unittest discover -s tests -p test_device_build.py -v
+          printf 'matrix=%s\n' "$(python3 scripts/device-build.py matrix "$DEVICE")" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Compile ${{ matrix.device }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Free build space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt-get clean
+          df -h .
+      - name: Install build prerequisites
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            asciidoc autoconf automake autopoint binutils bison build-essential \
+            bzip2 ccache clang cmake cpio curl device-tree-compiler file flex gawk \
+            gettext git g++-multilib gcc-multilib gperf help2man intltool \
+            libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev \
+            libmpfr-dev libncurses-dev libpython3-dev libreadline-dev libssl-dev \
+            libtool libyaml-dev lld llvm ninja-build p7zip-full patch pkgconf \
+            python3 python3-docutils python3-ply python3-pyelftools python3-setuptools \
+            qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo \
+            uglifyjs unzip wget xmlto xxd xz-utils zlib1g-dev zstd
+      - name: Cache source downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: dl
+          key: device-build-dl-${{ runner.os }}-${{ matrix.device }}-${{ hashFiles('feeds.conf.release', 'target/linux/generic/kernel-6.18', 'configs/devices/*.config') }}
+          restore-keys: |
+            device-build-dl-${{ runner.os }}-${{ matrix.device }}-
+      - name: Install pinned feeds
+        run: |
+          cp feeds.conf.release feeds.conf
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+      - name: Configure one device
+        env:
+          DEVICE: ${{ matrix.device }}
+        run: |
+          mkdir -p logs
+          python3 scripts/device-build.py configure "$DEVICE" 2>&1 | tee logs/configure.log
+          ./scripts/diffconfig.sh > logs/resolved.config
+      - name: Download sources
+        run: make download -j4 V=s 2>&1 | tee logs/download.log
+      - name: Prepare Linux 6.18.56
+        run: make target/linux/prepare -j2 V=s 2>&1 | tee logs/kernel-prepare.log
+      - name: Compile firmware
+        run: make -j"$(nproc)" V=s 2>&1 | tee logs/build.log
+      - name: Package firmware and source provenance
+        env:
+          DEVICE: ${{ matrix.device }}
+          TARGET: ${{ matrix.target }}
+          SUBTARGET: ${{ matrix.subtarget }}
+        run: |
+          output="bin/targets/$TARGET/$SUBTARGET"
+          test -f "$output/profiles.json"
+          python3 scripts/device-build.py check-config "$DEVICE"
+          python3 scripts/device-build.py check-images "$DEVICE" "$output"
+          cp feeds.conf.release "$output/feeds.conf.release"
+          cp config/device-build.json "$output/device-build.json"
+          cp logs/resolved.config "$output/build.config"
+          printf '%s\n' "$GITHUB_SHA" > "$output/source-commit.txt"
+          mkdir -p artifacts
+          tar --zstd -cf "artifacts/device-build-$DEVICE-linux-6.18.56.tar.zst" -C "$output" .
+          (cd artifacts && sha256sum -- *.tar.zst > sha256sums)
+      - name: Upload firmware
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: device-build-${{ matrix.device }}-linux-6.18.56
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: device-build-logs-${{ matrix.device }}
+          path: logs/*
+          if-no-files-found: ignore
+          retention-days: 7

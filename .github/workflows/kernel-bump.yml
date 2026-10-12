@@ -1,0 +1,67 @@
+name: Track OpenWrt kernel bumps
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kernel-bump
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      changed: ${{ steps.kernel.outputs.changed }}
+      version: ${{ steps.kernel.outputs.version }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Validate updater
+        run: python3 -m unittest discover -s tests -v
+      - name: Compare upstream kernel
+        id: kernel
+        run: python3 scripts/sync-kernel.py --write
+      - name: Propose kernel update
+        if: steps.kernel.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          KERNEL_VERSION: ${{ steps.kernel.outputs.version }}
+          UPSTREAM_SHA: ${{ steps.kernel.outputs.upstream_sha }}
+        run: |
+          branch="codex/kernel-$KERNEL_VERSION"
+          existing_branch=$(git ls-remote origin "refs/heads/$branch")
+          if [ -n "$existing_branch" ]; then
+            echo "Kernel proposal already exists: $branch"
+            exit 0
+          fi
+          git switch -c "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add target/linux/generic/kernel-*
+          git commit -m "kernel: track OpenWrt Linux $KERNEL_VERSION"
+          git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin "$branch"
+          body_file=$(mktemp)
+          printf '%s\n' \
+            "Update the Airoha kernel patch level and source checksum from OpenWrt commit $UPSTREAM_SHA." \
+            '' \
+            'This is a draft. Before merging, run target/linux/prepare and build both AN7581 and AN7583, then test PON registration, networking, offload, and sysupgrade on hardware.' \
+            'A new kernel series is deliberately refused until the Airoha patches have been rebased.' > "$body_file"
+          gh pr create --draft --base "$DEFAULT_BRANCH" --head "$branch" \
+            --title "kernel: track OpenWrt Linux $KERNEL_VERSION" --body-file "$body_file"
+
+  prepare:
+    needs: update
+    if: ${{ !cancelled() && needs.update.outputs.changed == 'true' }}
+    uses: ./.github/workflows/kernel-prepare.yml
+    with:
+      ref: codex/kernel-${{ needs.update.outputs.version }}

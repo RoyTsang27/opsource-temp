@@ -1,0 +1,58 @@
+name: Security regression checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Security regression tests
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 scripts/check-release.py
+          sh -n scripts/load-release-keys.sh
+          bash -n scripts/verify-release.sh
+      - name: Build real signing tools and test signed images
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake zstd gawk busybox
+          python3 scripts/build-signing-test-tools.py "$RUNNER_TEMP/signing-tools"
+          PONWRT_SIGNING_TOOLS="$RUNNER_TEMP/signing-tools/install/bin" \
+            python3 -m unittest discover -s tests -p test_signing_integration.py -v
+      - name: PON file safety tests with real Linux ownership checks
+        run: sudo python3 -m unittest discover -s tests -p test_pon_security.py -v
+      - name: PON helper tests with BusyBox ash and applets
+        run: |
+          mkdir "$RUNNER_TEMP/pon-busybox"
+          for command in mkdir mktemp mv head cp wc cmp rm rmdir; do
+            ln -s "$(command -v busybox)" "$RUNNER_TEMP/pon-busybox/$command"
+          done
+          # stat comes from the explicit coreutils-stat dependency.
+          sudo env PON_TEST_SHELL='busybox ash' PATH="$RUNNER_TEMP/pon-busybox:$PATH" \
+            python3 tests/test_pon_security.py BoardUploadTests RuntimeDirectoryTests -v
+      - name: Compile and test PON userspace and check dependency advisories
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal
+          cargo +1.90.0 test --locked --manifest-path package/pon/userspace/airoha-pon-daemons/src/Cargo.toml
+          cargo +1.90.0 test --locked --manifest-path package/pon/userspace/airoha-ponctl/src/Cargo.toml
+          cargo +1.90.0 install --locked cargo-audit --version 0.22.2
+          cargo +1.90.0 audit --file package/pon/userspace/airoha-pon-daemons/src/Cargo.lock
+          cargo +1.90.0 audit --file package/pon/userspace/airoha-ponctl/src/Cargo.lock
+      - name: Check workflows and shell scripts
+        run: |
+          go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          shellcheck scripts/load-release-keys.sh scripts/verify-release.sh

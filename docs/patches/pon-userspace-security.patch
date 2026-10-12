@@ -1,0 +1,1026 @@
+diff --git a/airoha-pon-daemons/Makefile b/airoha-pon-daemons/Makefile
+index 0f7104e7bf..05275ed093 100644
+--- a/airoha-pon-daemons/Makefile
++++ b/airoha-pon-daemons/Makefile
+@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=airoha-pon-daemons
+ PKG_VERSION:=0.3.0
+-PKG_RELEASE:=2
++PKG_RELEASE:=4
+ PKG_URL:=https://github.com/pbs05/openwrt-pon-userspace/tree/main/airoha-pon-daemons
+ 
+ PKG_LICENSE:=GPL-2.0-only
+diff --git a/airoha-pon-daemons/src/Cargo.lock b/airoha-pon-daemons/src/Cargo.lock
+index fa883f9282..0125ab4e42 100644
+--- a/airoha-pon-daemons/src/Cargo.lock
++++ b/airoha-pon-daemons/src/Cargo.lock
+@@ -19,6 +19,7 @@ version = "0.3.0"
+ dependencies = [
+  "aes",
+  "cmac",
++ "subtle",
+ ]
+ 
+ [[package]]
+diff --git a/airoha-pon-daemons/src/Cargo.toml b/airoha-pon-daemons/src/Cargo.toml
+index a68dab9921..4e8b0f8642 100644
+--- a/airoha-pon-daemons/src/Cargo.toml
++++ b/airoha-pon-daemons/src/Cargo.toml
+@@ -10,6 +10,7 @@ autobins = false
+ [dependencies]
+ aes = "0.8.4"
+ cmac = "0.7.2"
++subtle = "2.6.1"
+ 
+ [[bin]]
+ name = "airoha-pond"
+diff --git a/airoha-pon-daemons/src/src/control.rs b/airoha-pon-daemons/src/src/control.rs
+index fd31013934..bd29d49e19 100644
+--- a/airoha-pon-daemons/src/src/control.rs
++++ b/airoha-pon-daemons/src/src/control.rs
+@@ -1,11 +1,41 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ 
+ use std::fs;
+-use std::io;
+-use std::os::unix::fs::PermissionsExt;
++use std::io::{self, Read};
++use std::os::unix::fs::{FileTypeExt, PermissionsExt};
+ use std::os::unix::net::{UnixListener, UnixStream};
+ use std::path::{Path, PathBuf};
+ use std::thread;
++use std::time::{Duration, Instant};
++
++const REQUEST_LIMIT: usize = 128;
++const CLIENT_TIMEOUT: Duration = Duration::from_secs(2);
++
++/// One bounded, newline-terminated request with a deadline for the whole read.
++pub fn read_request(mut stream: &UnixStream) -> io::Result<String> {
++    let deadline = Instant::now() + CLIENT_TIMEOUT;
++    let mut buffer = [0u8; REQUEST_LIMIT];
++    let mut length = 0;
++    loop {
++        let remaining = deadline.saturating_duration_since(Instant::now());
++        if remaining.is_zero() {
++            return Err(io::Error::new(io::ErrorKind::TimedOut, "control request deadline"));
++        }
++        stream.set_read_timeout(Some(remaining))?;
++        let count = stream.read(&mut buffer[length..])?;
++        if count == 0 {
++            return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "incomplete control request"));
++        }
++        if let Some(end) = buffer[length..length + count].iter().position(|byte| *byte == b'\n') {
++            return String::from_utf8(buffer[..length + end + 1].to_vec())
++                .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "invalid control request encoding"));
++        }
++        length += count;
++        if length == REQUEST_LIMIT {
++            return Err(io::Error::new(io::ErrorKind::InvalidInput, "control request is too long"));
++        }
++    }
++}
+ 
+ pub struct ControlServer {
+     socket_path: PathBuf,
+@@ -24,6 +54,9 @@ impl ControlServer {
+             .name("pon-control".to_owned())
+             .spawn(move || {
+                 for stream in listener.incoming().flatten() {
++                    if stream.set_write_timeout(Some(CLIENT_TIMEOUT)).is_err() {
++                        continue;
++                    }
+                     let _ = handler(stream);
+                 }
+             })
+@@ -42,8 +75,56 @@ impl Drop for ControlServer {
+ }
+ 
+ fn prepare_socket_path(socket_path: &Path) -> io::Result<()> {
+-    if socket_path.exists() {
+-        fs::remove_file(socket_path)?;
++    match fs::symlink_metadata(socket_path) {
++        Ok(metadata) if metadata.file_type().is_socket() => fs::remove_file(socket_path),
++        Ok(_) => Err(io::Error::new(io::ErrorKind::AlreadyExists, "control path is not a socket")),
++        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
++        Err(error) => Err(error),
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::io::Write;
++    use std::net::Shutdown;
++
++    #[test]
++    fn reads_valid_request_and_rejects_oversized_or_incomplete_input() {
++        for (input, valid) in [
++            (b"STATUS 1\n".as_slice(), true),
++            (b"EVENTS 1 18446744073709551615\n".as_slice(), true),
++            (b"STATUS 1".as_slice(), false),
++            ([b'x'; REQUEST_LIMIT + 1].as_slice(), false),
++            (b"\xff\n".as_slice(), false),
++        ] {
++            let (reader, mut writer) = UnixStream::pair().unwrap();
++            writer.write_all(input).unwrap();
++            writer.shutdown(Shutdown::Write).unwrap();
++            assert_eq!(read_request(&reader).is_ok(), valid);
++        }
++    }
++
++    #[test]
++    fn silent_client_cannot_hold_the_control_server_forever() {
++        let (reader, _writer) = UnixStream::pair().unwrap();
++        let start = Instant::now();
++        assert!(read_request(&reader).is_err());
++        assert!(start.elapsed() < Duration::from_secs(5));
++    }
++
++    #[test]
++    fn refuses_to_remove_a_regular_file_or_symlink() {
++        let directory = std::env::temp_dir().join(format!("pon-control-test-{}", std::process::id()));
++        fs::create_dir(&directory).unwrap();
++        let path = directory.join("control");
++        fs::write(&path, b"keep me").unwrap();
++        assert!(prepare_socket_path(&path).is_err());
++        assert_eq!(fs::read(&path).unwrap(), b"keep me");
++        fs::remove_file(&path).unwrap();
++        std::os::unix::fs::symlink(directory.join("missing"), &path).unwrap();
++        assert!(prepare_socket_path(&path).is_err());
++        fs::remove_file(path).unwrap();
++        fs::remove_dir(directory).unwrap();
+     }
+-    Ok(())
+ }
+diff --git a/airoha-pon-daemons/src/src/oam/control.rs b/airoha-pon-daemons/src/src/oam/control.rs
+index 3cbb2bd857..385fe6e577 100644
+--- a/airoha-pon-daemons/src/src/oam/control.rs
++++ b/airoha-pon-daemons/src/src/oam/control.rs
+@@ -2,7 +2,7 @@
+ 
+ use std::collections::VecDeque;
+ use std::fs;
+-use std::io::{self, BufRead, BufReader, Write};
++use std::io::{self, Write};
+ use std::os::unix::net::UnixStream;
+ use std::path::Path;
+ use std::sync::{Arc, Mutex};
+@@ -134,8 +134,7 @@ pub fn start_server(
+ }
+ 
+ fn handle_client(mut stream: UnixStream, status: &StatusHub) -> io::Result<()> {
+-    let mut request = String::new();
+-    BufReader::new(&stream).read_line(&mut request)?;
++    let request = crate::control::read_request(&stream)?;
+     let fields: Vec<&str> = request.split_whitespace().collect();
+ 
+     match fields.as_slice() {
+diff --git a/airoha-pon-daemons/src/src/omci/control.rs b/airoha-pon-daemons/src/src/omci/control.rs
+index b6b7d6f1b8..0b58081edd 100644
+--- a/airoha-pon-daemons/src/src/omci/control.rs
++++ b/airoha-pon-daemons/src/src/omci/control.rs
+@@ -2,7 +2,7 @@
+ 
+ use std::collections::VecDeque;
+ use std::fs;
+-use std::io::{self, BufRead, BufReader, Write};
++use std::io::{self, Write};
+ use std::os::unix::net::UnixStream;
+ use std::path::Path;
+ use std::sync::{Arc, Mutex};
+@@ -190,11 +190,7 @@ pub fn start_server(
+ }
+ 
+ fn handle_client(mut stream: UnixStream, status: &StatusHub) -> io::Result<()> {
+-    let mut request = String::new();
+-    {
+-        let mut reader = BufReader::new(&stream);
+-        reader.read_line(&mut request)?;
+-    }
++    let request = crate::control::read_request(&stream)?;
+     let fields: Vec<&str> = request.split_whitespace().collect();
+ 
+     match fields.as_slice() {
+diff --git a/airoha-pon-daemons/src/src/omci/mib.rs b/airoha-pon-daemons/src/src/omci/mib.rs
+index 56e3c6c5f6..68fdb64c31 100644
+--- a/airoha-pon-daemons/src/src/omci/mib.rs
++++ b/airoha-pon-daemons/src/src/omci/mib.rs
+@@ -8,7 +8,7 @@ use super::protocol::{
+     ACTION_GET_ALL_ALARMS, ACTION_GET_ALL_ALARMS_NEXT, ACTION_GET_CURRENT_DATA, ACTION_GET_NEXT,
+     ACTION_MIB_RESET, ACTION_MIB_UPLOAD, ACTION_MIB_UPLOAD_NEXT, ACTION_SET, ACTION_SET_TABLE,
+     ACTION_SYNCHRONIZE_TIME, RESULT_ATTRIBUTE_FAILED, RESULT_COMMAND_NOT_SUPPORTED,
+-    RESULT_INSTANCE_EXISTS, RESULT_PARAMETER_ERROR, RESULT_SUCCESS, RESULT_UNKNOWN_INSTANCE,
++    RESULT_INSTANCE_EXISTS, RESULT_PARAMETER_ERROR, RESULT_PROCESSING_ERROR, RESULT_SUCCESS, RESULT_UNKNOWN_INSTANCE,
+     RESULT_UNKNOWN_ME,
+ };
+ use super::provisioning::{
+@@ -48,6 +48,11 @@ const TOTAL_PRIORITY_QUEUE_COUNT: u16 =
+ const TOTAL_GEM_PORT_COUNT: u16 = 256;
+ const VEIP_ENTITY: u16 = 0x0a01;
+ 
++// Bound OLT-controlled allocation while leaving ample room for provisioning.
++const MAX_MANAGED_ENTITIES: usize = 4096;
++const MAX_TABLE_ROWS: usize = 4096;
++const MAX_TOTAL_TABLE_ROWS: usize = 16384;
++
+ #[derive(Clone, Debug, Eq, PartialEq)]
+ pub struct AttributeValueChange {
+     pub class_id: u16,
+@@ -558,6 +563,13 @@ impl Mib {
+             };
+             return Response::new(request, result);
+         }
++        let additional = 1 + usize::from(
++            request.class_id == CLASS_MAC_BRIDGE_PORT_CONFIG_DATA
++                && !self.entities.contains_key(&(CLASS_MAC_BRIDGE_PORT_FILTER_PREASSIGN_DATA, request.entity_id)),
++        );
++        if self.entities.len() + additional > MAX_MANAGED_ENTITIES {
++            return Response::new(request, RESULT_PROCESSING_ERROR);
++        }
+         self.insert(request.class_id, request.entity_id, entity);
+         if request.class_id == CLASS_MAC_BRIDGE_PORT_CONFIG_DATA {
+             /* Creating Class 47 also creates the same Class 79 entity used by the following filter policy Set. */
+@@ -629,7 +641,10 @@ impl Mib {
+             return self.entity_error(request);
+         }
+         self.rebuild_upload_snapshot();
+-        Response::mib_upload(request, self.upload_snapshot.len() as u16)
++        match u16::try_from(self.upload_snapshot.len()) {
++            Ok(count) => Response::mib_upload(request, count),
++            Err(_) => Response::new(request, RESULT_PROCESSING_ERROR),
++        }
+     }
+ 
+     fn handle_get_all_alarms(&self, request: &Request<'_>) -> Response {
+@@ -751,7 +766,13 @@ impl Mib {
+             .expect("capacity was checked before response construction")
+     }
+ 
++    fn total_table_rows(&self) -> usize {
++        self.entities.values().flat_map(|entity| entity.attributes.values())
++            .map(|attribute| attribute.table_rows.len()).sum()
++    }
++
+     fn handle_set(&mut self, request: &Request<'_>) -> Response {
++        let total_rows = self.total_table_rows();
+         let class_known = self.known_classes.contains(&request.class_id);
+         let Some(entity) = self
+             .entities
+@@ -792,6 +813,18 @@ impl Mib {
+             if end > request.content.len() {
+                 return Response::new(request, RESULT_PARAMETER_ERROR);
+             }
++            if attribute.table_row_len.is_some() && request.class_id != CLASS_ENHANCED_SECURITY_CONTROL {
++                let row = &request.content[cursor..end];
++                if row.len() < 8 {
++                    return Response::new(request, RESULT_PARAMETER_ERROR);
++                }
++                if !row[8..].iter().all(|byte| *byte == 0xff)
++                    && !attribute.table_rows.contains_key(&row[..8])
++                    && (attribute.table_rows.len() >= MAX_TABLE_ROWS || total_rows >= MAX_TOTAL_TABLE_ROWS)
++                {
++                    return Response::new(request, RESULT_PROCESSING_ERROR);
++                }
++            }
+             updates.push((
+                 index,
+                 request.content[cursor..end].to_vec(),
+@@ -949,7 +982,7 @@ impl Mib {
+             .and_then(|attribute| attribute.table_rows.values().next())
+             .and_then(|row| row.get(1..17));
+ 
+-        if received != Some(expected.as_slice()) {
++        if !received.is_some_and(|tag| security::authentication_result_matches(&expected, tag)) {
+             self.set_enhanced_authentication_state(4);
+             return Ok(());
+         }
+@@ -1043,6 +1076,7 @@ impl Mib {
+     }
+ 
+     fn handle_set_table(&mut self, request: &Request<'_>) -> Response {
++        let total_rows = self.total_table_rows();
+         let class_known = self.known_classes.contains(&request.class_id);
+         let Some(entity) = self
+             .entities
+@@ -1076,15 +1110,22 @@ impl Mib {
+             return Response::new(request, RESULT_PARAMETER_ERROR);
+         }
+ 
+-        // Set-table applies rows in wire order using each table's add/delete control field.
++        // Stage the bounded packet so resource failure cannot partially apply a batch.
++        let mut rows = attribute.table_rows.clone();
+         for row in request.content.chunks_exact(row_len) {
+             let key = row[..8].to_vec();
+             if row[8..].iter().all(|byte| *byte == 0xff) {
+-                attribute.table_rows.remove(&key);
++                rows.remove(&key);
+             } else {
+-                attribute.table_rows.insert(key, row.to_vec());
++                rows.insert(key, row.to_vec());
+             }
+         }
++        if rows.len() > MAX_TABLE_ROWS
++            || total_rows - attribute.table_rows.len() + rows.len() > MAX_TOTAL_TABLE_ROWS
++        {
++            return Response::new(request, RESULT_PROCESSING_ERROR);
++        }
++        attribute.table_rows = rows;
+         self.increment_mib_sync();
+         Response::set_success(request)
+     }
+@@ -2054,4 +2095,108 @@ mod tests {
+         assert_eq!(mib.dispatch(&set).result(), Some(RESULT_SUCCESS));
+         assert_eq!(mib.entities[&filter].attributes[&1].value, value);
+     }
++
++    #[test]
++    fn create_budget_keeps_duplicate_requests_and_delete_recovery_working() {
++        let mut mib = empty_mib();
++        mib.dynamic_classes.insert(CLASS_ETHERNET_PM_HISTORY_DATA);
++        let payload = [0x12, 0x34];
++        let request = Request {
++            encoding: super::super::protocol::Encoding::Baseline,
++            tci: 1, message_type: 0x44, action: ACTION_CREATE,
++            class_id: CLASS_ETHERNET_PM_HISTORY_DATA, entity_id: 1,
++            attribute_mask: 0, payload: &payload, content: &payload,
++        };
++        assert_eq!(mib.handle_create(&request).result(), Some(RESULT_SUCCESS));
++        for id in 0..MAX_MANAGED_ENTITIES - 1 {
++            mib.entities.insert((65000, id as u16), ManagedEntity::default());
++        }
++        assert_eq!(mib.handle_create(&request).result(), Some(RESULT_SUCCESS));
++        let next = Request { entity_id: 2, ..request };
++        assert_eq!(mib.handle_create(&next).result(), Some(RESULT_PROCESSING_ERROR));
++        assert_eq!(mib.entities.len(), MAX_MANAGED_ENTITIES);
++        assert_eq!(mib.handle_delete(&request).result(), Some(RESULT_SUCCESS));
++        assert_eq!(mib.handle_create(&next).result(), Some(RESULT_SUCCESS));
++    }
++
++    #[test]
++    fn create_budget_accounts_for_the_implicit_bridge_filter_entity() {
++        let mut mib = empty_mib();
++        mib.dynamic_classes.insert(CLASS_MAC_BRIDGE_PORT_CONFIG_DATA);
++        for id in 0..MAX_MANAGED_ENTITIES - 1 {
++            mib.entities.insert((65000, id as u16), ManagedEntity::default());
++        }
++        let payload = [0; 32];
++        let request = Request {
++            encoding: super::super::protocol::Encoding::Baseline,
++            tci: 1, message_type: 0x44, action: ACTION_CREATE,
++            class_id: CLASS_MAC_BRIDGE_PORT_CONFIG_DATA, entity_id: 1,
++            attribute_mask: 0, payload: &payload, content: &payload,
++        };
++        assert_eq!(mib.handle_create(&request).result(), Some(RESULT_PROCESSING_ERROR));
++        assert_eq!(mib.entities.len(), MAX_MANAGED_ENTITIES - 1);
++        assert!(!mib.entities.contains_key(&(CLASS_MAC_BRIDGE_PORT_FILTER_PREASSIGN_DATA, 1)));
++    }
++
++    fn table_mib(count: usize) -> Mib {
++        let mut mib = empty_mib();
++        for id in 0..count {
++            let mut entity = ManagedEntity::default().table(6, 16);
++            for index in 0..MAX_TABLE_ROWS {
++                let mut row = vec![0; 16];
++                row[..8].copy_from_slice(&(index as u64).to_be_bytes());
++                entity.attributes.get_mut(&6).unwrap().table_rows.insert(row[..8].to_vec(), row);
++            }
++            mib.insert(CLASS_EXTENDED_VLAN_TAGGING, id as u16, entity);
++        }
++        mib
++    }
++
++    #[test]
++    fn table_budgets_allow_replacement_and_atomic_delete_then_add() {
++        let mut mib = table_mib(1);
++        let mut row = [0; 16];
++        row[..8].copy_from_slice(&99999u64.to_be_bytes());
++        let mut request = Request {
++            encoding: super::super::protocol::Encoding::Extended,
++            tci: 1, message_type: 0x48, action: ACTION_SET,
++            class_id: CLASS_EXTENDED_VLAN_TAGGING, entity_id: 0,
++            attribute_mask: attribute_bit(6).unwrap(), payload: &row, content: &row,
++        };
++        assert_eq!(mib.handle_set(&request).result(), Some(RESULT_PROCESSING_ERROR));
++        let replacement = [0; 16];
++        request.content = &replacement;
++        assert_eq!(mib.handle_set(&request).result(), Some(RESULT_SUCCESS));
++        request.content = &row;
++        assert_eq!(mib.handle_set_table(&request).result(), Some(RESULT_PROCESSING_ERROR));
++        assert_eq!(mib.entities[&(CLASS_EXTENDED_VLAN_TAGGING, 0)].attributes[&6].table_rows.len(), MAX_TABLE_ROWS);
++        let mut batch = [0; 32];
++        batch[8..16].fill(0xff);
++        batch[16..].copy_from_slice(&row);
++        request.content = &batch;
++        assert_eq!(mib.handle_set_table(&request).result(), Some(RESULT_SUCCESS));
++        let rows = &mib.entities[&(CLASS_EXTENDED_VLAN_TAGGING, 0)].attributes[&6].table_rows;
++        assert_eq!(rows.len(), MAX_TABLE_ROWS);
++        assert!(!rows.contains_key(&replacement[..8]));
++        assert!(rows.contains_key(&row[..8]));
++    }
++
++    #[test]
++    fn aggregate_table_budget_rejects_growth_without_partial_changes() {
++        let mut mib = table_mib(MAX_TOTAL_TABLE_ROWS / MAX_TABLE_ROWS);
++        let key = (CLASS_EXTENDED_VLAN_TAGGING, 5);
++        mib.insert(key.0, key.1, ManagedEntity::default().table(6, 16));
++        let mut batch = [0; 32];
++        batch[16..24].copy_from_slice(&1u64.to_be_bytes());
++        let request = Request {
++            encoding: super::super::protocol::Encoding::Extended,
++            tci: 1, message_type: 0x48, action: ACTION_SET,
++            class_id: key.0, entity_id: key.1,
++            attribute_mask: attribute_bit(6).unwrap(), payload: &batch, content: &batch,
++        };
++        assert_eq!(mib.handle_set(&request).result(), Some(RESULT_PROCESSING_ERROR));
++        assert_eq!(mib.handle_set_table(&request).result(), Some(RESULT_PROCESSING_ERROR));
++        assert!(mib.entities[&key].attributes[&6].table_rows.is_empty());
++    }
++
+ }
+diff --git a/airoha-pon-daemons/src/src/omci/protocol.rs b/airoha-pon-daemons/src/src/omci/protocol.rs
+index 43abe30dbe..3387b97619 100644
+--- a/airoha-pon-daemons/src/src/omci/protocol.rs
++++ b/airoha-pon-daemons/src/src/omci/protocol.rs
+@@ -18,6 +18,7 @@ pub const EXTENDED_GET_VALUE_CAPACITY: usize = EXTENDED_MAX_PDU_LEN - EXTENDED_H
+ pub const EXTENDED_GET_NEXT_VALUE_CAPACITY: usize = EXTENDED_MAX_PDU_LEN - EXTENDED_HEADER_LEN - 3;
+ 
+ pub const RESULT_SUCCESS: u8 = 0x00;
++pub const RESULT_PROCESSING_ERROR: u8 = 0x01;
+ pub const RESULT_COMMAND_NOT_SUPPORTED: u8 = 0x02;
+ pub const RESULT_PARAMETER_ERROR: u8 = 0x03;
+ pub const RESULT_UNKNOWN_ME: u8 = 0x04;
+diff --git a/airoha-pon-daemons/src/src/omci/security.rs b/airoha-pon-daemons/src/src/omci/security.rs
+index 2927694647..d57fff1eea 100644
+--- a/airoha-pon-daemons/src/src/omci/security.rs
++++ b/airoha-pon-daemons/src/src/omci/security.rs
+@@ -7,6 +7,7 @@ use std::io::{self, Read};
+ 
+ use aes::Aes128;
+ use cmac::{Cmac, Mac};
++use subtle::ConstantTimeEq;
+ 
+ /* Class 332 authentication uses this fixed AES-CMAC-128 key. */
+ const ENHANCED_PSK: [u8; 16] = [
+@@ -25,6 +26,11 @@ fn aes_cmac(message: &[u8]) -> [u8; 16] {
+     cmac.finalize().into_bytes().into()
+ }
+ 
++/// Compare all authentication bytes without a secret-dependent early exit.
++pub fn authentication_result_matches(expected: &[u8; 16], received: &[u8]) -> bool {
++    bool::from(expected.as_slice().ct_eq(received))
++}
++
+ pub fn fill_random(bytes: &mut [u8]) -> io::Result<()> {
+     File::open("/dev/urandom")?.read_exact(bytes)
+ }
+@@ -105,6 +111,19 @@ fn append_challenges(output: &mut Vec<u8>, challenges: &[[u8; 16]]) {
+ mod tests {
+     use super::*;
+ 
++    #[test]
++    fn authentication_requires_a_complete_matching_tag() {
++        let tag = [0x5a; 16];
++        assert!(authentication_result_matches(&tag, &tag));
++        for index in 0..tag.len() {
++            let mut wrong = tag;
++            wrong[index] ^= 1;
++            assert!(!authentication_result_matches(&tag, &wrong));
++        }
++        assert!(!authentication_result_matches(&tag, &tag[..15]));
++        assert!(!authentication_result_matches(&tag, &[0x5a; 17]));
++    }
++
+     #[test]
+     fn cmac_matches_nist_vector() {
+         /* NIST SP 800-38B example 1 verifies the RustCrypto API and byte order. */
+diff --git a/airoha-pon-daemons/src/src/transport.rs b/airoha-pon-daemons/src/src/transport.rs
+index 7bde089e90..6a6a359f0d 100644
+--- a/airoha-pon-daemons/src/src/transport.rs
++++ b/airoha-pon-daemons/src/src/transport.rs
+@@ -8,6 +8,7 @@ use std::time::Duration;
+ 
+ const AF_PACKET: c_int = 17;
+ const SOCK_RAW: c_int = 3;
++const SOCK_CLOEXEC: c_int = 0x80000;
+ const ETH_P_ALL: u16 = 0x0003;
+ const SOL_PACKET: c_int = 263;
+ const PACKET_IGNORE_OUTGOING: c_int = 23;
+@@ -98,7 +99,7 @@ impl PacketSocket {
+         }
+ 
+         let protocol = ETH_P_ALL.to_be();
+-        let fd = unsafe { socket(AF_PACKET, SOCK_RAW, protocol as c_int) };
++        let fd = unsafe { socket(AF_PACKET, SOCK_RAW | SOCK_CLOEXEC, protocol as c_int) };
+         if fd < 0 {
+             return Err(io::Error::last_os_error());
+         }
+diff --git a/airoha-pon-debug/Makefile b/airoha-pon-debug/Makefile
+index 325226ea6b..2b718239f0 100644
+--- a/airoha-pon-debug/Makefile
++++ b/airoha-pon-debug/Makefile
+@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=airoha-pon-debug
+ PKG_VERSION:=0.1.0
+-PKG_RELEASE:=2
++PKG_RELEASE:=3
+ PKG_URL:=https://github.com/pbs05/openwrt-pon-userspace/tree/main/airoha-pon-debug
+ 
+ PKG_LICENSE:=GPL-2.0-only
+diff --git a/airoha-pon-debug/files/airoha-pon-debug b/airoha-pon-debug/files/airoha-pon-debug
+index 4153d5c3ed..8ce3010df5 100755
+--- a/airoha-pon-debug/files/airoha-pon-debug
++++ b/airoha-pon-debug/files/airoha-pon-debug
+@@ -2,11 +2,14 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ 
+ . /lib/functions.sh
++. /lib/functions/pon-secure.sh
+ 
+-STATE_DIR="/tmp/airoha-pon-debug"
++pon_runtime_init debug || exit 1
++
++STATE_DIR="$PON_RUNTIME_DIR/debug"
+ CAPTURE_DIR="$STATE_DIR/capture"
+ WORK_DIR="$STATE_DIR/bundle"
+-BUNDLE_PATH="/tmp/pon-debug.tar.gz"
++BUNDLE_PATH="$STATE_DIR/pon-debug.tar.gz"
+ RESTART_LOG="$STATE_DIR/restart.log"
+ PRE_RESTART_DIR="$STATE_DIR/pre-restart"
+ RESTART_FAILED=0
+@@ -161,17 +164,23 @@ copy_config() {
+ 	done
+ }
+ 
+-collect_bundle() {
+-	local size result
++collect_bundle() (
++	local size archive
++
++	mkdir "$STATE_DIR/collect.lock" 2>/dev/null || {
++		echo "Diagnostic collection is already running" >&2
++		return 1
++	}
++	WORK_DIR=
++	archive=
++	trap '[ -z "$WORK_DIR" ] || rm -rf "$WORK_DIR"; [ -z "$archive" ] || rm -f "$archive"; /etc/init.d/airoha-pon-debug start >/dev/null 2>&1; rmdir "$STATE_DIR/collect.lock"' EXIT
++	WORK_DIR="$(mktemp -d "$STATE_DIR/bundle.XXXXXX")" || return 1
++	archive="$(mktemp "$STATE_DIR/archive.XXXXXX")" || return 1
+ 
+ 	# Stopping tcpdump flushes libpcap buffers before the bundle is compressed.
+ 	/etc/init.d/airoha-pon-debug stop >/dev/null 2>&1 || true
+ 	# procd returns before the capture helpers forward SIGTERM to tcpdump.
+ 	sleep 1
+-	rm -rf "$WORK_DIR"
+-	rm -f "$BUNDLE_PATH"
+-	mkdir -p "$WORK_DIR"
+-	chmod 0700 "$STATE_DIR" "$WORK_DIR"
+ 
+ 	{
+ 		date '+captured_at=%Y-%m-%dT%H:%M:%S%z'
+@@ -214,15 +223,11 @@ collect_bundle() {
+ 		cp -a /sys/fs/pstore/. "$WORK_DIR/pstore/" 2>/dev/null || true
+ 	fi
+ 
+-	result=0
+-	tar -C "$STATE_DIR" -czf "$BUNDLE_PATH" "$(basename "$WORK_DIR")" || result=$?
+-	/etc/init.d/airoha-pon-debug start >/dev/null 2>&1 || true
+-	[ "$result" -eq 0 ] || return "$result"
+-
+-	chmod 0600 "$BUNDLE_PATH"
++	tar -C "$WORK_DIR" -czf "$archive" . || return 1
++	mv -f "$archive" "$BUNDLE_PATH" || return 1
+ 	size="$(wc -c < "$BUNDLE_PATH")"
+ 	printf '{"path":"%s","size":%u}\n' "$BUNDLE_PATH" "$size"
+-}
++)
+ 
+ sample_frontend() {
+ 	local name="$1"
+@@ -230,7 +235,7 @@ sample_frontend() {
+ 	local output="$CAPTURE_DIR/state-$name.log"
+ 	local child child_path delay=1 network_interval=1 samples=0 size
+ 
+-	mkdir -p "$CAPTURE_DIR"
++	pon_private_dir "$CAPTURE_DIR" || return 1
+ 	while true; do
+ 		if [ -r "$output" ]; then
+ 			size="$(wc -c < "$output")"
+@@ -311,7 +316,7 @@ capture_interface() {
+ 	shift 4
+ 
+ 	CAPTURE_LOG="$CAPTURE_DIR/$output.log"
+-	mkdir -p "$CAPTURE_DIR"
++	pon_private_dir "$CAPTURE_DIR" || return 1
+ 	# procd signals only this shell; tcpdump must exit to flush its ring.
+ 	trap stop_capture INT TERM
+ 	while true; do
+diff --git a/airoha-pon-debug/files/airoha-pon-debug.init b/airoha-pon-debug/files/airoha-pon-debug.init
+index c95f52fb60..c8f649f9dd 100755
+--- a/airoha-pon-debug/files/airoha-pon-debug.init
++++ b/airoha-pon-debug/files/airoha-pon-debug.init
+@@ -5,7 +5,9 @@ START=17
+ STOP=82
+ USE_PROCD=1
+ 
+-CAPTURE_DIR="/tmp/airoha-pon-debug/capture"
++. /lib/functions/pon-secure.sh
++
++CAPTURE_DIR="$PON_RUNTIME_DIR/debug/capture"
+ DEBUG_ENABLED=0
+ PPPOE_FILTER='ether[12:2] = 0x8863 or ether[12:2] = 0x8864 or ((ether[12:2] = 0x8100 or ether[12:2] = 0x88a8) and (ether[16:2] = 0x8863 or ether[16:2] = 0x8864)) or ((ether[12:2] = 0x8100 or ether[12:2] = 0x88a8) and (ether[16:2] = 0x8100 or ether[16:2] = 0x88a8) and (ether[20:2] = 0x8863 or ether[20:2] = 0x8864))'
+ 
+@@ -108,8 +110,8 @@ start_service() {
+ 	load_debug_setting
+ 	[ "$DEBUG_ENABLED" -eq 1 ] || return 0
+ 
+-	mkdir -p "$CAPTURE_DIR"
+-	chmod 0700 "$(dirname "$CAPTURE_DIR")" "$CAPTURE_DIR"
++	pon_runtime_init debug || return 1
++	pon_private_dir "$CAPTURE_DIR" || return 1
+ 	trim_old_captures 4096
+ 
+ 	config_load pon
+diff --git a/airoha-ponctl/Makefile b/airoha-ponctl/Makefile
+index e973ee9ab2..8e8dd84351 100644
+--- a/airoha-ponctl/Makefile
++++ b/airoha-ponctl/Makefile
+@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=airoha-ponctl
+ PKG_VERSION:=0.2.0
+-PKG_RELEASE:=1
++PKG_RELEASE:=3
+ PKG_URL:=https://github.com/pbs05/openwrt-pon-userspace/tree/main/airoha-ponctl
+ 
+ PKG_LICENSE:=GPL-2.0-only
+@@ -19,7 +19,7 @@ define Package/airoha-ponctl
+   CATEGORY:=Network
+   SUBMENU:=PON
+   TITLE:=Airoha PON control utility
+-  DEPENDS:=$(RUST_ARCH_DEPENDS) +kmod-airoha-xpon
++  DEPENDS:=$(RUST_ARCH_DEPENDS) +kmod-airoha-xpon +coreutils-stat
+ endef
+ 
+ define Package/airoha-ponctl/description
+@@ -44,6 +44,8 @@ define Package/airoha-ponctl/install
+ 	chmod 0600 $(1)/etc/config/pon
+ 	$(INSTALL_DIR) $(1)/etc/init.d
+ 	$(INSTALL_BIN) ./files/pon.init $(1)/etc/init.d/pon
++	$(INSTALL_DIR) $(1)/lib/functions
++	$(INSTALL_DATA) ./files/pon-secure.sh $(1)/lib/functions/pon-secure.sh
+ endef
+ 
+ $(eval $(call RustBinPackage,airoha-ponctl))
+diff --git a/airoha-ponctl/files/pon-secure.sh b/airoha-ponctl/files/pon-secure.sh
+new file mode 100644
+index 0000000000..e598a59c1c
+--- /dev/null
++++ b/airoha-ponctl/files/pon-secure.sh
+@@ -0,0 +1,22 @@
++# SPDX-License-Identifier: GPL-2.0-only
++# /tmp is shared. Never chmod or write through a pre-existing untrusted path.
++
++umask 077
++PON_RUNTIME_DIR=/tmp/ponwrt
++
++pon_private_dir() {
++	local directory="$1"
++
++	if ! mkdir -m 0700 "$directory" 2>/dev/null; then
++		[ ! -L "$directory" ] && [ -d "$directory" ] &&
++			[ "$(stat -c '%u:%a' "$directory")" = '0:700' ] || {
++			echo "Unsafe PON runtime directory: $directory" >&2
++			return 1
++		}
++	fi
++}
++
++pon_runtime_init() {
++	pon_private_dir "$PON_RUNTIME_DIR" || return 1
++	pon_private_dir "$PON_RUNTIME_DIR/$1"
++}
+diff --git a/airoha-ponctl/files/pon.init b/airoha-ponctl/files/pon.init
+index 7d3b176a0d..efb5fb6677 100755
+--- a/airoha-ponctl/files/pon.init
++++ b/airoha-ponctl/files/pon.init
+@@ -1,6 +1,8 @@
+ #!/bin/sh /etc/rc.common
+ # SPDX-License-Identifier: GPL-2.0-only
+ 
++. /lib/functions/pon-secure.sh
++
+ START=18
+ USE_PROCD=1
+ 
+@@ -34,6 +36,7 @@ apply_all_lines() {
+ }
+ 
+ start_service() {
++	pon_runtime_init board || return 1
+ 	apply_all_lines
+ }
+ 
+diff --git a/luci-app-pon/Makefile b/luci-app-pon/Makefile
+index 832ae3dda0..1ca7e5dbda 100644
+--- a/luci-app-pon/Makefile
++++ b/luci-app-pon/Makefile
+@@ -7,7 +7,7 @@ LUCI_URL:=https://github.com/pbs05/openwrt-pon-userspace/tree/main/luci-app-pon
+ LUCI_DEPENDS:=+luci-base +airoha-ponctl +airoha-pond \
+ 	+mtd +ubi-utils +nand-utils +jshn +jsonfilter
+ PKG_VERSION:=0.1.0
+-PKG_RELEASE:=3
++PKG_RELEASE:=4
+ 
+ PKG_LICENSE:=Apache-2.0 GPL-2.0-only
+ 
+diff --git a/luci-app-pon/htdocs/luci-static/resources/view/pon/config.js b/luci-app-pon/htdocs/luci-static/resources/view/pon/config.js
+index b5ab038762..b694c18b1d 100644
+--- a/luci-app-pon/htdocs/luci-static/resources/view/pon/config.js
++++ b/luci-app-pon/htdocs/luci-static/resources/view/pon/config.js
+@@ -98,23 +98,28 @@ return view.extend({
+ 	handleBoardDataUpload: function(storages, selector) {
+ 		var storage = storages[Number(selector.value)];
+ 
+-		return ui.uploadFile('/tmp/pon-board-data.bin').then(function() {
+-			return fs.exec('/usr/libexec/airoha-pon-data', [ 'write', storage.id ]).then(function(result) {
+-				if (result.code != 0)
+-					throw new Error(result.stderr || result.stdout || _('Write failed.'));
+-
+-				var message = [
+-					_('Board data written to %s and verified. Reboot the device to apply it.')
+-						.format(storage.label)
+-				];
+-				if (result.stdout.trim())
+-					message.push(E('br'), result.stdout.trim());
+-				ui.addNotification(null, E('p', message));
+-			}).catch(function(error) {
+-				ui.addNotification(null, E('p', [
+-					_('Writing board data failed: %s').format(error.message)
+-				]));
++		return fs.exec('/usr/libexec/airoha-pon-data', [ 'prepare' ]).then(function(result) {
++			if (result.code != 0)
++				throw new Error(result.stderr || _('Unable to prepare upload.'));
++			var upload = JSON.parse(result.stdout);
++			return ui.uploadFile(upload.path).then(function() {
++				return fs.exec('/usr/libexec/airoha-pon-data', [ 'write', storage.id, upload.token ]);
+ 			});
++		}).then(function(result) {
++			if (result.code != 0)
++				throw new Error(result.stderr || result.stdout || _('Write failed.'));
++
++			var message = [
++				_('Board data written to %s and verified. Reboot the device to apply it.')
++					.format(storage.label)
++			];
++			if (result.stdout.trim())
++				message.push(E('br'), result.stdout.trim());
++			ui.addNotification(null, E('p', message));
++		}).catch(function(error) {
++			ui.addNotification(null, E('p', [
++				_('Writing board data failed: %s').format(error.message)
++			]));
+ 		});
+ 	},
+ 
+diff --git a/luci-app-pon/htdocs/luci-static/resources/view/pon/diagnostics.js b/luci-app-pon/htdocs/luci-static/resources/view/pon/diagnostics.js
+index 2bec2e1f41..b933f07ffb 100644
+--- a/luci-app-pon/htdocs/luci-static/resources/view/pon/diagnostics.js
++++ b/luci-app-pon/htdocs/luci-static/resources/view/pon/diagnostics.js
+@@ -8,7 +8,7 @@
+ 'require view';
+ 
+ var HELPER = '/usr/libexec/airoha-pon-debug';
+-var BUNDLE = '/tmp/pon-debug.tar.gz';
++var BUNDLE = '/tmp/ponwrt/debug/pon-debug.tar.gz';
+ 
+ function downloadBundle() {
+ 	return fs.read_direct(BUNDLE, 'blob').then(function(blob) {
+diff --git a/luci-app-pon/root/usr/libexec/airoha-pon-data b/luci-app-pon/root/usr/libexec/airoha-pon-data
+index 3c08cb0b38..bb42b3ecaa 100755
+--- a/luci-app-pon/root/usr/libexec/airoha-pon-data
++++ b/luci-app-pon/root/usr/libexec/airoha-pon-data
+@@ -4,6 +4,9 @@
+ . /lib/functions.sh
+ . /usr/share/libubox/jshn.sh
+ . /lib/upgrade/nand.sh
++. /lib/functions/pon-secure.sh
++
++BOARD_DIR="$PON_RUNTIME_DIR/board"
+ 
+ fail()
+ {
+@@ -20,6 +23,7 @@ load_target()
+ 	json_get_var capacity size
+ 	json_get_var parent parent
+ 	name="$1"
++	case "$name" in ''|*[!A-Za-z0-9_-]*) fail "Invalid target name";; esac
+ 	case "$capacity" in ''|*[!0-9]*) fail "Invalid target size";; esac
+ 	[ "$capacity" -gt 0 ] || fail "Invalid target size"
+ }
+@@ -70,8 +74,8 @@ write_target()
+ 	local backup=
+ 
+ 	if [ -n "$target" ]; then
+-		backup="/tmp/pon-board-data.$name.$$.bin"
+ 		read_target "$work/original" "$capacity"
++		backup="$(mktemp "$BOARD_DIR/backup-$name.XXXXXX")" || fail "Cannot create backup"
+ 		cp "$work/original" "$backup" || fail "Cannot save board data backup"
+ 	fi
+ 	if [ -z "$target" ]; then
+@@ -96,30 +100,44 @@ write_target()
+ cleanup()
+ {
+ 	[ -n "$work" ] && rm -rf "$work"
+-	rmdir /tmp/airoha-pon-data.lock
++	rmdir "$BOARD_DIR/write.lock"
+ }
+ 
+ case "$1" in
++prepare)
++	[ "$#" -eq 1 ] || exit 2
++	pon_runtime_init board || fail "Cannot prepare private upload directory"
++	upload="$(mktemp "$BOARD_DIR/upload.XXXXXX")" || fail "Cannot prepare upload"
++	printf '{"path":"%s","token":"%s"}\n' "$upload" "${upload##*/}"
++	exit 0
++	;;
+ list)
+ 	[ "$#" -eq 1 ] || exit 2
+ 	jsonfilter -i /etc/board.json -e '@.pon_data' || printf '{}\n'
+ 	exit 0
+ 	;;
+ write)
+-	[ "$#" -eq 2 ] || exit 2
++	[ "$#" -eq 3 ] || exit 2
+ 	load_target "$2"
++	case "$3" in upload.??????) ;; *) fail "Invalid upload token";; esac
++	case "$3" in *[!A-Za-z0-9.]* ) fail "Invalid upload token";; esac
++	upload="$BOARD_DIR/$3"
+ 	;;
+ *)
+-	echo "usage: airoha-pon-data list | write NAME" >&2
++	echo "usage: airoha-pon-data list | prepare | write NAME TOKEN" >&2
+ 	exit 2
+ 	;;
+ esac
+ 
+-mkdir /tmp/airoha-pon-data.lock 2>/dev/null || fail "Another board data write is in progress"
++pon_runtime_init board || fail "Cannot prepare private work directory"
++mkdir "$BOARD_DIR/write.lock" 2>/dev/null || fail "Another board data write is in progress"
+ work=
+ trap cleanup EXIT
+-work="$(mktemp -d /tmp/airoha-pon-data.XXXXXX)" || fail "Cannot create work directory"
+-mv /tmp/pon-board-data.bin "$work/input" || fail "Uploaded image is missing"
++work="$(mktemp -d "$BOARD_DIR/work.XXXXXX")" || fail "Cannot create work directory"
++mv "$upload" "$work/input" || fail "Uploaded image is missing"
++[ ! -L "$work/input" ] && [ -f "$work/input" ] &&
++	[ "$(stat -c '%u:%h' "$work/input")" = '0:1' ] || fail "Unsafe uploaded image"
++chmod 0600 "$work/input" || fail "Cannot protect uploaded image"
+ length="$(wc -c < "$work/input")"
+ [ "$length" -gt 0 ] && [ "$length" -le "$capacity" ] || fail "Invalid image size"
+ locate_target
+diff --git a/luci-app-pon/root/usr/libexec/pon-board-identity b/luci-app-pon/root/usr/libexec/pon-board-identity
+index bd05b216ab..2d105f68d6 100755
+--- a/luci-app-pon/root/usr/libexec/pon-board-identity
++++ b/luci-app-pon/root/usr/libexec/pon-board-identity
+@@ -4,6 +4,9 @@
+ . /lib/functions.sh
+ . /usr/share/libubox/jshn.sh
+ . /lib/upgrade/nand.sh
++. /lib/functions/pon-secure.sh
++
++BOARD_DIR="$PON_RUNTIME_DIR/board"
+ 
+ fail()
+ {
+@@ -103,7 +106,7 @@ read_image()
+ cleanup()
+ {
+ 	[ -n "$work" ] && rm -r "$work"
+-	rmdir /tmp/airoha-pon-data.lock
++	rmdir "$BOARD_DIR/write.lock"
+ }
+ 
+ action="$1"
+@@ -128,10 +131,11 @@ read|write)
+ esac
+ 
+ [ "$action" = write ] || [ "$#" -eq 1 ] || exit 2
+-mkdir /tmp/airoha-pon-data.lock 2>/dev/null || fail "Board data is busy"
++pon_runtime_init board || fail "Cannot prepare private work directory"
++mkdir "$BOARD_DIR/write.lock" 2>/dev/null || fail "Board data is busy"
+ work=
+ trap cleanup EXIT
+-work="$(mktemp -d /tmp/pon-board-identity.XXXXXX)" || fail "Cannot create work directory"
++work="$(mktemp -d "$BOARD_DIR/identity.XXXXXX")" || fail "Cannot create work directory"
+ 
+ load_storage
+ locate_target
+@@ -157,7 +161,7 @@ for change in "$@"; do
+ done
+ 
+ # Keep the original logical image available for recovery after an update.
+-backup="/tmp/pon-board-identity.$name.$$.bin"
++backup="$(mktemp "$BOARD_DIR/backup-$name.XXXXXX")" || fail "Cannot create backup"
+ cp "$work/current" "$backup" || fail "Cannot save identity backup"
+ case "$storage" in
+ ubi) ubiupdatevol "$target" "$work/updated" || fail "UBI update failed" ;;
+diff --git a/luci-app-pon/root/usr/share/rpcd/acl.d/luci-app-pon.json b/luci-app-pon/root/usr/share/rpcd/acl.d/luci-app-pon.json
+index 0b555ce213..c1a378654a 100644
+--- a/luci-app-pon/root/usr/share/rpcd/acl.d/luci-app-pon.json
++++ b/luci-app-pon/root/usr/share/rpcd/acl.d/luci-app-pon.json
+@@ -2,33 +2,75 @@
+ 	"luci-app-pon": {
+ 		"description": "Grant access to PON configuration and board data",
+ 		"read": {
+-			"cgi-io": [ "exec" ],
+-			"uci": [ "pon", "airoha-pon-debug" ],
++			"cgi-io": [
++				"exec"
++			],
++			"uci": [
++				"pon",
++				"airoha-pon-debug"
++			],
+ 			"ubus": {
+-				"file": [ "read" ]
++				"file": [
++					"read"
++				]
+ 			},
+ 			"file": {
+-				"/usr/sbin/ponctl --device * status": [ "exec" ],
+-				"/usr/sbin/ponctl --device * status --json": [ "exec" ],
+-				"/usr/bin/pondctl status --line *": [ "exec" ],
+-				"/usr/libexec/pon-board-identity list": [ "exec" ],
+-				"/usr/libexec/pon-board-identity read *": [ "exec" ],
+-				"/usr/libexec/airoha-pon-data list": [ "exec" ],
+-				"/tmp/pon-debug.tar.gz": [ "read" ]
++				"/usr/sbin/ponctl --device * status": [
++					"exec"
++				],
++				"/usr/sbin/ponctl --device * status --json": [
++					"exec"
++				],
++				"/usr/bin/pondctl status --line *": [
++					"exec"
++				],
++				"/usr/libexec/pon-board-identity list": [
++					"exec"
++				],
++				"/usr/libexec/pon-board-identity read *": [
++					"exec"
++				],
++				"/usr/libexec/airoha-pon-data list": [
++					"exec"
++				]
+ 			}
+ 		},
+ 		"write": {
+-			"cgi-io": [ "upload" ],
+-			"uci": [ "pon", "airoha-pon-debug" ],
++			"cgi-io": [
++				"upload"
++			],
++			"uci": [
++				"pon",
++				"airoha-pon-debug"
++			],
+ 			"ubus": {
+-				"file": [ "exec", "write" ]
++				"file": [
++					"exec",
++					"write"
++				]
+ 			},
+ 			"file": {
+-				"/tmp/pon-board-data.bin": [ "write" ],
+-				"/usr/libexec/airoha-pon-data write *": [ "exec" ],
+-				"/usr/libexec/pon-board-identity write *": [ "exec" ],
+-				"/usr/libexec/airoha-pon-debug collect": [ "exec" ],
+-				"/usr/libexec/airoha-pon-debug restart": [ "exec" ]
++				"/usr/libexec/airoha-pon-data write *": [
++					"exec"
++				],
++				"/usr/libexec/pon-board-identity write *": [
++					"exec"
++				],
++				"/usr/libexec/airoha-pon-debug collect": [
++					"exec"
++				],
++				"/usr/libexec/airoha-pon-debug restart": [
++					"exec"
++				],
++				"/tmp/ponwrt/board/upload.*": [
++					"write"
++				],
++				"/usr/libexec/airoha-pon-data prepare": [
++					"exec"
++				],
++				"/tmp/ponwrt/debug/pon-debug.tar.gz": [
++					"read"
++				]
+ 			}
+ 		}
+ 	}
