@@ -1,13 +1,17 @@
 {
   "name": "Device Build",
-  "repository": "RoyTsang27/Device-Build",
+  "repository": "tdsafgen1888asd/Device-Build",
   "kernel": "6.18.56",
   "source": {
     "url": "https://github.com/RoyTsang27/ponwrt-test-build",
     "branch": "codex/security-audit",
     "commit": "a80feaf1764000fa9ebd1f49ce27fcc6c0b5cb09"
   },
-  "default_devices": ["ax3000t", "tr3000", "tr1200"],
+  "default_devices": [
+    "ax3000t",
+    "tr3000",
+    "tr1200"
+  ],
   "devices": {
     "ax3000t": {
       "name": "Xiaomi Mi Router AX3000T (stock layout)",

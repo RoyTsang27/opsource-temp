@@ -40,7 +40,7 @@ GNU make 4.1+, and at least 40GB of free space for one build. The dependency lis
 is in the [Device Build workflow](.github/workflows/device-build.yml).
 
 ```sh
-git clone https://github.com/RoyTsang27/Device-Build.git
+git clone https://github.com/tdsafgen1888asd/Device-Build.git
 cd Device-Build
 cp feeds.conf.release feeds.conf
 ./scripts/feeds update -a
