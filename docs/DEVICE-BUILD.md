@@ -3,7 +3,7 @@
 ## Linux 7.3 branch
 
 The experimental `codex/kernel-7.3` branch pins `mediatek/filogic` and
-`ramips/mt76x8` to Linux 7.3.1. The generic 7.3 configuration and patch stack
+`ramips/mt76x8` to Linux 7.3.3. The generic 7.3 configuration and patch stack
 come from [the OpenWrt development
 branch](https://github.com/graysky2/openwrt/tree/30c0d891b6103695e614de575814a67016973cf7).
 The target-specific stacks were rebased from the original 6.18.56 source.
@@ -16,7 +16,7 @@ This branch uses the 7.3 stack's standard flow offload.
 
 Local checks verified the kernel archive checksum, applied both patch stacks
 to their referenced files, compiled all six device trees, and confirmed the
-7.3.1 selection through OpenWrt target metadata. Full Linux firmware
+7.3.3 selection through OpenWrt target metadata. Full Linux firmware
 compilation and device boot and upgrade tests are pending.
 
 ## Imported snapshot

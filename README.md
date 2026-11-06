@@ -1,7 +1,7 @@
 # Device Build
 
 ImmortalWrt source for compiling Xiaomi AX3000T, Cudy TR3000, and Cudy TR1200
-firmware with **Linux 7.3.1** on the experimental `codex/kernel-7.3` branch.
+firmware with **Linux 7.3.3** on the experimental `codex/kernel-7.3` branch.
 The GitHub repository name is `Device-Build` and the project display name is
 **Device Build**.
 
@@ -92,9 +92,9 @@ scheduled upstream tracking is disabled here.
 
 ## Source and validation
 
-The `mediatek/filogic` and `ramips/mt76x8` subtargets select Linux 7.3.1.
+The `mediatek/filogic` and `ramips/mt76x8` subtargets select Linux 7.3.3.
 The kernel archive SHA256 is
-`fa595aad93734f829c963c2a90ef7c3673224fd7fdae7b49406e397cde2de231`,
+`79c66dde66cd96877fcde8f7d36aec946b1f423d2b97b5a7b1751b75c764f3d1`,
 matching [kernel.org](https://cdn.kernel.org/pub/linux/kernel/v7.x/sha256sums.asc).
 
 The 7.3 port uses OpenWrt's development patch stack and carries forward the
