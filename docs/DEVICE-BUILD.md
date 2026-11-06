@@ -1,5 +1,24 @@
 # Device Build source provenance and validation
 
+## Linux 7.3 branch
+
+The experimental `codex/kernel-7.3` branch pins `mediatek/filogic` and
+`ramips/mt76x8` to Linux 7.3.1. The generic 7.3 configuration and patch stack
+come from [the OpenWrt development
+branch](https://github.com/graysky2/openwrt/tree/30c0d891b6103695e614de575814a67016973cf7).
+The target-specific stacks were rebased from the original 6.18.56 source.
+The OpenWrt MTD concatenation option has its own Kconfig symbol to distinguish
+the existing device-tree binding from Linux 7.3's concatenation support.
+
+The fork's bridge-family nftables flow offload extension (patches 675-01
+through 675-14) requires a separate port to Linux 7.3's forwarding-path API.
+This branch uses the 7.3 stack's standard flow offload.
+
+Local checks verified the kernel archive checksum, applied both patch stacks
+to their referenced files, compiled all six device trees, and confirmed the
+7.3.1 selection through OpenWrt target metadata. Full Linux firmware
+compilation and device boot and upgrade tests are pending.
+
 ## Imported snapshot
 
 | Item | Source |

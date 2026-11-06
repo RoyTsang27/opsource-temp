@@ -72,7 +72,7 @@ class ImageTests(unittest.TestCase):
         payload = b'firmware test payload'
         (self.output / 'tr1200-sysupgrade.bin').write_bytes(payload)
         self.info = {
-            'target': 'ramips/mt76x8', 'linux_kernel': {'version': '6.18.56'},
+            'target': 'ramips/mt76x8', 'linux_kernel': {'version': builder.manifest()['kernel']},
             'profiles': {'cudy_tr1200-v1': {'images': [{
                 'type': 'sysupgrade', 'name': 'tr1200-sysupgrade.bin',
                 'size': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}]}}}
@@ -95,10 +95,10 @@ class ImageTests(unittest.TestCase):
         with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)
 
     def test_wrong_kernel_or_profile_is_rejected(self):
-        self.info['linux_kernel']['version'] = '6.18.52'
+        self.info['linux_kernel']['version'] = '6.18.56'
         self.write_info()
         with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)
-        self.info['linux_kernel']['version'] = '6.18.56'
+        self.info['linux_kernel']['version'] = builder.manifest()['kernel']
         self.info['profiles']['other-device'] = self.info['profiles']['cudy_tr1200-v1']
         self.write_info()
         with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)

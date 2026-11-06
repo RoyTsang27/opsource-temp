@@ -4,6 +4,7 @@
 
 SUBTARGET:=mt76x8
 BOARDNAME:=MT76x8 based boards
+KERNEL_PATCHVER:=7.3
 FEATURES+=usb ramdisk small_flash
 CPU_TYPE:=24kc
 

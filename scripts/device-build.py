@@ -56,16 +56,29 @@ def check_config(name, path):
 
 def check_source():
     data = manifest()
-    details = (ROOT / 'target/linux/generic/kernel-6.18').read_text()
-    if not re.search(r'^LINUX_VERSION-6\.18\s*=\s*\.56$', details, re.M):
-        raise ValueError('Device Build requires Linux ' + data['kernel'])
-    checksum = '4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89'
-    if not re.search(r'^LINUX_KERNEL_HASH-6\.18\.56\s*=\s*' + checksum + '$', details, re.M):
-        raise ValueError('Linux 6.18.56 source checksum does not match kernel.org')
+    version = data['kernel']
+    series, revision = version.rsplit('.', 1)
+    generic = ROOT / 'target/linux/generic'
+    details = (generic / ('kernel-' + series)).read_text()
+    checksum = data['kernel_sha256']
+    expected = {
+        'LINUX_VERSION-' + series: '.' + revision,
+        'LINUX_KERNEL_HASH-' + version: checksum,
+    }
+    assignments = dict(re.findall(r'^([^\s=]+)[ \t]*=[ \t]*([^\s]+)$', details, re.M))
+    if not re.fullmatch(r'[a-f0-9]{64}', checksum):
+        raise ValueError('Invalid Linux source checksum in the Device Build manifest')
+    if any(assignments.get(key) != value for key, value in expected.items()):
+        raise ValueError('Linux ' + version + ' source version or checksum differs from the manifest')
+    if not (generic / ('config-' + series)).is_file():
+        raise ValueError('Missing generic config-' + series)
     for name, entry in data['devices'].items():
         target = ROOT / 'target/linux' / entry['target']
-        if 'KERNEL_PATCHVER:=6.18' not in (target / 'Makefile').read_text():
-            raise ValueError(name + ': target does not select kernel 6.18')
+        subtarget = target / entry['subtarget']
+        declarations = (target / 'Makefile').read_text() + '\n' + (subtarget / 'target.mk').read_text()
+        selected = re.findall(r'^KERNEL_PATCHVER[ \t]*:?=[ \t]*(\d+\.\d+)[ \t]*$', declarations, re.M)
+        if not selected or selected[-1] != series:
+            raise ValueError(name + ': target does not select kernel ' + series)
         image = (target / 'image' / (entry['subtarget'] + '.mk')).read_text()
         match = re.search(r'^define Device/' + re.escape(entry['profile']) + r'\n(.*?)^endef$', image, re.M | re.S)
         if not match or not re.search(r'^TARGET_DEVICES \+= ' + re.escape(entry['profile']) + '$', image, re.M):
@@ -80,10 +93,10 @@ def check_source():
         expected = 'CONFIG_TARGET_{target}_{subtarget}_DEVICE_{profile}=y'.format(**entry)
         if selections(profile) != {expected}:
             raise ValueError(name + ': preset selects the wrong device')
-        if not (target / entry['subtarget'] / 'config-6.18').exists():
-            raise ValueError(name + ': missing subtarget config-6.18')
-        if not (target / 'patches-6.18').exists():
-            raise ValueError(name + ': missing patches-6.18')
+        if not (subtarget / ('config-' + series)).is_file():
+            raise ValueError(name + ': missing subtarget config-' + series)
+        if not (target / ('patches-' + series)).is_dir():
+            raise ValueError(name + ': missing patches-' + series)
     print('Source checks passed: Linux ' + data['kernel'] + ', ' + str(len(data['devices'])) + ' profiles')
 
 

@@ -1,8 +1,9 @@
 # Device Build
 
 ImmortalWrt source for compiling Xiaomi AX3000T, Cudy TR3000, and Cudy TR1200
-firmware with **Linux 6.18.56**. The GitHub repository name is `Device-Build`;
-the project display name is **Device Build**.
+firmware with **Linux 7.3.1** on the experimental `codex/kernel-7.3` branch.
+The GitHub repository name is `Device-Build` and the project display name is
+**Device Build**.
 
 This repository contains the complete build system, kernel patches, device
 trees, drivers, and image recipes. Its base is
@@ -37,11 +38,10 @@ requires a produced sysupgrade image before uploading firmware.
 
 Use Ubuntu 24.04 or an equivalent Linux host with a case-sensitive filesystem,
 GNU make 4.1+, and at least 40GB of free space for one build. The dependency list
-is in the [Device Build workflow](.github/workflows/device-build.yml).
+is in the [Device Build workflow](.github/workflows/device-build.yml). Run these
+commands from a checkout of `codex/kernel-7.3`.
 
 ```sh
-git clone https://github.com/tdsafgen1888asd/Device-Build.git
-cd Device-Build
 cp feeds.conf.release feeds.conf
 ./scripts/feeds update -a
 ./scripts/feeds install -a
@@ -68,8 +68,9 @@ the documented procedure and CI use `feeds.conf.release` to pin them.
 ## GitHub Actions
 
 The **Device Build** workflow compiles all three default devices on pushes to
-`main` and relevant pull requests. In **Actions → Device Build → Run workflow**,
-choose `all` or one of the six selectors. Each device has a fresh runner,
+`main` and `codex/kernel-*` branches and on relevant pull requests. In
+**Actions → Device Build → Run workflow**, choose `all` or one of the six
+selectors. Each device has a fresh runner,
 independent configuration/toolchain/build directories, source-download caching,
 and its own firmware and diagnostic artifacts.
 
@@ -91,15 +92,14 @@ scheduled upstream tracking is disabled here.
 
 ## Source and validation
 
-Both MediaTek and Ralink targets select kernel 6.18 and resolve to 6.18.56.
+The `mediatek/filogic` and `ramips/mt76x8` subtargets select Linux 7.3.1.
 The kernel archive SHA256 is
-`4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89`,
-matching [kernel.org](https://cdn.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc).
+`fa595aad93734f829c963c2a90ef7c3673224fd7fdae7b49406e397cde2de231`,
+matching [kernel.org](https://cdn.kernel.org/pub/linux/kernel/v7.x/sha256sums.asc).
 
-The import preserves ImmortalWrt/OpenWrt/PonWrt licenses, original package
-sources, and the reference's 6.18.56 generic kernel fixes. Device Build removes
-a Ralink PWM patch already incorporated in 6.18.56 and fixes the TR1200 backup
-partition address. See [source provenance and validation](docs/DEVICE-BUILD.md).
+The 7.3 port uses OpenWrt's development patch stack and carries forward the
+target-specific patches and device trees. See the [port status and source
+provenance](docs/DEVICE-BUILD.md#linux-73-branch) for validation and remaining work.
 
 Inherited Airoha/PON devices remain available through the original profiles.
 Their documentation is preserved in [README.PonWrt.md](README.PonWrt.md),

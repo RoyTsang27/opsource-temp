@@ -51,6 +51,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      kernel: ${{ steps.plan.outputs.kernel }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -63,6 +64,7 @@ jobs:
           python3 scripts/device-build.py check-source
           python3 -m unittest discover -s tests -p test_device_build.py -v
           printf 'matrix=%s\n' "$(python3 scripts/device-build.py matrix "$DEVICE")" >> "$GITHUB_OUTPUT"
+          printf 'kernel=%s\n' "$(python3 -c 'import json; print(json.load(open("config/device-build.json"))["kernel"])')" >> "$GITHUB_OUTPUT"
 
   build:
     name: Compile ${{ matrix.device }}
@@ -100,7 +102,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: dl
-          key: device-build-dl-${{ runner.os }}-${{ matrix.device }}-${{ hashFiles('feeds.conf.release', 'target/linux/generic/kernel-6.18', 'configs/devices/*.config') }}
+          key: device-build-dl-${{ runner.os }}-${{ matrix.device }}-${{ hashFiles('feeds.conf.release', 'config/device-build.json', 'configs/devices/*.config') }}
           restore-keys: |
             device-build-dl-${{ runner.os }}-${{ matrix.device }}-
       - name: Install pinned feeds
@@ -117,7 +119,7 @@ jobs:
           ./scripts/diffconfig.sh > logs/resolved.config
       - name: Download sources
         run: make download -j4 V=s 2>&1 | tee logs/download.log
-      - name: Prepare Linux 6.18.56
+      - name: Prepare Linux ${{ needs.plan.outputs.kernel }}
         run: make target/linux/prepare -j2 V=s 2>&1 | tee logs/kernel-prepare.log
       - name: Compile firmware
         run: make -j"$(nproc)" V=s 2>&1 | tee logs/build.log
@@ -126,6 +128,7 @@ jobs:
           DEVICE: ${{ matrix.device }}
           TARGET: ${{ matrix.target }}
           SUBTARGET: ${{ matrix.subtarget }}
+          KERNEL: ${{ needs.plan.outputs.kernel }}
         run: |
           output="bin/targets/$TARGET/$SUBTARGET"
           test -f "$output/profiles.json"
@@ -136,12 +139,12 @@ jobs:
           cp logs/resolved.config "$output/build.config"
           printf '%s\n' "$GITHUB_SHA" > "$output/source-commit.txt"
           mkdir -p artifacts
-          tar --zstd -cf "artifacts/device-build-$DEVICE-linux-6.18.56.tar.zst" -C "$output" .
+          tar --zstd -cf "artifacts/device-build-$DEVICE-linux-$KERNEL.tar.zst" -C "$output" .
           (cd artifacts && sha256sum -- *.tar.zst > sha256sums)
       - name: Upload firmware
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: device-build-${{ matrix.device }}-linux-6.18.56
+          name: device-build-${{ matrix.device }}-linux-${{ needs.plan.outputs.kernel }}
           path: artifacts/*
           if-no-files-found: error
           retention-days: 14
