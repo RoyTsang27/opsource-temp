@@ -22,6 +22,16 @@ CMAKE_SOURCE_SUBDIR := llvm
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/cmake.mk
 
+# LLVM's C++ front end needs much more RAM per worker than most host tools.
+# Size the limit from available RAM/cgroups, rather than the firmware's make -j.
+# Keep an explicit Ninja limit even when the parent make has a jobserver.
+LLVM_BPF_JOBS ?= auto
+LLVM_BPF_JOB_LIMIT := $(shell $(PYTHON) $(SCRIPT_DIR)/llvm-bpf-jobs.py --jobs '$(LLVM_BPF_JOBS)')
+ifeq ($(LLVM_BPF_JOB_LIMIT),)
+  $(error Cannot determine LLVM concurrency; use LLVM_BPF_JOBS=1 or another positive integer)
+endif
+NINJA += -j$(LLVM_BPF_JOB_LIMIT)
+
 ifneq ($(HOST_OS),Linux)
   HOST_CFLAGS := $(filter-out -I$(STAGING_DIR_HOST)/include,$(HOST_CFLAGS))
   HOST_CXXFLAGS := $(filter-out -I$(STAGING_DIR_HOST)/include,$(HOST_CXXFLAGS))
@@ -55,6 +65,11 @@ CMAKE_HOST_OPTIONS += \
 	-DLLVM_ENABLE_ZSTD=OFF \
 	-DLLVM_PARALLEL_LINK_JOBS=1 \
 	-DCMAKE_SKIP_RPATH=OFF
+
+define Host/Compile
+	@echo "LLVM-BPF: using $(LLVM_BPF_JOB_LIMIT) Ninja worker(s) (LLVM_BPF_JOBS=$(LLVM_BPF_JOBS))"
+	$(call Host/Compile/Default)
+endef
 
 define Host/Install
 	rm -rf $(STAGING_DIR_HOST)/llvm-bpf*

@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-11",
+  "llvm_tests_passed": 27,
+  "updater_tests_passed": 7,
+  "tests_skipped": 0,
+  "ninja_version": "1.13.2",
+  "concurrency_preflight": {
+    "parent_make_jobs": 24,
+    "synthetic_total_gib": 16,
+    "synthetic_available_gib": 14,
+    "observed_peak_workers": 3,
+    "explicit_overrides_tested": [
+      1,
+      2
+    ]
+  },
+  "updater_integration": [
+    {
+      "recipe": "original",
+      "changed_files": 3,
+      "idempotent": true,
+      "config_preserved": true
+    },
+    {
+      "recipe": "single-worker",
+      "changed_files": 2,
+      "idempotent": true,
+      "config_preserved": true
+    },
+    {
+      "recipe": "automatic-workers",
+      "changed_files": 0,
+      "idempotent": true,
+      "config_preserved": true
+    }
+  ],
+  "official_archive_listing_checked": "https://downloads.openwrt.org/snapshots/targets/mediatek/filogic/",
+  "official_archive_name": "llvm-bpf-22.1.3.Linux-x86_64.tar.zst",
+  "official_archive_observed_sha256": "4b0f989d91062ebe7470a848faab2c5175145ba68b93692e866774b03be564d5",
+  "official_archive_downloaded_this_check": false,
+  "linux_llvm_build_and_timings_verified": false
+}

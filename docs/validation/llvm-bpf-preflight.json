@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-17",
+  "source_base": "229cf383822ab5c6ce0987c452a0ce7e60ddf18c",
+  "llvm_version": "22.1.3",
+  "ninja_version_tested": "1.13.2",
+  "actual_recipe_concurrency": {
+    "unusable_parent_jobserver": true,
+    "default_peak_workers": 1,
+    "override_two_peak_workers": 2
+  },
+  "actual_openwrt_kconfig": {
+    "devel_disabled_prebuilt_selected": true,
+    "devel_enabled_prebuilt_selected": true,
+    "llvm_source_build_disabled": true
+  },
+  "prebuilt_archive": {
+    "url": "https://downloads.openwrt.org/snapshots/targets/mediatek/filogic/llvm-bpf-22.1.3.Linux-x86_64.tar.zst",
+    "observed_sha256": "ccbfa9ea15768cadcf6d080bca9912cbd74ffb223d94da90c833272ca9b9c8c1",
+    "size_bytes": 53056544,
+    "checksum_verified": true,
+    "safe_extraction_verified": true,
+    "version_marker_verified": true,
+    "required_linux_x86_64_elf_tools_verified": true
+  },
+  "regression_tests": {
+    "passed": 55,
+    "skipped": 5,
+    "new_llvm_tests_passed": 14,
+    "skip_reason": "Native signing tool directory unavailable"
+  },
+  "source_checks": {
+    "kernel": "6.18.57",
+    "profiles_passed": 6
+  },
+  "original_failure_cause_confirmed": false,
+  "linux_bpf_pipeline_executed_on_macos": false,
+  "linux_setup_requires_successful_bpf_pipeline_before_selection": true,
+  "full_firmware_build_verified": false,
+  "memory_policy_preflight": {
+    "date": "2026-10-25",
+    "reported_build_host": {
+      "cpu": "AMD Ryzen 9 7900",
+      "ram_gb": 16
+    },
+    "policy": {
+      "default": "auto",
+      "ram_per_worker_gib": 3,
+      "reserve": "max(2 GiB, effective memory capacity / 4)",
+      "cgroup_memory": "v1/v2, visible ancestors, v2 memory.high and memory.max",
+      "counts_swap_as_ram": false,
+      "fallback_workers": 1
+    },
+    "ninja_version_tested": "1.13.2",
+    "actual_recipe_with_synthetic_linux_memory": {
+      "total_gib": 16,
+      "available_gib": 14,
+      "cpus": 24,
+      "parent_make_jobs": 24,
+      "unusable_parent_jobserver": true,
+      "auto_peak_workers": 3,
+      "one_override_peak_workers": 1,
+      "two_override_peak_workers": 2
+    },
+    "llvm_tests_passed": 27,
+    "repository_tests": {
+      "discovered": 103,
+      "passed": 92,
+      "skipped": 11,
+      "skip_reasons": [
+        "Linux ownership/compiler tests",
+        "GNU awk unavailable",
+        "native signing tools unavailable"
+      ]
+    },
+    "official_archive_availability": {
+      "date": "2026-10-25",
+      "http_status": 200,
+      "reported_bytes": 53110747,
+      "sha256_from_official_manifest": "e2387d99b93bf527fd3c58ac94078f00329ceba90b315683f0875bf061b57796",
+      "archive_downloaded_in_this_check": false
+    },
+    "source_checks": {
+      "kernel": "6.18.58",
+      "profiles_passed": 31
+    },
+    "full_llvm_compilation_run": false,
+    "full_firmware_build_verified": false
+  }
+}
