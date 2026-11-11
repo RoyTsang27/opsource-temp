@@ -1,0 +1,28 @@
+Subject: [PATCH] wifi: mt76: mt7915: skip recovery on MCU probe timeout
+
+The MCU handshake can time out before mt76_register_device()
+initializes the primary PHY transmit list. The response timeout
+handler can queue the full recovery worker, which assumes that the
+list and mac80211 device are ready. mt7915_reset() already uses
+hw_init_done to guard the corresponding interrupt-driven recovery.
+
+Return the probe error without scheduling recovery before hardware
+initialization finishes. Runtime timeouts continue to request reset.
+
+Link: https://github.com/openwrt/openwrt/issues/25819
+
+diff --git a/mt7915/mcu.c b/mt7915/mcu.c
+index 1d845cf..7734d79 100644
+--- a/mt7915/mcu.c
++++ b/mt7915/mcu.c
+@@ -165,6 +165,10 @@ mt7915_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+ 		dev_err(mdev->dev, "Message %08x (seq %d) timeout\n",
+ 			cmd, seq);
+ 
++		/* The recovery worker requires a registered device. */
++		if (!dev->recovery.hw_init_done)
++			return -ETIMEDOUT;
++
+ 		if (!test_and_set_bit(MT76_MCU_RESET, &dev->mphy.state)) {
+ 			dev->recovery.restart = true;
+ 			wake_up(&dev->mt76.mcu.wait);

@@ -1,0 +1,39 @@
+Subject: [PATCH 5/6] wifi: mt76: mt7915: bound firmware log buffers
+
+Reuse the supplied RC1 log-length checks. Reject short magic/monitor
+headers and invalid relay lengths before reading or copying the data.
+
+diff --git a/mt7915/debugfs.c b/mt7915/debugfs.c
+index 7e561a4..abf8879 100644
+--- a/mt7915/debugfs.c
++++ b/mt7915/debugfs.c
+@@ -1361,6 +1361,10 @@ mt7915_debugfs_write_fwlog(struct mt7915_dev *dev, const void *hdr, int hdrlen,
+ 	unsigned long flags;
+ 	void *dest;
+ 
++	if (unlikely(hdrlen < 0 || len < 0 ||
++		     hdrlen > INT_MAX - len - 4))
++		return;
++
+ 	spin_lock_irqsave(&lock, flags);
+ 	dest = relay_reserve(dev->relay_fwlog, hdrlen + len + 4);
+ 	if (dest) {
+@@ -1392,6 +1396,8 @@ void mt7915_debugfs_rx_fw_monitor(struct mt7915_dev *dev, const void *data, int
+ 
+ 	if (!dev->relay_fwlog)
+ 		return;
++	if (unlikely(len < 0 || (size_t)len < sizeof(__le16)))
++		return;
+ 
+ 	hdr.timestamp = cpu_to_le32(mt76_rr(dev, MT_LPON_FRCR(0)));
+ 	hdr.len = *(__le16 *)data;
+@@ -1400,6 +1406,9 @@ void mt7915_debugfs_rx_fw_monitor(struct mt7915_dev *dev, const void *data, int
+ 
+ bool mt7915_debugfs_rx_log(struct mt7915_dev *dev, const void *data, int len)
+ {
++	if (unlikely(len < 0 || (size_t)len < sizeof(__le32)))
++		return false;
++
+ 	if (get_unaligned_le32(data) != FW_BIN_LOG_MAGIC)
+ 		return false;
+ 

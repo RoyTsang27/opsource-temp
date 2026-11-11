@@ -1,0 +1,90 @@
+Subject: [PATCH 3/6] wifi: mt76: mt7915: bound MCU events without rejecting semaphore replies
+
+Adapt RC1 event size checks, but keep the 33-byte patch semaphore reply
+accepted by the upstream response parser. Route that reply before using
+the full 36-byte extended header. Linearize before inspecting typed events.
+Check the consumed fields of each unsolicited event before dispatch.
+
+diff --git a/mt7915/mcu.c b/mt7915/mcu.c
+index 659441e..9e64f21 100644
+--- a/mt7915/mcu.c
++++ b/mt7915/mcu.c
+@@ -430,24 +430,42 @@ mt7915_mcu_rx_ext_event(struct mt7915_dev *dev, struct sk_buff *skb)
+ {
+ 	struct mt76_connac2_mcu_rxd *rxd;
+ 
++	if (unlikely(skb->len < sizeof(*rxd)))
++		return;
++
+ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
+ 	switch (rxd->ext_eid) {
+ 	case MCU_EXT_EVENT_THERMAL_PROTECT:
++		if (unlikely(skb->len <
++			     offsetofend(struct mt7915_mcu_thermal_notify, ctrl)))
++			return;
+ 		mt7915_mcu_rx_thermal_notify(dev, skb);
+ 		break;
+ 	case MCU_EXT_EVENT_RDD_REPORT:
++		if (unlikely(skb->len <
++			     offsetofend(struct mt7915_mcu_rdd_report, rdd_idx)))
++			return;
+ 		mt7915_mcu_rx_radar_detected(dev, skb);
+ 		break;
+ 	case MCU_EXT_EVENT_CSA_NOTIFY:
++		if (unlikely(skb->len <
++			     offsetofend(struct mt7915_mcu_csa_notify, band_idx)))
++			return;
+ 		mt7915_mcu_rx_csa_notify(dev, skb);
+ 		break;
+ 	case MCU_EXT_EVENT_FW_LOG_2_HOST:
+ 		mt7915_mcu_rx_log_message(dev, skb);
+ 		break;
+ 	case MCU_EXT_EVENT_BCC_NOTIFY:
++		if (unlikely(skb->len <
++			     offsetofend(struct mt7915_mcu_bcc_notify, band_idx)))
++			return;
+ 		mt7915_mcu_rx_bcc_notify(dev, skb);
+ 		break;
+ 	case MCU_EXT_EVENT_PS_SYNC:
++		if (unlikely(skb->len <
++			     offsetofend(struct mt7915_mcu_ps_notify, wtbl_higher)))
++			return;
+ 		mt7915_mcu_rx_ps_sync(dev, skb);
+ 		break;
+ 	default:
+@@ -460,6 +478,11 @@ mt7915_mcu_rx_unsolicited_event(struct mt7915_dev *dev, struct sk_buff *skb)
+ {
+ 	struct mt76_connac2_mcu_rxd *rxd;
+ 
++	if (unlikely(skb->len < sizeof(*rxd))) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
+ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
+ 	switch (rxd->eid) {
+ 	case MCU_EVENT_EXT:
+@@ -475,7 +498,23 @@ void mt7915_mcu_rx_event(struct mt7915_dev *dev, struct sk_buff *skb)
+ {
+ 	struct mt76_connac2_mcu_rxd *rxd;
+ 
++	/* PATCH_SEM_CONTROL replies contain a 32-byte header and status byte. */
++	if (unlikely(skb_linearize(skb) ||
++		     skb->len < sizeof(*rxd) - 4 + sizeof(u8))) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
+ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
++	if (rxd->eid == MCU_EVENT_MT_PATCH_SEM && rxd->seq) {
++		mt76_mcu_rx_event(&dev->mt76, skb);
++		return;
++	}
++	if (unlikely(skb->len < sizeof(*rxd))) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
+ 	if ((rxd->ext_eid == MCU_EXT_EVENT_THERMAL_PROTECT ||
+ 	     rxd->ext_eid == MCU_EXT_EVENT_FW_LOG_2_HOST ||
+ 	     rxd->ext_eid == MCU_EXT_EVENT_ASSERT_DUMP ||
