@@ -3,10 +3,12 @@
 ## Linux 7.3 branch
 
 The experimental `codex/kernel-7.3` branch pins `mediatek/filogic` and
-`ramips/mt76x8` to Linux 7.3.3. The generic 7.3 configuration and patch stack
+`ramips/mt76x8` to Linux 7.3.4. The generic 7.3 configuration and patch stack
 come from [the OpenWrt development
 branch](https://github.com/graysky2/openwrt/tree/30c0d891b6103695e614de575814a67016973cf7).
 The target-specific stacks were rebased from the original 6.18.56 source.
+The 7.3.4 update removes the carried SPI QPIC ECC-context and MT7986 timer
+frequency fixes because both are included in the upstream kernel.
 The OpenWrt MTD concatenation option has its own Kconfig symbol to distinguish
 the existing device-tree binding from Linux 7.3's concatenation support.
 
@@ -14,9 +16,14 @@ The fork's bridge-family nftables flow offload extension (patches 675-01
 through 675-14) requires a separate port to Linux 7.3's forwarding-path API.
 This branch uses the 7.3 stack's standard flow offload.
 
+The default mt76 package is pinned to upstream revision
+`0936617dc529ff9da0385221d3fa6de732231177` from 2026-10-28.
+Its source archive SHA256 is
+`3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f`.
+
 Local checks verified the kernel archive checksum, applied both patch stacks
 to their referenced files, compiled all six device trees, and confirmed the
-7.3.3 selection through OpenWrt target metadata. Full Linux firmware
+7.3.4 selection through OpenWrt target metadata. Full Linux firmware
 compilation and device boot and upgrade tests are pending.
 
 ## Imported snapshot

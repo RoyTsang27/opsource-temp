@@ -1,7 +1,7 @@
 # Device Build
 
 ImmortalWrt source for compiling Xiaomi AX3000T, Cudy TR3000, and Cudy TR1200
-firmware with **Linux 7.3.3** on the experimental `codex/kernel-7.3` branch.
+firmware with **Linux 7.3.4** on the experimental `codex/kernel-7.3` branch.
 The GitHub repository name is `Device-Build` and the project display name is
 **Device Build**.
 
@@ -30,6 +30,8 @@ TR3000 flash variant; it is a separate profile.
 
 AX3000T and TR3000 retain their MT7981/MT7915 Wi-Fi drivers and firmware.
 TR1200 retains MT7603 and MT7663 Wi-Fi, USB, and its switch configuration.
+The default mt76 driver uses upstream revision `0936617dc529ff9da0385221d3fa6de732231177`
+from 2026-10-28.
 Each preset builds one device, with LuCI HTTPS and firmware/package signing.
 TR1200 uses the smaller LuCI TLS variant for its 16MB flash. The workflow
 requires a produced sysupgrade image before uploading firmware.
@@ -92,9 +94,9 @@ scheduled upstream tracking is disabled here.
 
 ## Source and validation
 
-The `mediatek/filogic` and `ramips/mt76x8` subtargets select Linux 7.3.3.
+The `mediatek/filogic` and `ramips/mt76x8` subtargets select Linux 7.3.4.
 The kernel archive SHA256 is
-`79c66dde66cd96877fcde8f7d36aec946b1f423d2b97b5a7b1751b75c764f3d1`,
+`b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f`,
 matching [kernel.org](https://cdn.kernel.org/pub/linux/kernel/v7.x/sha256sums.asc).
 
 The 7.3 port uses OpenWrt's development patch stack and carries forward the
