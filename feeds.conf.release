@@ -1,0 +1,6 @@
+# Reviewed snapshot for release builds. Update deliberately and test both targets.
+src-git packages https://github.com/immortalwrt/packages.git^e731ba76764082d9db71de60f1ddac43f4114101
+src-git luci https://github.com/immortalwrt/luci.git^5fc1fac5684cac6eee2c7fbff78c65b867980dd8
+src-git routing https://github.com/openwrt/routing.git^4b9891b9136259f93294a424507ed24c5e8c1cbd
+src-git telephony https://github.com/openwrt/telephony.git^5d68d53c160a325ea9d03fce393e051573bcc736
+src-git video https://github.com/openwrt/video.git^afb0a7453e4ecebe4b59f9c1b5f8d5413fb652f2

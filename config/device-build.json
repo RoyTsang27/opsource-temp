@@ -1,0 +1,66 @@
+{
+  "name": "Device Build",
+  "repository": "RoyTsang27/opsource-temp",
+  "kernel": "7.3.4",
+  "kernel_sha256": "b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f",
+  "source": {
+    "url": "https://github.com/RoyTsang27/ponwrt-test-build",
+    "branch": "codex/security-audit",
+    "commit": "a80feaf1764000fa9ebd1f49ce27fcc6c0b5cb09"
+  },
+  "default_devices": [
+    "ax3000t",
+    "tr3000",
+    "tr1200"
+  ],
+  "devices": {
+    "ax3000t": {
+      "name": "Xiaomi Mi Router AX3000T (stock layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "xiaomi_mi-router-ax3000t",
+      "dts": "mt7981b-xiaomi-mi-router-ax3000t",
+      "compatible": "xiaomi,mi-router-ax3000t"
+    },
+    "ax3000t-ubootmod": {
+      "name": "Xiaomi Mi Router AX3000T (OpenWrt U-Boot layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "xiaomi_mi-router-ax3000t-ubootmod",
+      "dts": "mt7981b-xiaomi-mi-router-ax3000t-ubootmod",
+      "compatible": "xiaomi,mi-router-ax3000t-ubootmod"
+    },
+    "tr3000": {
+      "name": "Cudy TR3000 v1 (stock layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "cudy_tr3000-v1",
+      "dts": "mt7981b-cudy-tr3000-v1",
+      "compatible": "cudy,tr3000-v1"
+    },
+    "tr3000-256mb": {
+      "name": "Cudy TR3000 256MB v1 (stock layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "cudy_tr3000-256mb-v1",
+      "dts": "mt7981b-cudy-tr3000-256mb-v1",
+      "compatible": "cudy,tr3000-256mb-v1"
+    },
+    "tr3000-ubootmod": {
+      "name": "Cudy TR3000 v1 (OpenWrt U-Boot layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "cudy_tr3000-v1-ubootmod",
+      "dts": "mt7981b-cudy-tr3000-v1-ubootmod",
+      "compatible": "cudy,tr3000-v1-ubootmod"
+    },
+    "tr1200": {
+      "name": "Cudy TR1200 v1",
+      "target": "ramips",
+      "subtarget": "mt76x8",
+      "profile": "cudy_tr1200-v1",
+      "dts": "mt7628an_cudy_tr1200-v1",
+      "compatible": "cudy,tr1200-v1"
+    }
+  }
+}

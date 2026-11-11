@@ -1,0 +1,26 @@
+diff --git a/airoha-xpon/Makefile b/airoha-xpon/Makefile
+index e2ed5104b8..e0ecc17e2c 100644
+--- a/airoha-xpon/Makefile
++++ b/airoha-xpon/Makefile
+@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=airoha-xpon
+-PKG_RELEASE:=68
++PKG_RELEASE:=69
+ PKG_LICENSE:=GPL-2.0-only
+ 
+ include $(INCLUDE_DIR)/package.mk
+diff --git a/airoha-xpon/src/airoha-xpon-omci.c b/airoha-xpon/src/airoha-xpon-omci.c
+index 38ef05abb5..d2a745d822 100644
+--- a/airoha-xpon/src/airoha-xpon-omci.c
++++ b/airoha-xpon/src/airoha-xpon-omci.c
+@@ -63,7 +63,7 @@ static int airoha_xpon_omci_stop(struct net_device *netdev)
+ 
+ static int airoha_xpon_omci_normalize_tx(struct sk_buff *skb)
+ {
+-	u16 expected;
++	unsigned int expected;
+ 	u8 device_id;
+ 
+ 	/* Baseline and extended OMCI share a ten-byte header. */
