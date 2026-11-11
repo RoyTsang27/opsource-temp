@@ -1,0 +1,111 @@
+Subject: [PATCH 4/6] wifi: mt76: mt7915: complete truncated TX-free events
+
+Reuse the supplied RC1 fix: validate the fixed TX-free header and complete
+entries before reading them. On truncation, drain the local free list and
+run the normal wake/worker completion path, including after partial work.
+Also cap the two packed v3 IDs by the number of completions left so
+a malformed final word cannot release an extra token.
+
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+index 29494fa..d699bc9 100644
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -933,19 +933,24 @@ static void
+ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
+ {
+ 	struct mt76_connac_tx_free *free = data;
+-	__le32 *tx_info = (__le32 *)(data + sizeof(*free));
++	__le32 *tx_info;
+ 	struct mt76_dev *mdev = &dev->mt76;
+ 	struct mt76_txwi_cache *txwi;
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct mt76_wcid *wcid = NULL;
+ 	LIST_HEAD(free_list);
+-	void *end = data + len;
++	u8 *end;
+ 	bool v3, wake = false;
+ 	u16 total, count = 0;
+-	u32 txd = le32_to_cpu(free->txd);
++	u32 txd;
+ 	__le32 *cur_info;
+ 
+ 	mt7915_mac_tx_free_prepare(dev);
++	if (unlikely(len < 0 || (size_t)len < sizeof(*free)))
++		goto out;
++	tx_info = (__le32 *)(data + sizeof(*free));
++	end = (u8 *)data + len;
++	txd = le32_to_cpu(free->txd);
+ 
+ 	total = le16_get_bits(free->ctrl, MT_TX_FREE_MSDU_CNT);
+ 	v3 = (FIELD_GET(MT_TX_FREE_VER, txd) == 0x4);
+@@ -954,8 +959,12 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
+ 		u32 msdu, info;
+ 		u8 i;
+ 
+-		if (WARN_ON_ONCE((void *)cur_info >= end))
+-			return;
++		if (unlikely((u8 *)cur_info > end ||
++			     (size_t)(end - (u8 *)cur_info) < sizeof(*cur_info))) {
++			dev_dbg_ratelimited(dev->mt76.dev,
++					    "short TX-free event\n");
++			goto out;
++		}
+ 
+ 		/*
+ 		 * 1'b1: new wcid pair.
+@@ -998,7 +1007,7 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
+ 		if (v3 && (info & MT_TX_FREE_MPDU_HEADER_V3))
+ 			continue;
+ 
+-		for (i = 0; i < 1 + v3; i++) {
++		for (i = 0; i < 1 + v3 && count < total; i++) {
+ 			if (v3) {
+ 				msdu = (info >> (15 * i)) & MT_TX_FREE_MSDU_ID_V3;
+ 				if (msdu == MT_TX_FREE_MSDU_ID_V3)
+@@ -1015,6 +1024,7 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
+ 		}
+ 	}
+ 
++out:
+ 	mt7915_mac_tx_free_done(dev, &free_list, wake);
+ }
+ 
+@@ -1022,18 +1032,26 @@ static void
+ mt7915_mac_tx_free_v0(struct mt7915_dev *dev, void *data, int len)
+ {
+ 	struct mt76_connac_tx_free *free = data;
+-	__le16 *info = (__le16 *)(data + sizeof(*free));
++	__le16 *info;
+ 	struct mt76_dev *mdev = &dev->mt76;
+-	void *end = data + len;
++	u8 *end;
+ 	LIST_HEAD(free_list);
+ 	bool wake = false;
+ 	u8 i, count;
+ 
+ 	mt7915_mac_tx_free_prepare(dev);
++	if (unlikely(len < 0 || (size_t)len < sizeof(*free)))
++		goto out;
++	info = (__le16 *)(data + sizeof(*free));
++	end = (u8 *)data + len;
+ 
+ 	count = FIELD_GET(MT_TX_FREE_MSDU_CNT_V0, le16_to_cpu(free->ctrl));
+-	if (WARN_ON_ONCE((void *)&info[count] > end))
+-		return;
++	if (unlikely((size_t)(end - (u8 *)info) <
++		     (size_t)count * sizeof(*info))) {
++		dev_dbg_ratelimited(dev->mt76.dev,
++				    "short TX-free v0 event\n");
++		goto out;
++	}
+ 
+ 	for (i = 0; i < count; i++) {
+ 		struct mt76_txwi_cache *txwi;
+@@ -1046,6 +1064,7 @@ mt7915_mac_tx_free_v0(struct mt7915_dev *dev, void *data, int len)
+ 		mt76_connac2_txwi_free(mdev, txwi, NULL, &free_list);
+ 	}
+ 
++out:
+ 	mt7915_mac_tx_free_done(dev, &free_list, wake);
+ }
+ 

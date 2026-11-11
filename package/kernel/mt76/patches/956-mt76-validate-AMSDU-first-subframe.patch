@@ -1,0 +1,89 @@
+Subject: [PATCH] wifi: mt76: validate the A-MSDU prefix within the first skb
+
+The RFC 1042 check assumes the first subframe starts in the linear
+portion of the skb and has six available bytes. Also, for raw HE and
+EHT frames, the data pointer can start at radiotap metadata instead
+of the 802.11 header.
+
+Find the 802.11 header after the metadata, then read the destination
+prefix with an skb accessor that handles non-linear data. Drop the
+aggregate if the first skb is too short or begins with RFC 1042. Keep
+the existing decrypted-IV handling and multi-subframe check scope.
+
+diff --git a/mac80211.c b/mac80211.c
+index 41d3636..fe3fddc 100644
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -889,10 +889,45 @@ struct mt76_phy *mt76_vif_phy(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL_GPL(mt76_vif_phy);
+ 
++static bool mt76_rx_amsdu_valid(struct sk_buff *skb)
++{
++	const struct mt76_rx_status *status = (const void *)skb->cb;
++	u32 flags = status->flag;
++	u8 buf[ETH_ALEN];
++	const u8 *addr;
++	int offset = 0;
++
++	if (!(flags & RX_FLAG_8023)) {
++		__le16 fc;
++
++		if (flags & RX_FLAG_RADIOTAP_TLV_AT_END) {
++			/* The EHT decoder saves the MAC header before pushing TLVs. */
++			if (!skb_mac_header_was_set(skb))
++				return false;
++			offset = skb_mac_offset(skb);
++		} else {
++			if (flags & RX_FLAG_RADIOTAP_HE)
++				offset += sizeof(struct ieee80211_radiotap_he);
++			if (flags & RX_FLAG_RADIOTAP_HE_MU)
++				offset += sizeof(struct ieee80211_radiotap_he_mu);
++		}
++
++		if (offset < 0 || skb_copy_bits(skb, offset, &fc, sizeof(fc)))
++			return false;
++		offset += ieee80211_hdrlen(fc);
++		if ((flags & (RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED)) ==
++		    RX_FLAG_DECRYPTED)
++			offset += 8;
++	}
++
++	/* The chained subframes are not included in the head skb's len. */
++	addr = skb_header_pointer(skb, offset, sizeof(buf), buf);
++	return addr && memcmp(addr, rfc1042_header, sizeof(buf)) != 0;
++}
++
+ static void mt76_rx_release_amsdu(struct mt76_phy *phy, enum mt76_rxq_id q)
+ {
+ 	struct sk_buff *skb = phy->rx_amsdu[q].head;
+-	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
+ 	struct mt76_dev *dev = phy->dev;
+ 	struct mt76_queue *rxq = &dev->q_rx[q];
+ 
+@@ -906,22 +941,9 @@ static void mt76_rx_release_amsdu(struct mt76_phy *phy, enum mt76_rxq_id q)
+ 	 * subframe has a LLC/SNAP header in the location of the destination
+ 	 * address.
+ 	 */
+-	if (skb_shinfo(skb)->frag_list) {
+-		int offset = 0;
+-
+-		if (!(status->flag & RX_FLAG_8023)) {
+-			offset = ieee80211_get_hdrlen_from_skb(skb);
+-
+-			if ((status->flag &
+-			     (RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED)) ==
+-			    RX_FLAG_DECRYPTED)
+-				offset += 8;
+-		}
+-
+-		if (ether_addr_equal(skb->data + offset, rfc1042_header)) {
+-			dev_kfree_skb(skb);
+-			return;
+-		}
++	if (skb_shinfo(skb)->frag_list && !mt76_rx_amsdu_valid(skb)) {
++		dev_kfree_skb(skb);
++		return;
+ 	}
+ 
+ 	/* RRO 3.0 data queue skbs are processed and completed in the context

@@ -11462,7 +11462,7 @@ index 00000000..2f41ad0c
 + 	/*
 + 	 * Assume that HT/VHT transmission on any AC except VO will
 diff --git a/package/kernel/mt76/Makefile b/package/kernel/mt76/Makefile
-index 90271811..783af14a 100644
+index 90271811..614c2ca1 100644
 --- a/package/kernel/mt76/Makefile
 +++ b/package/kernel/mt76/Makefile
 @@ -1,16 +1,16 @@
@@ -11470,7 +11470,7 @@ index 90271811..783af14a 100644
  
  PKG_NAME:=mt76
 -PKG_RELEASE=1
-+PKG_RELEASE:=2
++PKG_RELEASE:=3
  
  PKG_LICENSE:=BSD-3-Clause-Clear
  PKG_LICENSE_FILES:=
@@ -11495,6 +11495,28 @@ index 90271811..783af14a 100644
    FILES:= $(PKG_BUILD_DIR)/mt7996/mt7996e.ko
    AUTOLOAD:=$(call AutoProbe,mt7996e)
  endef
+diff --git a/package/kernel/mt76/patches/.ax3000t-mt76-audit-20261107.json b/package/kernel/mt76/patches/.ax3000t-mt76-audit-20261107.json
+new file mode 100644
+index 00000000..dc93712d
+--- /dev/null
++++ b/package/kernel/mt76/patches/.ax3000t-mt76-audit-20261107.json
+@@ -0,0 +1,16 @@
++{
++  "files": {
++    "950-mt7915-preserve-64-bit-TWT-intervals.patch": "1a2acc5c508d32c6fdc17dc1ae370b4838184f3721537df3973cf4c5a899ebe8",
++    "951-mt7915-validate-RX-descriptors-and-frame-headers.patch": "b810f549f4b9aef4eb68f49085630f3506f5fd2bccce2071fec918d34ce84f28",
++    "952-mt7915-bound-MCU-events-preserve-short-semaphore.patch": "15b030570d400c46ec9507047fe846bab73f427cd1012786cf7c6b4619e59e47",
++    "953-mt7915-complete-truncated-TX-free-events.patch": "1800ffe1ef083669f8f101cced1adbfbc73ff66cf9b42ad3e8750c2ad99fe8a7",
++    "954-mt7915-bound-firmware-log-buffers.patch": "ce7d9e3ada9454a81b861219ac38110b344f6e1195d4e0bc6447ff034462aa14",
++    "955-mt7915-validate-MT7981-MIB-response.patch": "b2163dbf448e50d18aed5387481d38dd204d8391703992601898175c63a0263c",
++    "956-mt76-validate-AMSDU-first-subframe.patch": "91fcdf9797fd4b67425e3fbaf47a3b0e6f210fedd9533c7ed9762a35e0fbce7c",
++    "957-mt7915-skip-recovery-on-MCU-probe-timeout.patch": "269c44bab2defa9df6bffa6f8e08be32b55b16cc19fb733fff54c6d27a15d6d2",
++    "960-mt7915-bound-TX-firmware-DMA-length.patch": "a50d509bd708fee671ff4ebbdc4ea0c9e777ff248bd536b8c2b06a49e0abaca0",
++    "961-mt76-discard-incomplete-DMA-RX-chains.patch": "efa86b6e0a6703cf2feb3793780ee0e3cf074209a0744d57926584daa787a1d2"
++  },
++  "pin": "0936617dc529ff9da0385221d3fa6de732231177",
++  "schema": 1
++}
 diff --git a/package/kernel/mt76/patches/100-wifi-mt76-mt76x02-restart-mac_work-after-a-channel-change.patch b/package/kernel/mt76/patches/100-wifi-mt76-mt76x02-restart-mac_work-after-a-channel-change.patch
 new file mode 100644
 index 00000000..4e6aaf4c
@@ -11645,6 +11667,1011 @@ index 00000000..bcafc252
 + 		.sta_remove = mt76x02_sta_remove,
 + 	};
 + 	struct usb_device *udev = interface_to_usbdev(intf);
+diff --git a/package/kernel/mt76/patches/950-mt7915-preserve-64-bit-TWT-intervals.patch b/package/kernel/mt76/patches/950-mt7915-preserve-64-bit-TWT-intervals.patch
+new file mode 100644
+index 00000000..4e8b3ff5
+--- /dev/null
++++ b/package/kernel/mt76/patches/950-mt7915-preserve-64-bit-TWT-intervals.patch
+@@ -0,0 +1,44 @@
++Subject: [PATCH 1/6] wifi: mt76: mt7915: preserve 64-bit TWT intervals
++
++The peer-controlled mantissa and exponent can produce an interval larger
++than U32_MAX. div_u64_rem takes a u32 divisor and can truncate this value
++to zero or schedule the agreement using an incorrect remainder. Use the
++64-bit divisor/remainder helper and reject zero intervals explicitly.
++
++diff --git a/mt7915/mac.c b/mt7915/mac.c
++index 2a88aa3..ada8c27 100644
++--- a/mt7915/mac.c
+++++ b/mt7915/mac.c
++@@ -2,6 +2,7 @@
++ /* Copyright (C) 2020 MediaTek Inc. */
++ 
++ #include <linux/etherdevice.h>
+++#include <linux/math64.h>
++ #include <linux/timekeeping.h>
++ #include "coredump.h"
++ #include "mt7915.h"
++@@ -2259,7 +2260,7 @@ static int mt7915_mac_check_twt_req(struct ieee80211_twt_setup *twt)
++ 	duration = twt_agrt->min_twt_dur << 8;
++ 
++ 	interval = (u64)mantissa << exp;
++-	if (interval < duration)
+++	if (!interval || interval < duration)
++ 		return -EOPNOTSUPP;
++ 
++ 	return 0;
++@@ -2352,13 +2353,12 @@ void mt7915_mac_add_twt_setup(struct ieee80211_hw *hw,
++ 	if (sta_setup_cmd == TWT_SETUP_CMD_REQUEST ||
++ 	    sta_setup_cmd == TWT_SETUP_CMD_SUGGEST) {
++ 		u64 interval = (u64)le16_to_cpu(twt_agrt->mantissa) << exp;
++-		u64 flow_tsf, curr_tsf;
++-		u32 rem;
+++		u64 flow_tsf, curr_tsf, rem;
++ 
++ 		flow->sched = true;
++ 		flow->start_tsf = mt7915_mac_twt_sched_list_add(dev, flow);
++ 		curr_tsf = __mt7915_get_tsf(hw, msta->vif);
++-		div_u64_rem(curr_tsf - flow->start_tsf, interval, &rem);
+++		div64_u64_rem(curr_tsf - flow->start_tsf, interval, &rem);
++ 		flow_tsf = curr_tsf + interval - rem;
++ 		twt_agrt->twt = cpu_to_le64(flow_tsf);
++ 	} else {
+diff --git a/package/kernel/mt76/patches/951-mt7915-validate-RX-descriptors-and-frame-headers.patch b/package/kernel/mt76/patches/951-mt7915-validate-RX-descriptors-and-frame-headers.patch
+new file mode 100644
+index 00000000..27209931
+--- /dev/null
++++ b/package/kernel/mt76/patches/951-mt7915-validate-RX-descriptors-and-frame-headers.patch
+@@ -0,0 +1,260 @@
++Subject: [PATCH 2/6] wifi: mt76: mt7915: validate RX descriptors and frame headers
++
++Adapt the supplied RC1 RX entry/group guards to current upstream. Bound
++direct accesses by the linear head, not the total fragmented skb length.
++Validate payload and padding before header conversion, CCMP insertion and
++QoS reads. Linearize control skbs before raw-buffer consumers.
++
++Only decode HE radiotap when group 5 supplies the C-RXV, and avoid an
++unneeded rxv[2] read for chips whose group 3 has only two words.
++
++diff --git a/mt76_connac_mac.c b/mt76_connac_mac.c
++index 8481eac8d78382853470b12ee232c673833c4c41..54e32c3dd805d0541bc74d555f9c97304ad39c9d 100644
++--- a/mt76_connac_mac.c
+++++ b/mt76_connac_mac.c
++@@ -1047,13 +1047,12 @@ int mt76_connac2_mac_fill_rx_rate(struct mt76_dev *dev,
++ 				  struct ieee80211_supported_band *sband,
++ 				  __le32 *rxv, u8 *mode)
++ {
++-	u32 v0, v2;
+++	u32 v0;
++ 	u8 stbc, gi, bw, dcm, nss;
++ 	int i, idx;
++ 	bool cck = false;
++ 
++ 	v0 = le32_to_cpu(rxv[0]);
++-	v2 = le32_to_cpu(rxv[2]);
++ 
++ 	idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
++ 	nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
++@@ -1068,6 +1067,8 @@ int mt76_connac2_mac_fill_rx_rate(struct mt76_dev *dev,
++ 			dcm = FIELD_GET(MT_PRXV_DCM, v0);
++ 		bw = FIELD_GET(MT_PRXV_FRAME_MODE, v0);
++ 	} else {
+++		u32 v2 = le32_to_cpu(rxv[2]);
+++
++ 		stbc = FIELD_GET(MT_CRXV_HT_STBC, v2);
++ 		gi = FIELD_GET(MT_CRXV_HT_SHORT_GI, v2);
++ 		*mode = FIELD_GET(MT_CRXV_TX_MODE, v2);
++diff --git a/mt7915/mac.c b/mt7915/mac.c
++index ada8c27db32b5de4af4ec173b72aa9c12c12cc1f..29494fa3a003ea9c78eea7e4b2ab4e1cd1ab86ff 100644
++--- a/mt7915/mac.c
+++++ b/mt7915/mac.c
++@@ -261,6 +261,15 @@ mt7915_wed_check_ppe(struct mt7915_dev *dev, struct mt76_queue *q,
++ 				 msta->wcid.idx);
++ }
++ 
+++static bool
+++mt7915_rx_desc_len_valid(struct sk_buff *skb, const void *data, size_t len)
+++{
+++	const u8 *start = data;
+++	const u8 *end = skb_tail_pointer(skb);
+++
+++	return start >= skb->data && start <= end && len <= end - start;
+++}
+++
++ static int
++ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 		   enum mt76_rxq_id q, u32 *info)
++@@ -271,11 +280,7 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 	struct ieee80211_supported_band *sband;
++ 	__le32 *rxd = (__le32 *)skb->data;
++ 	__le32 *rxv = NULL;
++-	u32 rxd0 = le32_to_cpu(rxd[0]);
++-	u32 rxd1 = le32_to_cpu(rxd[1]);
++-	u32 rxd2 = le32_to_cpu(rxd[2]);
++-	u32 rxd3 = le32_to_cpu(rxd[3]);
++-	u32 rxd4 = le32_to_cpu(rxd[4]);
+++	u32 rxd0, rxd1, rxd2, rxd3, rxd4;
++ 	u32 csum_mask = MT_RXD0_NORMAL_IP_SUM | MT_RXD0_NORMAL_UDP_TCP_SUM;
++ 	bool unicast, insert_ccmp_hdr = false;
++ 	u8 remove_pad, amsdu_info;
++@@ -288,6 +293,16 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 	__le16 fc = 0;
++ 	int idx;
++ 
+++	/* The RXD header is supplied by DMA/firmware, not by mac80211. */
+++	if (unlikely(skb_headlen(skb) < 6 * sizeof(*rxd)))
+++		return -EINVAL;
+++
+++	rxd0 = le32_to_cpu(rxd[0]);
+++	rxd1 = le32_to_cpu(rxd[1]);
+++	rxd2 = le32_to_cpu(rxd[2]);
+++	rxd3 = le32_to_cpu(rxd[3]);
+++	rxd4 = le32_to_cpu(rxd[4]);
+++
++ 	memset(status, 0, sizeof(*status));
++ 
++ 	if ((rxd1 & MT_RXD1_NORMAL_BAND_IDX) && !phy->mt76->band_idx) {
++@@ -358,8 +373,13 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 
++ 	rxd += 6;
++ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_4) {
++-		u32 v0 = le32_to_cpu(rxd[0]);
++-		u32 v2 = le32_to_cpu(rxd[2]);
+++		u32 v0, v2;
+++
+++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
+++						       4 * sizeof(*rxd))))
+++			return -EINVAL;
+++		v0 = le32_to_cpu(rxd[0]);
+++		v2 = le32_to_cpu(rxd[2]);
++ 
++ 		fc = cpu_to_le16(FIELD_GET(MT_RXD6_FRAME_CONTROL, v0));
++ 		qos_ctl = FIELD_GET(MT_RXD8_QOS_CTL, v2);
++@@ -373,6 +393,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_1) {
++ 		u8 *data = (u8 *)rxd;
++ 
+++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
+++						       4 * sizeof(*rxd))))
+++			return -EINVAL;
+++
++ 		if (status->flag & RX_FLAG_DECRYPTED) {
++ 			switch (FIELD_GET(MT_RXD1_NORMAL_SEC_MODE, rxd1)) {
++ 			case MT_CIPHER_AES_CCMP:
++@@ -402,6 +426,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 	}
++ 
++ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_2) {
+++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
+++						       2 * sizeof(*rxd))))
+++			return -EINVAL;
+++
++ 		status->timestamp = le32_to_cpu(rxd[0]);
++ 		status->flag |= RX_FLAG_MACTIME_START;
++ 
++@@ -428,6 +456,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 		u32 v0, v1;
++ 		int ret;
++ 
+++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
+++						       2 * sizeof(*rxd))))
+++			return -EINVAL;
+++
++ 		rxv = rxd;
++ 		rxd += 2;
++ 		if ((u8 *)rxd - skb->data >= skb->len)
++@@ -447,6 +479,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 
++ 		/* RXD Group 5 - C-RXV */
++ 		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
+++			if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
+++							       18 * sizeof(*rxd))))
+++				return -EINVAL;
+++
++ 			rxd += 18;
++ 			if ((u8 *)rxd - skb->data >= skb->len)
++ 				return -EINVAL;
++@@ -468,6 +504,13 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 	}
++ 
++ 	hdr_gap = (u8 *)rxd - skb->data + 2 * remove_pad;
+++	/* Header conversion below accesses the linear head directly. */
+++	if (unlikely(hdr_gap > skb_headlen(skb)))
+++		return -EINVAL;
+++	if (hdr_trans &&
+++	    unlikely(skb_headlen(skb) - hdr_gap < ETH_HLEN))
+++		return -EINVAL;
+++
++ 	if (hdr_trans && ieee80211_has_morefrags(fc)) {
++ 		struct ieee80211_vif *vif;
++ 		int err;
++@@ -487,7 +530,12 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 
++ 		skb_pull(skb, hdr_gap);
++ 		if (!hdr_trans && status->amsdu) {
+++			if (unlikely(skb_headlen(skb) < 2))
+++				return -EINVAL;
++ 			pad_start = ieee80211_get_hdrlen_from_skb(skb);
+++			if (unlikely(!pad_start ||
+++				     skb_headlen(skb) < pad_start + 2))
+++				return -EINVAL;
++ 		} else if (hdr_trans && (rxd2 & MT_RXD2_NORMAL_HDR_TRANS_ERROR)) {
++ 			/*
++ 			 * When header translation failure is indicated,
++@@ -502,6 +550,9 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 				pad_start += 4;
++ 			else
++ 				pad_start = 0;
+++			if (pad_start &&
+++			    unlikely(skb_headlen(skb) < pad_start + 2))
+++				return -EINVAL;
++ 		}
++ 
++ 		if (pad_start) {
++@@ -512,6 +563,15 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 
++ 	if (!hdr_trans) {
++ 		struct ieee80211_hdr *hdr;
+++		unsigned int hdrlen;
+++
+++		/* Validate before CCMP insertion and direct QoS/sequence reads. */
+++		if (unlikely(skb_headlen(skb) < 2))
+++			return -EINVAL;
+++		hdr = (struct ieee80211_hdr *)skb->data;
+++		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+++		if (unlikely(skb_headlen(skb) < hdrlen))
+++			return -EINVAL;
++ 
++ 		if (insert_ccmp_hdr) {
++ 			u8 key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
++@@ -531,7 +591,8 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
++ 				     *info);
++ 	}
++ 
++-	if (rxv && mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
+++	if (rxv && (rxd1 & MT_RXD1_NORMAL_GROUP_5) &&
+++	    mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
++ 		mt76_connac2_mac_decode_he_radiotap(&dev->mt76, skb, rxv, mode);
++ 
++ 	if (!status->wcid || !ieee80211_is_data_qos(fc))
++@@ -559,6 +620,9 @@ mt7915_mac_fill_rx_vector(struct mt7915_dev *dev, struct sk_buff *skb)
++ 	u8 snr;
++ 	int i;
++ 
+++	if (unlikely(skb_headlen(skb) < 26 * sizeof(*rxd)))
+++		goto out;
+++
++ 	band_idx = le32_get_bits(rxv_hdr[1], MT_RXV_HDR_BAND_IDX);
++ 	if (band_idx && !phy->mt76->band_idx) {
++ 		phy = mt7915_ext_phy(dev);
++@@ -1025,9 +1089,13 @@ bool mt7915_rx_check(struct mt76_dev *mdev, void *data, int len)
++ {
++ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
++ 	__le32 *rxd = (__le32 *)data;
++-	__le32 *end = (__le32 *)&rxd[len / 4];
+++	__le32 *end;
++ 	enum rx_pkt_type type;
++ 
+++	if (unlikely(len < 0 || (size_t)len < sizeof(*rxd)))
+++		return false;
+++
+++	end = (__le32 *)&rxd[len / 4];
++ 	type = le32_get_bits(rxd[0], MT_RXD0_PKT_TYPE);
++ 
++ 	switch (type) {
++@@ -1054,10 +1122,22 @@ void mt7915_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
++ {
++ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
++ 	__le32 *rxd = (__le32 *)skb->data;
++-	__le32 *end = (__le32 *)&skb->data[skb->len];
+++	__le32 *end;
++ 	enum rx_pkt_type type;
++ 
+++	if (unlikely(skb_headlen(skb) < sizeof(*rxd))) {
+++		dev_kfree_skb(skb);
+++		return;
+++	}
+++
++ 	type = le32_get_bits(rxd[0], MT_RXD0_PKT_TYPE);
+++	/* Control handlers consume contiguous buffers, unlike normal RX data. */
+++	if (type != PKT_TYPE_NORMAL && unlikely(skb_linearize(skb))) {
+++		dev_kfree_skb(skb);
+++		return;
+++	}
+++	rxd = (__le32 *)skb->data;
+++	end = (__le32 *)&skb->data[skb_headlen(skb)];
++ 
++ 	switch (type) {
++ 	case PKT_TYPE_TXRX_NOTIFY:
+diff --git a/package/kernel/mt76/patches/952-mt7915-bound-MCU-events-preserve-short-semaphore.patch b/package/kernel/mt76/patches/952-mt7915-bound-MCU-events-preserve-short-semaphore.patch
+new file mode 100644
+index 00000000..385e985f
+--- /dev/null
++++ b/package/kernel/mt76/patches/952-mt7915-bound-MCU-events-preserve-short-semaphore.patch
+@@ -0,0 +1,90 @@
++Subject: [PATCH 3/6] wifi: mt76: mt7915: bound MCU events without rejecting semaphore replies
++
++Adapt RC1 event size checks, but keep the 33-byte patch semaphore reply
++accepted by the upstream response parser. Route that reply before using
++the full 36-byte extended header. Linearize before inspecting typed events.
++Check the consumed fields of each unsolicited event before dispatch.
++
++diff --git a/mt7915/mcu.c b/mt7915/mcu.c
++index 659441e..9e64f21 100644
++--- a/mt7915/mcu.c
+++++ b/mt7915/mcu.c
++@@ -430,24 +430,42 @@ mt7915_mcu_rx_ext_event(struct mt7915_dev *dev, struct sk_buff *skb)
++ {
++ 	struct mt76_connac2_mcu_rxd *rxd;
++ 
+++	if (unlikely(skb->len < sizeof(*rxd)))
+++		return;
+++
++ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
++ 	switch (rxd->ext_eid) {
++ 	case MCU_EXT_EVENT_THERMAL_PROTECT:
+++		if (unlikely(skb->len <
+++			     offsetofend(struct mt7915_mcu_thermal_notify, ctrl)))
+++			return;
++ 		mt7915_mcu_rx_thermal_notify(dev, skb);
++ 		break;
++ 	case MCU_EXT_EVENT_RDD_REPORT:
+++		if (unlikely(skb->len <
+++			     offsetofend(struct mt7915_mcu_rdd_report, rdd_idx)))
+++			return;
++ 		mt7915_mcu_rx_radar_detected(dev, skb);
++ 		break;
++ 	case MCU_EXT_EVENT_CSA_NOTIFY:
+++		if (unlikely(skb->len <
+++			     offsetofend(struct mt7915_mcu_csa_notify, band_idx)))
+++			return;
++ 		mt7915_mcu_rx_csa_notify(dev, skb);
++ 		break;
++ 	case MCU_EXT_EVENT_FW_LOG_2_HOST:
++ 		mt7915_mcu_rx_log_message(dev, skb);
++ 		break;
++ 	case MCU_EXT_EVENT_BCC_NOTIFY:
+++		if (unlikely(skb->len <
+++			     offsetofend(struct mt7915_mcu_bcc_notify, band_idx)))
+++			return;
++ 		mt7915_mcu_rx_bcc_notify(dev, skb);
++ 		break;
++ 	case MCU_EXT_EVENT_PS_SYNC:
+++		if (unlikely(skb->len <
+++			     offsetofend(struct mt7915_mcu_ps_notify, wtbl_higher)))
+++			return;
++ 		mt7915_mcu_rx_ps_sync(dev, skb);
++ 		break;
++ 	default:
++@@ -460,6 +478,11 @@ mt7915_mcu_rx_unsolicited_event(struct mt7915_dev *dev, struct sk_buff *skb)
++ {
++ 	struct mt76_connac2_mcu_rxd *rxd;
++ 
+++	if (unlikely(skb->len < sizeof(*rxd))) {
+++		dev_kfree_skb(skb);
+++		return;
+++	}
+++
++ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
++ 	switch (rxd->eid) {
++ 	case MCU_EVENT_EXT:
++@@ -475,7 +498,23 @@ void mt7915_mcu_rx_event(struct mt7915_dev *dev, struct sk_buff *skb)
++ {
++ 	struct mt76_connac2_mcu_rxd *rxd;
++ 
+++	/* PATCH_SEM_CONTROL replies contain a 32-byte header and status byte. */
+++	if (unlikely(skb_linearize(skb) ||
+++		     skb->len < sizeof(*rxd) - 4 + sizeof(u8))) {
+++		dev_kfree_skb(skb);
+++		return;
+++	}
+++
++ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
+++	if (rxd->eid == MCU_EVENT_MT_PATCH_SEM && rxd->seq) {
+++		mt76_mcu_rx_event(&dev->mt76, skb);
+++		return;
+++	}
+++	if (unlikely(skb->len < sizeof(*rxd))) {
+++		dev_kfree_skb(skb);
+++		return;
+++	}
+++
++ 	if ((rxd->ext_eid == MCU_EXT_EVENT_THERMAL_PROTECT ||
++ 	     rxd->ext_eid == MCU_EXT_EVENT_FW_LOG_2_HOST ||
++ 	     rxd->ext_eid == MCU_EXT_EVENT_ASSERT_DUMP ||
+diff --git a/package/kernel/mt76/patches/953-mt7915-complete-truncated-TX-free-events.patch b/package/kernel/mt76/patches/953-mt7915-complete-truncated-TX-free-events.patch
+new file mode 100644
+index 00000000..ec755bdb
+--- /dev/null
++++ b/package/kernel/mt76/patches/953-mt7915-complete-truncated-TX-free-events.patch
+@@ -0,0 +1,111 @@
++Subject: [PATCH 4/6] wifi: mt76: mt7915: complete truncated TX-free events
++
++Reuse the supplied RC1 fix: validate the fixed TX-free header and complete
++entries before reading them. On truncation, drain the local free list and
++run the normal wake/worker completion path, including after partial work.
++Also cap the two packed v3 IDs by the number of completions left so
++a malformed final word cannot release an extra token.
++
++diff --git a/mt7915/mac.c b/mt7915/mac.c
++index 29494fa..d699bc9 100644
++--- a/mt7915/mac.c
+++++ b/mt7915/mac.c
++@@ -933,19 +933,24 @@ static void
++ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
++ {
++ 	struct mt76_connac_tx_free *free = data;
++-	__le32 *tx_info = (__le32 *)(data + sizeof(*free));
+++	__le32 *tx_info;
++ 	struct mt76_dev *mdev = &dev->mt76;
++ 	struct mt76_txwi_cache *txwi;
++ 	struct ieee80211_sta *sta = NULL;
++ 	struct mt76_wcid *wcid = NULL;
++ 	LIST_HEAD(free_list);
++-	void *end = data + len;
+++	u8 *end;
++ 	bool v3, wake = false;
++ 	u16 total, count = 0;
++-	u32 txd = le32_to_cpu(free->txd);
+++	u32 txd;
++ 	__le32 *cur_info;
++ 
++ 	mt7915_mac_tx_free_prepare(dev);
+++	if (unlikely(len < 0 || (size_t)len < sizeof(*free)))
+++		goto out;
+++	tx_info = (__le32 *)(data + sizeof(*free));
+++	end = (u8 *)data + len;
+++	txd = le32_to_cpu(free->txd);
++ 
++ 	total = le16_get_bits(free->ctrl, MT_TX_FREE_MSDU_CNT);
++ 	v3 = (FIELD_GET(MT_TX_FREE_VER, txd) == 0x4);
++@@ -954,8 +959,12 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
++ 		u32 msdu, info;
++ 		u8 i;
++ 
++-		if (WARN_ON_ONCE((void *)cur_info >= end))
++-			return;
+++		if (unlikely((u8 *)cur_info > end ||
+++			     (size_t)(end - (u8 *)cur_info) < sizeof(*cur_info))) {
+++			dev_dbg_ratelimited(dev->mt76.dev,
+++					    "short TX-free event\n");
+++			goto out;
+++		}
++ 
++ 		/*
++ 		 * 1'b1: new wcid pair.
++@@ -998,7 +1007,7 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
++ 		if (v3 && (info & MT_TX_FREE_MPDU_HEADER_V3))
++ 			continue;
++ 
++-		for (i = 0; i < 1 + v3; i++) {
+++		for (i = 0; i < 1 + v3 && count < total; i++) {
++ 			if (v3) {
++ 				msdu = (info >> (15 * i)) & MT_TX_FREE_MSDU_ID_V3;
++ 				if (msdu == MT_TX_FREE_MSDU_ID_V3)
++@@ -1015,6 +1024,7 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
++ 		}
++ 	}
++ 
+++out:
++ 	mt7915_mac_tx_free_done(dev, &free_list, wake);
++ }
++ 
++@@ -1022,18 +1032,26 @@ static void
++ mt7915_mac_tx_free_v0(struct mt7915_dev *dev, void *data, int len)
++ {
++ 	struct mt76_connac_tx_free *free = data;
++-	__le16 *info = (__le16 *)(data + sizeof(*free));
+++	__le16 *info;
++ 	struct mt76_dev *mdev = &dev->mt76;
++-	void *end = data + len;
+++	u8 *end;
++ 	LIST_HEAD(free_list);
++ 	bool wake = false;
++ 	u8 i, count;
++ 
++ 	mt7915_mac_tx_free_prepare(dev);
+++	if (unlikely(len < 0 || (size_t)len < sizeof(*free)))
+++		goto out;
+++	info = (__le16 *)(data + sizeof(*free));
+++	end = (u8 *)data + len;
++ 
++ 	count = FIELD_GET(MT_TX_FREE_MSDU_CNT_V0, le16_to_cpu(free->ctrl));
++-	if (WARN_ON_ONCE((void *)&info[count] > end))
++-		return;
+++	if (unlikely((size_t)(end - (u8 *)info) <
+++		     (size_t)count * sizeof(*info))) {
+++		dev_dbg_ratelimited(dev->mt76.dev,
+++				    "short TX-free v0 event\n");
+++		goto out;
+++	}
++ 
++ 	for (i = 0; i < count; i++) {
++ 		struct mt76_txwi_cache *txwi;
++@@ -1046,6 +1064,7 @@ mt7915_mac_tx_free_v0(struct mt7915_dev *dev, void *data, int len)
++ 		mt76_connac2_txwi_free(mdev, txwi, NULL, &free_list);
++ 	}
++ 
+++out:
++ 	mt7915_mac_tx_free_done(dev, &free_list, wake);
++ }
++ 
+diff --git a/package/kernel/mt76/patches/954-mt7915-bound-firmware-log-buffers.patch b/package/kernel/mt76/patches/954-mt7915-bound-firmware-log-buffers.patch
+new file mode 100644
+index 00000000..eba22c78
+--- /dev/null
++++ b/package/kernel/mt76/patches/954-mt7915-bound-firmware-log-buffers.patch
+@@ -0,0 +1,39 @@
++Subject: [PATCH 5/6] wifi: mt76: mt7915: bound firmware log buffers
++
++Reuse the supplied RC1 log-length checks. Reject short magic/monitor
++headers and invalid relay lengths before reading or copying the data.
++
++diff --git a/mt7915/debugfs.c b/mt7915/debugfs.c
++index 7e561a4..abf8879 100644
++--- a/mt7915/debugfs.c
+++++ b/mt7915/debugfs.c
++@@ -1361,6 +1361,10 @@ mt7915_debugfs_write_fwlog(struct mt7915_dev *dev, const void *hdr, int hdrlen,
++ 	unsigned long flags;
++ 	void *dest;
++ 
+++	if (unlikely(hdrlen < 0 || len < 0 ||
+++		     hdrlen > INT_MAX - len - 4))
+++		return;
+++
++ 	spin_lock_irqsave(&lock, flags);
++ 	dest = relay_reserve(dev->relay_fwlog, hdrlen + len + 4);
++ 	if (dest) {
++@@ -1392,6 +1396,8 @@ void mt7915_debugfs_rx_fw_monitor(struct mt7915_dev *dev, const void *data, int
++ 
++ 	if (!dev->relay_fwlog)
++ 		return;
+++	if (unlikely(len < 0 || (size_t)len < sizeof(__le16)))
+++		return;
++ 
++ 	hdr.timestamp = cpu_to_le32(mt76_rr(dev, MT_LPON_FRCR(0)));
++ 	hdr.len = *(__le16 *)data;
++@@ -1400,6 +1406,9 @@ void mt7915_debugfs_rx_fw_monitor(struct mt7915_dev *dev, const void *data, int
++ 
++ bool mt7915_debugfs_rx_log(struct mt7915_dev *dev, const void *data, int len)
++ {
+++	if (unlikely(len < 0 || (size_t)len < sizeof(__le32)))
+++		return false;
+++
++ 	if (get_unaligned_le32(data) != FW_BIN_LOG_MAGIC)
++ 		return false;
++ 
+diff --git a/package/kernel/mt76/patches/955-mt7915-validate-MT7981-MIB-response.patch b/package/kernel/mt76/patches/955-mt7915-validate-MT7981-MIB-response.patch
+new file mode 100644
+index 00000000..d236845e
+--- /dev/null
++++ b/package/kernel/mt76/patches/955-mt7915-validate-MT7981-MIB-response.patch
+@@ -0,0 +1,78 @@
++Subject: [PATCH 6/6] wifi: mt76: mt7915: validate MT7981 channel MIB replies
++
++The MCU sequence is only four bits. On MT7981 an unrelated late reply
++can match a GET_MIB_INFO request and provide bytes long enough to pass
++the existing length check. Treat the echoed offsets as an additional
++check before reading or accumulating the counters. Retry only an
++invalid MT7981 payload, with at most three requests in all. Keep the
++minimum-size check so a firmware trailer remains valid.
++
++Keep the matcher in this consumer and preserve the layouts of other
++chips. Zero the unused data fields in outgoing requests and keep the
++selected offsets local to the call.
++
++Link: https://github.com/openwrt/mt76/issues/1135
++
++diff --git a/mt7915/mcu.c b/mt7915/mcu.c
++index 9e64f21..d30a11e 100644
++--- a/mt7915/mcu.c
+++++ b/mt7915/mcu.c
++@@ -3262,10 +3262,11 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
++ 	struct mt76_channel_state *state = phy->mt76->chan_state;
++ 	struct mt76_channel_state *state_ts = &phy->state_ts;
++ 	struct mt7915_dev *dev = phy->dev;
++-	struct mt7915_mcu_mib *res, req[5];
+++	struct mt7915_mcu_mib *res, req[5] = {};
++ 	struct sk_buff *skb;
++-	static const u32 *offs;
++-	int i, ret, len, offs_cc;
+++	bool check_offsets = is_mt7981(&dev->mt76);
+++	const u32 *offs;
+++	int i, ret, len, offs_cc, attempt;
++ 	u64 cc_tx;
++ 
++ 	/* strict order */
++@@ -3297,17 +3298,35 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
++ 		req[i].offs = cpu_to_le32(offs[i]);
++ 	}
++ 
++-	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_CMD(GET_MIB_INFO),
++-					req, len * sizeof(req[0]), true, &skb);
++-	if (ret)
++-		return ret;
++-	if (skb->len < offs_cc + len * sizeof(*res)) {
+++	/*
+++	 * On MT7981, an unrelated late reply can match a reused sequence
+++	 * number. Check the echoed offsets before using any survey counters.
+++	 */
+++	for (attempt = 1; ; attempt++) {
+++		ret = mt76_mcu_send_and_get_msg(&dev->mt76,
+++					       MCU_EXT_CMD(GET_MIB_INFO),
+++					       req, len * sizeof(req[0]), true,
+++					       &skb);
+++		if (ret)
+++			return ret;
+++
+++		if (skb_headlen(skb) >= offs_cc + len * sizeof(*res)) {
+++			res = (struct mt7915_mcu_mib *)(skb->data + offs_cc);
+++			if (!check_offsets)
+++				break;
+++
+++			for (i = 0; i < len; i++)
+++				if (res[i].offs != req[i].offs)
+++					break;
+++			if (i == len)
+++				break;
+++		}
+++
++ 		dev_kfree_skb(skb);
++-		return -EINVAL;
+++		if (!check_offsets || attempt == 3)
+++			return -EINVAL;
++ 	}
++ 
++-	res = (struct mt7915_mcu_mib *)(skb->data + offs_cc);
++-
++ #define __res_u64(s) le64_to_cpu(res[s].data)
++ 	/* subtract Tx backoff time from Tx duration for MT7915 */
++ 	if (is_mt7915(&dev->mt76)) {
+diff --git a/package/kernel/mt76/patches/956-mt76-validate-AMSDU-first-subframe.patch b/package/kernel/mt76/patches/956-mt76-validate-AMSDU-first-subframe.patch
+new file mode 100644
+index 00000000..5aa2685e
+--- /dev/null
++++ b/package/kernel/mt76/patches/956-mt76-validate-AMSDU-first-subframe.patch
+@@ -0,0 +1,89 @@
++Subject: [PATCH] wifi: mt76: validate the A-MSDU prefix within the first skb
++
++The RFC 1042 check assumes the first subframe starts in the linear
++portion of the skb and has six available bytes. Also, for raw HE and
++EHT frames, the data pointer can start at radiotap metadata instead
++of the 802.11 header.
++
++Find the 802.11 header after the metadata, then read the destination
++prefix with an skb accessor that handles non-linear data. Drop the
++aggregate if the first skb is too short or begins with RFC 1042. Keep
++the existing decrypted-IV handling and multi-subframe check scope.
++
++diff --git a/mac80211.c b/mac80211.c
++index 41d3636..fe3fddc 100644
++--- a/mac80211.c
+++++ b/mac80211.c
++@@ -889,10 +889,45 @@ struct mt76_phy *mt76_vif_phy(struct ieee80211_hw *hw,
++ }
++ EXPORT_SYMBOL_GPL(mt76_vif_phy);
++ 
+++static bool mt76_rx_amsdu_valid(struct sk_buff *skb)
+++{
+++	const struct mt76_rx_status *status = (const void *)skb->cb;
+++	u32 flags = status->flag;
+++	u8 buf[ETH_ALEN];
+++	const u8 *addr;
+++	int offset = 0;
+++
+++	if (!(flags & RX_FLAG_8023)) {
+++		__le16 fc;
+++
+++		if (flags & RX_FLAG_RADIOTAP_TLV_AT_END) {
+++			/* The EHT decoder saves the MAC header before pushing TLVs. */
+++			if (!skb_mac_header_was_set(skb))
+++				return false;
+++			offset = skb_mac_offset(skb);
+++		} else {
+++			if (flags & RX_FLAG_RADIOTAP_HE)
+++				offset += sizeof(struct ieee80211_radiotap_he);
+++			if (flags & RX_FLAG_RADIOTAP_HE_MU)
+++				offset += sizeof(struct ieee80211_radiotap_he_mu);
+++		}
+++
+++		if (offset < 0 || skb_copy_bits(skb, offset, &fc, sizeof(fc)))
+++			return false;
+++		offset += ieee80211_hdrlen(fc);
+++		if ((flags & (RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED)) ==
+++		    RX_FLAG_DECRYPTED)
+++			offset += 8;
+++	}
+++
+++	/* The chained subframes are not included in the head skb's len. */
+++	addr = skb_header_pointer(skb, offset, sizeof(buf), buf);
+++	return addr && memcmp(addr, rfc1042_header, sizeof(buf)) != 0;
+++}
+++
++ static void mt76_rx_release_amsdu(struct mt76_phy *phy, enum mt76_rxq_id q)
++ {
++ 	struct sk_buff *skb = phy->rx_amsdu[q].head;
++-	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
++ 	struct mt76_dev *dev = phy->dev;
++ 	struct mt76_queue *rxq = &dev->q_rx[q];
++ 
++@@ -906,22 +941,9 @@ static void mt76_rx_release_amsdu(struct mt76_phy *phy, enum mt76_rxq_id q)
++ 	 * subframe has a LLC/SNAP header in the location of the destination
++ 	 * address.
++ 	 */
++-	if (skb_shinfo(skb)->frag_list) {
++-		int offset = 0;
++-
++-		if (!(status->flag & RX_FLAG_8023)) {
++-			offset = ieee80211_get_hdrlen_from_skb(skb);
++-
++-			if ((status->flag &
++-			     (RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED)) ==
++-			    RX_FLAG_DECRYPTED)
++-				offset += 8;
++-		}
++-
++-		if (ether_addr_equal(skb->data + offset, rfc1042_header)) {
++-			dev_kfree_skb(skb);
++-			return;
++-		}
+++	if (skb_shinfo(skb)->frag_list && !mt76_rx_amsdu_valid(skb)) {
+++		dev_kfree_skb(skb);
+++		return;
++ 	}
++ 
++ 	/* RRO 3.0 data queue skbs are processed and completed in the context
+diff --git a/package/kernel/mt76/patches/957-mt7915-skip-recovery-on-MCU-probe-timeout.patch b/package/kernel/mt76/patches/957-mt7915-skip-recovery-on-MCU-probe-timeout.patch
+new file mode 100644
+index 00000000..a1a2310d
+--- /dev/null
++++ b/package/kernel/mt76/patches/957-mt7915-skip-recovery-on-MCU-probe-timeout.patch
+@@ -0,0 +1,28 @@
++Subject: [PATCH] wifi: mt76: mt7915: skip recovery on MCU probe timeout
++
++The MCU handshake can time out before mt76_register_device()
++initializes the primary PHY transmit list. The response timeout
++handler can queue the full recovery worker, which assumes that the
++list and mac80211 device are ready. mt7915_reset() already uses
++hw_init_done to guard the corresponding interrupt-driven recovery.
++
++Return the probe error without scheduling recovery before hardware
++initialization finishes. Runtime timeouts continue to request reset.
++
++Link: https://github.com/openwrt/openwrt/issues/25819
++
++diff --git a/mt7915/mcu.c b/mt7915/mcu.c
++index 1d845cf..7734d79 100644
++--- a/mt7915/mcu.c
+++++ b/mt7915/mcu.c
++@@ -165,6 +165,10 @@ mt7915_mcu_parse_response(struct mt76_dev *mdev, int cmd,
++ 		dev_err(mdev->dev, "Message %08x (seq %d) timeout\n",
++ 			cmd, seq);
++ 
+++		/* The recovery worker requires a registered device. */
+++		if (!dev->recovery.hw_init_done)
+++			return -ETIMEDOUT;
+++
++ 		if (!test_and_set_bit(MT76_MCU_RESET, &dev->mphy.state)) {
++ 			dev->recovery.restart = true;
++ 			wake_up(&dev->mt76.mcu.wait);
+diff --git a/package/kernel/mt76/patches/960-mt7915-bound-TX-firmware-DMA-length.patch b/package/kernel/mt76/patches/960-mt7915-bound-TX-firmware-DMA-length.patch
+new file mode 100644
+index 00000000..daae17b5
+--- /dev/null
++++ b/package/kernel/mt76/patches/960-mt7915-bound-TX-firmware-DMA-length.patch
+@@ -0,0 +1,26 @@
++Subject: [PATCH] wifi: mt76: mt7915: bound the firmware DMA preview length
++
++The TX DMA code maps skb_headlen(skb) bytes before calling
++mt7915_tx_prepare_skb(). The firmware header preview descriptor
++then unconditionally requests MT_CT_PARSE_LEN bytes even when
++the first DMA mapping is shorter.
++
++Cap the preview length to the existing mapping. The firmware TXP
++still records the original buffer lengths for the actual packet.
++
++Based on the posted patch by Joshua Klinesmith.
++Link: https://lore.kernel.org/linux-wireless/20260406184556.8245-3-joshuaklinesmith@gmail.com/
++
++diff --git a/mt7915/mac.c b/mt7915/mac.c
++index 06cddff..721f8d4 100644
++--- a/mt7915/mac.c
+++++ b/mt7915/mac.c
++@@ -799,7 +799,7 @@ int mt7915_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
++ 	tx_info->skb = NULL;
++ 
++ 	/* pass partial skb header to fw */
++-	tx_info->buf[1].len = MT_CT_PARSE_LEN;
+++	tx_info->buf[1].len = min_t(u16, MT_CT_PARSE_LEN, tx_info->buf[1].len);
++ 	tx_info->buf[1].skip_unmap = true;
++ 	tx_info->nbuf = MT_CT_DMA_BUF_NUM;
++ 
+diff --git a/package/kernel/mt76/patches/961-mt76-discard-incomplete-DMA-RX-chains.patch b/package/kernel/mt76/patches/961-mt76-discard-incomplete-DMA-RX-chains.patch
+new file mode 100644
+index 00000000..3689965e
+--- /dev/null
++++ b/package/kernel/mt76/patches/961-mt76-discard-incomplete-DMA-RX-chains.patch
+@@ -0,0 +1,180 @@
++Subject: [PATCH] wifi: mt76: discard incomplete DMA receive chains
++
++A dropped continuation can leave rx_head pending, allowing a later
++descriptor to complete a packet whose bytes are missing. A failed
++first buffer can also leave a continuation to be parsed as a new
++packet. Missing WED tokens and an exhausted skb fragment array have
++the same framing problem.
++
++Discard the packet and its remaining DMA descriptors through the
++last-section bit, including across polls. Count consumed descriptors
++against the poll budget even when no packet can be delivered. Clear
++the discard state when the RX queue is cleaned up.
++
++diff --git a/dma.c b/dma.c
++index a67880a..24fae7a 100644
++--- a/dma.c
+++++ b/dma.c
++@@ -473,6 +473,11 @@ mt76_dma_get_rxdmad_c_buf(struct mt76_dev *dev, struct mt76_queue *q,
++ 	u8 ind_reason;
++ 	void *buf;
++ 
+++	if (len)
+++		*len = FIELD_GET(RRO_RXDMAD_DATA1_SDL0_MASK, data1);
+++	if (more)
+++		*more = !FIELD_GET(RRO_RXDMAD_DATA1_LS_MASK, data1);
+++
++ 	rx_token_id = FIELD_GET(RRO_RXDMAD_DATA2_RX_TOKEN_ID_MASK, data2);
++ 	t = mt76_rx_token_release(dev, rx_token_id);
++ 	if (!t)
++@@ -483,11 +488,6 @@ mt76_dma_get_rxdmad_c_buf(struct mt76_dev *dev, struct mt76_queue *q,
++ 				SKB_WITH_OVERHEAD(q->buf_size),
++ 				page_pool_get_dma_dir(q->page_pool));
++ 
++-	if (len)
++-		*len = FIELD_GET(RRO_RXDMAD_DATA1_SDL0_MASK, data1);
++-	if (more)
++-		*more = !FIELD_GET(RRO_RXDMAD_DATA1_LS_MASK, data1);
++-
++ 	buf = t->ptr;
++ 	ind_reason = FIELD_GET(RRO_RXDMAD_DATA2_IND_REASON_MASK, data2);
++ 	if (ind_reason == MT_DMA_WED_IND_REASON_REPEAT ||
++@@ -535,8 +535,11 @@ mt76_dma_get_buf(struct mt76_dev *dev, struct mt76_queue *q, int idx,
++ 		u32 token = FIELD_GET(MT_DMA_CTL_TOKEN, buf1);
++ 		struct mt76_txwi_cache *t = mt76_rx_token_release(dev, token);
++ 
++-		if (!t)
++-			return NULL;
+++		if (!t) {
+++			/* The descriptor was consumed even without a buffer. */
+++			buf = flush ? NULL : ERR_PTR(-EAGAIN);
+++			goto done;
+++		}
++ 
++ 		dma_sync_single_for_cpu(dev->dma_dev, t->dma_addr,
++ 				SKB_WITH_OVERHEAD(q->buf_size),
++@@ -924,6 +927,7 @@ mt76_dma_rx_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
++ 		dev_kfree_skb(q->rx_head);
++ 		q->rx_head = NULL;
++ 	}
+++	q->rx_drop = false;
++ 
++ 	spin_unlock_bh(&q->lock);
++ }
++@@ -972,29 +976,20 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
++ 
++ static void
++ mt76_add_fragment(struct mt76_dev *dev, struct mt76_queue *q, void *data,
++-		  int len, bool more, u32 info, bool allow_direct)
+++		  int len, bool more, u32 info)
++ {
++ 	struct sk_buff *skb = q->rx_head;
++ 	struct skb_shared_info *shinfo = skb_shinfo(skb);
++-	int nr_frags = shinfo->nr_frags;
++-
++-	if (nr_frags < ARRAY_SIZE(shinfo->frags)) {
++-		struct page *page = virt_to_head_page(data);
++-		int offset = data - page_address(page) + q->buf_offset;
+++	struct page *page = virt_to_head_page(data);
+++	int offset = data - page_address(page) + q->buf_offset;
++ 
++-		skb_add_rx_frag(skb, nr_frags, page, offset, len, q->buf_size);
++-	} else {
++-		mt76_put_page_pool_buf(data, allow_direct);
++-	}
+++	skb_add_rx_frag(skb, shinfo->nr_frags, page, offset, len, q->buf_size);
++ 
++ 	if (more)
++ 		return;
++ 
++ 	q->rx_head = NULL;
++-	if (nr_frags < ARRAY_SIZE(shinfo->frags))
++-		dev->drv->rx_skb(dev, q - dev->q_rx, skb, &info);
++-	else
++-		dev_kfree_skb(skb);
+++	dev->drv->rx_skb(dev, q - dev->q_rx, skb, &info);
++ }
++ 
++ static int
++@@ -1032,21 +1027,19 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
++ 		if (!data)
++ 			break;
++ 
++-		if (PTR_ERR(data) == -EAGAIN) {
++-			done++;
++-			continue;
++-		}
+++		/* Bound work even for fragmented and discarded frames. */
+++		done++;
+++		if (IS_ERR(data))
+++			goto drop_chain;
++ 
++ 		if (mt76_queue_is_wed_rro_ind(q) && dev->drv->rx_rro_ind_process)
++ 			dev->drv->rx_rro_ind_process(dev, data);
++ 
++ 		if (mt76_queue_is_wed_rro(q) &&
++-		    !mt76_queue_is_wed_rro_rxdmad_c(q)) {
++-			done++;
+++		    !mt76_queue_is_wed_rro_rxdmad_c(q))
++ 			continue;
++-		}
++ 
++-		if (drop)
+++		if (drop || q->rx_drop)
++ 			goto free_frag;
++ 
++ 		if (q->rx_head)
++@@ -1054,15 +1047,15 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
++ 		else
++ 			data_len = SKB_WITH_OVERHEAD(q->buf_size);
++ 
++-		if (data_len < len + q->buf_offset) {
++-			dev_kfree_skb(q->rx_head);
++-			q->rx_head = NULL;
+++		if (len <= 0 || len > data_len - q->buf_offset)
++ 			goto free_frag;
++-		}
++ 
++ 		if (q->rx_head) {
++-			mt76_add_fragment(dev, q, data, len, more, info,
++-					  allow_direct);
+++			struct skb_shared_info *shinfo = skb_shinfo(q->rx_head);
+++
+++			if (shinfo->nr_frags >= ARRAY_SIZE(shinfo->frags))
+++				goto free_frag;
+++			mt76_add_fragment(dev, q, data, len, more, info);
++ 			continue;
++ 		}
++ 
++@@ -1080,7 +1073,6 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
++ 		*(u32 *)skb->cb = info;
++ 
++ 		__skb_put(skb, len);
++-		done++;
++ 
++ 		if (more) {
++ 			q->rx_head = skb;
++@@ -1092,6 +1084,11 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
++ 
++ free_frag:
++ 		mt76_put_page_pool_buf(data, allow_direct);
+++drop_chain:
+++		/* Never join a discarded packet to another DMA buffer. */
+++		dev_kfree_skb(q->rx_head);
+++		q->rx_head = NULL;
+++		q->rx_drop = more;
++ 	}
++ 
++ 	mt76_dma_rx_fill(dev, q, true);
++diff --git a/mt76.h b/mt76.h
++index 63ba188..d3eca5a 100644
++--- a/mt76.h
+++++ b/mt76.h
++@@ -259,6 +259,7 @@ struct mt76_queue {
++ 	int buf_size;
++ 	bool stopped;
++ 	bool blocked;
+++	bool rx_drop;
++ 
++ 	u8 buf_offset;
++ 	u16 flags;
 diff --git a/target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch b/target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch
 deleted file mode 100644
 index 8c9d29d2..00000000

@@ -1,0 +1,16 @@
+{
+  "files": {
+    "950-mt7915-preserve-64-bit-TWT-intervals.patch": "1a2acc5c508d32c6fdc17dc1ae370b4838184f3721537df3973cf4c5a899ebe8",
+    "951-mt7915-validate-RX-descriptors-and-frame-headers.patch": "b810f549f4b9aef4eb68f49085630f3506f5fd2bccce2071fec918d34ce84f28",
+    "952-mt7915-bound-MCU-events-preserve-short-semaphore.patch": "15b030570d400c46ec9507047fe846bab73f427cd1012786cf7c6b4619e59e47",
+    "953-mt7915-complete-truncated-TX-free-events.patch": "1800ffe1ef083669f8f101cced1adbfbc73ff66cf9b42ad3e8750c2ad99fe8a7",
+    "954-mt7915-bound-firmware-log-buffers.patch": "ce7d9e3ada9454a81b861219ac38110b344f6e1195d4e0bc6447ff034462aa14",
+    "955-mt7915-validate-MT7981-MIB-response.patch": "b2163dbf448e50d18aed5387481d38dd204d8391703992601898175c63a0263c",
+    "956-mt76-validate-AMSDU-first-subframe.patch": "91fcdf9797fd4b67425e3fbaf47a3b0e6f210fedd9533c7ed9762a35e0fbce7c",
+    "957-mt7915-skip-recovery-on-MCU-probe-timeout.patch": "269c44bab2defa9df6bffa6f8e08be32b55b16cc19fb733fff54c6d27a15d6d2",
+    "960-mt7915-bound-TX-firmware-DMA-length.patch": "a50d509bd708fee671ff4ebbdc4ea0c9e777ff248bd536b8c2b06a49e0abaca0",
+    "961-mt76-discard-incomplete-DMA-RX-chains.patch": "efa86b6e0a6703cf2feb3793780ee0e3cf074209a0744d57926584daa787a1d2"
+  },
+  "pin": "0936617dc529ff9da0385221d3fa6de732231177",
+  "schema": 1
+}

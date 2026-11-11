@@ -1,0 +1,78 @@
+Subject: [PATCH 6/6] wifi: mt76: mt7915: validate MT7981 channel MIB replies
+
+The MCU sequence is only four bits. On MT7981 an unrelated late reply
+can match a GET_MIB_INFO request and provide bytes long enough to pass
+the existing length check. Treat the echoed offsets as an additional
+check before reading or accumulating the counters. Retry only an
+invalid MT7981 payload, with at most three requests in all. Keep the
+minimum-size check so a firmware trailer remains valid.
+
+Keep the matcher in this consumer and preserve the layouts of other
+chips. Zero the unused data fields in outgoing requests and keep the
+selected offsets local to the call.
+
+Link: https://github.com/openwrt/mt76/issues/1135
+
+diff --git a/mt7915/mcu.c b/mt7915/mcu.c
+index 9e64f21..d30a11e 100644
+--- a/mt7915/mcu.c
++++ b/mt7915/mcu.c
+@@ -3262,10 +3262,11 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
+ 	struct mt76_channel_state *state = phy->mt76->chan_state;
+ 	struct mt76_channel_state *state_ts = &phy->state_ts;
+ 	struct mt7915_dev *dev = phy->dev;
+-	struct mt7915_mcu_mib *res, req[5];
++	struct mt7915_mcu_mib *res, req[5] = {};
+ 	struct sk_buff *skb;
+-	static const u32 *offs;
+-	int i, ret, len, offs_cc;
++	bool check_offsets = is_mt7981(&dev->mt76);
++	const u32 *offs;
++	int i, ret, len, offs_cc, attempt;
+ 	u64 cc_tx;
+ 
+ 	/* strict order */
+@@ -3297,17 +3298,35 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
+ 		req[i].offs = cpu_to_le32(offs[i]);
+ 	}
+ 
+-	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_CMD(GET_MIB_INFO),
+-					req, len * sizeof(req[0]), true, &skb);
+-	if (ret)
+-		return ret;
+-	if (skb->len < offs_cc + len * sizeof(*res)) {
++	/*
++	 * On MT7981, an unrelated late reply can match a reused sequence
++	 * number. Check the echoed offsets before using any survey counters.
++	 */
++	for (attempt = 1; ; attempt++) {
++		ret = mt76_mcu_send_and_get_msg(&dev->mt76,
++					       MCU_EXT_CMD(GET_MIB_INFO),
++					       req, len * sizeof(req[0]), true,
++					       &skb);
++		if (ret)
++			return ret;
++
++		if (skb_headlen(skb) >= offs_cc + len * sizeof(*res)) {
++			res = (struct mt7915_mcu_mib *)(skb->data + offs_cc);
++			if (!check_offsets)
++				break;
++
++			for (i = 0; i < len; i++)
++				if (res[i].offs != req[i].offs)
++					break;
++			if (i == len)
++				break;
++		}
++
+ 		dev_kfree_skb(skb);
+-		return -EINVAL;
++		if (!check_offsets || attempt == 3)
++			return -EINVAL;
+ 	}
+ 
+-	res = (struct mt7915_mcu_mib *)(skb->data + offs_cc);
+-
+ #define __res_u64(s) le64_to_cpu(res[s].data)
+ 	/* subtract Tx backoff time from Tx duration for MT7915 */
+ 	if (is_mt7915(&dev->mt76)) {

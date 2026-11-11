@@ -1,0 +1,180 @@
+Subject: [PATCH] wifi: mt76: discard incomplete DMA receive chains
+
+A dropped continuation can leave rx_head pending, allowing a later
+descriptor to complete a packet whose bytes are missing. A failed
+first buffer can also leave a continuation to be parsed as a new
+packet. Missing WED tokens and an exhausted skb fragment array have
+the same framing problem.
+
+Discard the packet and its remaining DMA descriptors through the
+last-section bit, including across polls. Count consumed descriptors
+against the poll budget even when no packet can be delivered. Clear
+the discard state when the RX queue is cleaned up.
+
+diff --git a/dma.c b/dma.c
+index a67880a..24fae7a 100644
+--- a/dma.c
++++ b/dma.c
+@@ -473,6 +473,11 @@ mt76_dma_get_rxdmad_c_buf(struct mt76_dev *dev, struct mt76_queue *q,
+ 	u8 ind_reason;
+ 	void *buf;
+ 
++	if (len)
++		*len = FIELD_GET(RRO_RXDMAD_DATA1_SDL0_MASK, data1);
++	if (more)
++		*more = !FIELD_GET(RRO_RXDMAD_DATA1_LS_MASK, data1);
++
+ 	rx_token_id = FIELD_GET(RRO_RXDMAD_DATA2_RX_TOKEN_ID_MASK, data2);
+ 	t = mt76_rx_token_release(dev, rx_token_id);
+ 	if (!t)
+@@ -483,11 +488,6 @@ mt76_dma_get_rxdmad_c_buf(struct mt76_dev *dev, struct mt76_queue *q,
+ 				SKB_WITH_OVERHEAD(q->buf_size),
+ 				page_pool_get_dma_dir(q->page_pool));
+ 
+-	if (len)
+-		*len = FIELD_GET(RRO_RXDMAD_DATA1_SDL0_MASK, data1);
+-	if (more)
+-		*more = !FIELD_GET(RRO_RXDMAD_DATA1_LS_MASK, data1);
+-
+ 	buf = t->ptr;
+ 	ind_reason = FIELD_GET(RRO_RXDMAD_DATA2_IND_REASON_MASK, data2);
+ 	if (ind_reason == MT_DMA_WED_IND_REASON_REPEAT ||
+@@ -535,8 +535,11 @@ mt76_dma_get_buf(struct mt76_dev *dev, struct mt76_queue *q, int idx,
+ 		u32 token = FIELD_GET(MT_DMA_CTL_TOKEN, buf1);
+ 		struct mt76_txwi_cache *t = mt76_rx_token_release(dev, token);
+ 
+-		if (!t)
+-			return NULL;
++		if (!t) {
++			/* The descriptor was consumed even without a buffer. */
++			buf = flush ? NULL : ERR_PTR(-EAGAIN);
++			goto done;
++		}
+ 
+ 		dma_sync_single_for_cpu(dev->dma_dev, t->dma_addr,
+ 				SKB_WITH_OVERHEAD(q->buf_size),
+@@ -924,6 +927,7 @@ mt76_dma_rx_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
+ 		dev_kfree_skb(q->rx_head);
+ 		q->rx_head = NULL;
+ 	}
++	q->rx_drop = false;
+ 
+ 	spin_unlock_bh(&q->lock);
+ }
+@@ -972,29 +976,20 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
+ 
+ static void
+ mt76_add_fragment(struct mt76_dev *dev, struct mt76_queue *q, void *data,
+-		  int len, bool more, u32 info, bool allow_direct)
++		  int len, bool more, u32 info)
+ {
+ 	struct sk_buff *skb = q->rx_head;
+ 	struct skb_shared_info *shinfo = skb_shinfo(skb);
+-	int nr_frags = shinfo->nr_frags;
+-
+-	if (nr_frags < ARRAY_SIZE(shinfo->frags)) {
+-		struct page *page = virt_to_head_page(data);
+-		int offset = data - page_address(page) + q->buf_offset;
++	struct page *page = virt_to_head_page(data);
++	int offset = data - page_address(page) + q->buf_offset;
+ 
+-		skb_add_rx_frag(skb, nr_frags, page, offset, len, q->buf_size);
+-	} else {
+-		mt76_put_page_pool_buf(data, allow_direct);
+-	}
++	skb_add_rx_frag(skb, shinfo->nr_frags, page, offset, len, q->buf_size);
+ 
+ 	if (more)
+ 		return;
+ 
+ 	q->rx_head = NULL;
+-	if (nr_frags < ARRAY_SIZE(shinfo->frags))
+-		dev->drv->rx_skb(dev, q - dev->q_rx, skb, &info);
+-	else
+-		dev_kfree_skb(skb);
++	dev->drv->rx_skb(dev, q - dev->q_rx, skb, &info);
+ }
+ 
+ static int
+@@ -1032,21 +1027,19 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
+ 		if (!data)
+ 			break;
+ 
+-		if (PTR_ERR(data) == -EAGAIN) {
+-			done++;
+-			continue;
+-		}
++		/* Bound work even for fragmented and discarded frames. */
++		done++;
++		if (IS_ERR(data))
++			goto drop_chain;
+ 
+ 		if (mt76_queue_is_wed_rro_ind(q) && dev->drv->rx_rro_ind_process)
+ 			dev->drv->rx_rro_ind_process(dev, data);
+ 
+ 		if (mt76_queue_is_wed_rro(q) &&
+-		    !mt76_queue_is_wed_rro_rxdmad_c(q)) {
+-			done++;
++		    !mt76_queue_is_wed_rro_rxdmad_c(q))
+ 			continue;
+-		}
+ 
+-		if (drop)
++		if (drop || q->rx_drop)
+ 			goto free_frag;
+ 
+ 		if (q->rx_head)
+@@ -1054,15 +1047,15 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
+ 		else
+ 			data_len = SKB_WITH_OVERHEAD(q->buf_size);
+ 
+-		if (data_len < len + q->buf_offset) {
+-			dev_kfree_skb(q->rx_head);
+-			q->rx_head = NULL;
++		if (len <= 0 || len > data_len - q->buf_offset)
+ 			goto free_frag;
+-		}
+ 
+ 		if (q->rx_head) {
+-			mt76_add_fragment(dev, q, data, len, more, info,
+-					  allow_direct);
++			struct skb_shared_info *shinfo = skb_shinfo(q->rx_head);
++
++			if (shinfo->nr_frags >= ARRAY_SIZE(shinfo->frags))
++				goto free_frag;
++			mt76_add_fragment(dev, q, data, len, more, info);
+ 			continue;
+ 		}
+ 
+@@ -1080,7 +1073,6 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
+ 		*(u32 *)skb->cb = info;
+ 
+ 		__skb_put(skb, len);
+-		done++;
+ 
+ 		if (more) {
+ 			q->rx_head = skb;
+@@ -1092,6 +1084,11 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
+ 
+ free_frag:
+ 		mt76_put_page_pool_buf(data, allow_direct);
++drop_chain:
++		/* Never join a discarded packet to another DMA buffer. */
++		dev_kfree_skb(q->rx_head);
++		q->rx_head = NULL;
++		q->rx_drop = more;
+ 	}
+ 
+ 	mt76_dma_rx_fill(dev, q, true);
+diff --git a/mt76.h b/mt76.h
+index 63ba188..d3eca5a 100644
+--- a/mt76.h
++++ b/mt76.h
+@@ -259,6 +259,7 @@ struct mt76_queue {
+ 	int buf_size;
+ 	bool stopped;
+ 	bool blocked;
++	bool rx_drop;
+ 
+ 	u8 buf_offset;
+ 	u16 flags;

@@ -1,0 +1,44 @@
+Subject: [PATCH 1/6] wifi: mt76: mt7915: preserve 64-bit TWT intervals
+
+The peer-controlled mantissa and exponent can produce an interval larger
+than U32_MAX. div_u64_rem takes a u32 divisor and can truncate this value
+to zero or schedule the agreement using an incorrect remainder. Use the
+64-bit divisor/remainder helper and reject zero intervals explicitly.
+
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+index 2a88aa3..ada8c27 100644
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -2,6 +2,7 @@
+ /* Copyright (C) 2020 MediaTek Inc. */
+ 
+ #include <linux/etherdevice.h>
++#include <linux/math64.h>
+ #include <linux/timekeeping.h>
+ #include "coredump.h"
+ #include "mt7915.h"
+@@ -2259,7 +2260,7 @@ static int mt7915_mac_check_twt_req(struct ieee80211_twt_setup *twt)
+ 	duration = twt_agrt->min_twt_dur << 8;
+ 
+ 	interval = (u64)mantissa << exp;
+-	if (interval < duration)
++	if (!interval || interval < duration)
+ 		return -EOPNOTSUPP;
+ 
+ 	return 0;
+@@ -2352,13 +2353,12 @@ void mt7915_mac_add_twt_setup(struct ieee80211_hw *hw,
+ 	if (sta_setup_cmd == TWT_SETUP_CMD_REQUEST ||
+ 	    sta_setup_cmd == TWT_SETUP_CMD_SUGGEST) {
+ 		u64 interval = (u64)le16_to_cpu(twt_agrt->mantissa) << exp;
+-		u64 flow_tsf, curr_tsf;
+-		u32 rem;
++		u64 flow_tsf, curr_tsf, rem;
+ 
+ 		flow->sched = true;
+ 		flow->start_tsf = mt7915_mac_twt_sched_list_add(dev, flow);
+ 		curr_tsf = __mt7915_get_tsf(hw, msta->vif);
+-		div_u64_rem(curr_tsf - flow->start_tsf, interval, &rem);
++		div64_u64_rem(curr_tsf - flow->start_tsf, interval, &rem);
+ 		flow_tsf = curr_tsf + interval - rem;
+ 		twt_agrt->twt = cpu_to_le64(flow_tsf);
+ 	} else {

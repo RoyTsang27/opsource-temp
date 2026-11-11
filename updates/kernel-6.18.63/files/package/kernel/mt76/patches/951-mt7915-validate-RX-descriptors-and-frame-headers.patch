@@ -1,0 +1,260 @@
+Subject: [PATCH 2/6] wifi: mt76: mt7915: validate RX descriptors and frame headers
+
+Adapt the supplied RC1 RX entry/group guards to current upstream. Bound
+direct accesses by the linear head, not the total fragmented skb length.
+Validate payload and padding before header conversion, CCMP insertion and
+QoS reads. Linearize control skbs before raw-buffer consumers.
+
+Only decode HE radiotap when group 5 supplies the C-RXV, and avoid an
+unneeded rxv[2] read for chips whose group 3 has only two words.
+
+diff --git a/mt76_connac_mac.c b/mt76_connac_mac.c
+index 8481eac8d78382853470b12ee232c673833c4c41..54e32c3dd805d0541bc74d555f9c97304ad39c9d 100644
+--- a/mt76_connac_mac.c
++++ b/mt76_connac_mac.c
+@@ -1047,13 +1047,12 @@ int mt76_connac2_mac_fill_rx_rate(struct mt76_dev *dev,
+ 				  struct ieee80211_supported_band *sband,
+ 				  __le32 *rxv, u8 *mode)
+ {
+-	u32 v0, v2;
++	u32 v0;
+ 	u8 stbc, gi, bw, dcm, nss;
+ 	int i, idx;
+ 	bool cck = false;
+ 
+ 	v0 = le32_to_cpu(rxv[0]);
+-	v2 = le32_to_cpu(rxv[2]);
+ 
+ 	idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
+ 	nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
+@@ -1068,6 +1067,8 @@ int mt76_connac2_mac_fill_rx_rate(struct mt76_dev *dev,
+ 			dcm = FIELD_GET(MT_PRXV_DCM, v0);
+ 		bw = FIELD_GET(MT_PRXV_FRAME_MODE, v0);
+ 	} else {
++		u32 v2 = le32_to_cpu(rxv[2]);
++
+ 		stbc = FIELD_GET(MT_CRXV_HT_STBC, v2);
+ 		gi = FIELD_GET(MT_CRXV_HT_SHORT_GI, v2);
+ 		*mode = FIELD_GET(MT_CRXV_TX_MODE, v2);
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+index ada8c27db32b5de4af4ec173b72aa9c12c12cc1f..29494fa3a003ea9c78eea7e4b2ab4e1cd1ab86ff 100644
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -261,6 +261,15 @@ mt7915_wed_check_ppe(struct mt7915_dev *dev, struct mt76_queue *q,
+ 				 msta->wcid.idx);
+ }
+ 
++static bool
++mt7915_rx_desc_len_valid(struct sk_buff *skb, const void *data, size_t len)
++{
++	const u8 *start = data;
++	const u8 *end = skb_tail_pointer(skb);
++
++	return start >= skb->data && start <= end && len <= end - start;
++}
++
+ static int
+ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 		   enum mt76_rxq_id q, u32 *info)
+@@ -271,11 +280,7 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	struct ieee80211_supported_band *sband;
+ 	__le32 *rxd = (__le32 *)skb->data;
+ 	__le32 *rxv = NULL;
+-	u32 rxd0 = le32_to_cpu(rxd[0]);
+-	u32 rxd1 = le32_to_cpu(rxd[1]);
+-	u32 rxd2 = le32_to_cpu(rxd[2]);
+-	u32 rxd3 = le32_to_cpu(rxd[3]);
+-	u32 rxd4 = le32_to_cpu(rxd[4]);
++	u32 rxd0, rxd1, rxd2, rxd3, rxd4;
+ 	u32 csum_mask = MT_RXD0_NORMAL_IP_SUM | MT_RXD0_NORMAL_UDP_TCP_SUM;
+ 	bool unicast, insert_ccmp_hdr = false;
+ 	u8 remove_pad, amsdu_info;
+@@ -288,6 +293,16 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	__le16 fc = 0;
+ 	int idx;
+ 
++	/* The RXD header is supplied by DMA/firmware, not by mac80211. */
++	if (unlikely(skb_headlen(skb) < 6 * sizeof(*rxd)))
++		return -EINVAL;
++
++	rxd0 = le32_to_cpu(rxd[0]);
++	rxd1 = le32_to_cpu(rxd[1]);
++	rxd2 = le32_to_cpu(rxd[2]);
++	rxd3 = le32_to_cpu(rxd[3]);
++	rxd4 = le32_to_cpu(rxd[4]);
++
+ 	memset(status, 0, sizeof(*status));
+ 
+ 	if ((rxd1 & MT_RXD1_NORMAL_BAND_IDX) && !phy->mt76->band_idx) {
+@@ -358,8 +373,13 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 
+ 	rxd += 6;
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_4) {
+-		u32 v0 = le32_to_cpu(rxd[0]);
+-		u32 v2 = le32_to_cpu(rxd[2]);
++		u32 v0, v2;
++
++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
++						       4 * sizeof(*rxd))))
++			return -EINVAL;
++		v0 = le32_to_cpu(rxd[0]);
++		v2 = le32_to_cpu(rxd[2]);
+ 
+ 		fc = cpu_to_le16(FIELD_GET(MT_RXD6_FRAME_CONTROL, v0));
+ 		qos_ctl = FIELD_GET(MT_RXD8_QOS_CTL, v2);
+@@ -373,6 +393,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_1) {
+ 		u8 *data = (u8 *)rxd;
+ 
++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
++						       4 * sizeof(*rxd))))
++			return -EINVAL;
++
+ 		if (status->flag & RX_FLAG_DECRYPTED) {
+ 			switch (FIELD_GET(MT_RXD1_NORMAL_SEC_MODE, rxd1)) {
+ 			case MT_CIPHER_AES_CCMP:
+@@ -402,6 +426,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	}
+ 
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_2) {
++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
++						       2 * sizeof(*rxd))))
++			return -EINVAL;
++
+ 		status->timestamp = le32_to_cpu(rxd[0]);
+ 		status->flag |= RX_FLAG_MACTIME_START;
+ 
+@@ -428,6 +456,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 		u32 v0, v1;
+ 		int ret;
+ 
++		if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
++						       2 * sizeof(*rxd))))
++			return -EINVAL;
++
+ 		rxv = rxd;
+ 		rxd += 2;
+ 		if ((u8 *)rxd - skb->data >= skb->len)
+@@ -447,6 +479,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 
+ 		/* RXD Group 5 - C-RXV */
+ 		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
++			if (unlikely(!mt7915_rx_desc_len_valid(skb, rxd,
++							       18 * sizeof(*rxd))))
++				return -EINVAL;
++
+ 			rxd += 18;
+ 			if ((u8 *)rxd - skb->data >= skb->len)
+ 				return -EINVAL;
+@@ -468,6 +504,13 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	}
+ 
+ 	hdr_gap = (u8 *)rxd - skb->data + 2 * remove_pad;
++	/* Header conversion below accesses the linear head directly. */
++	if (unlikely(hdr_gap > skb_headlen(skb)))
++		return -EINVAL;
++	if (hdr_trans &&
++	    unlikely(skb_headlen(skb) - hdr_gap < ETH_HLEN))
++		return -EINVAL;
++
+ 	if (hdr_trans && ieee80211_has_morefrags(fc)) {
+ 		struct ieee80211_vif *vif;
+ 		int err;
+@@ -487,7 +530,12 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 
+ 		skb_pull(skb, hdr_gap);
+ 		if (!hdr_trans && status->amsdu) {
++			if (unlikely(skb_headlen(skb) < 2))
++				return -EINVAL;
+ 			pad_start = ieee80211_get_hdrlen_from_skb(skb);
++			if (unlikely(!pad_start ||
++				     skb_headlen(skb) < pad_start + 2))
++				return -EINVAL;
+ 		} else if (hdr_trans && (rxd2 & MT_RXD2_NORMAL_HDR_TRANS_ERROR)) {
+ 			/*
+ 			 * When header translation failure is indicated,
+@@ -502,6 +550,9 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 				pad_start += 4;
+ 			else
+ 				pad_start = 0;
++			if (pad_start &&
++			    unlikely(skb_headlen(skb) < pad_start + 2))
++				return -EINVAL;
+ 		}
+ 
+ 		if (pad_start) {
+@@ -512,6 +563,15 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 
+ 	if (!hdr_trans) {
+ 		struct ieee80211_hdr *hdr;
++		unsigned int hdrlen;
++
++		/* Validate before CCMP insertion and direct QoS/sequence reads. */
++		if (unlikely(skb_headlen(skb) < 2))
++			return -EINVAL;
++		hdr = (struct ieee80211_hdr *)skb->data;
++		hdrlen = ieee80211_hdrlen(hdr->frame_control);
++		if (unlikely(skb_headlen(skb) < hdrlen))
++			return -EINVAL;
+ 
+ 		if (insert_ccmp_hdr) {
+ 			u8 key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
+@@ -531,7 +591,8 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 				     *info);
+ 	}
+ 
+-	if (rxv && mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
++	if (rxv && (rxd1 & MT_RXD1_NORMAL_GROUP_5) &&
++	    mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
+ 		mt76_connac2_mac_decode_he_radiotap(&dev->mt76, skb, rxv, mode);
+ 
+ 	if (!status->wcid || !ieee80211_is_data_qos(fc))
+@@ -559,6 +620,9 @@ mt7915_mac_fill_rx_vector(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	u8 snr;
+ 	int i;
+ 
++	if (unlikely(skb_headlen(skb) < 26 * sizeof(*rxd)))
++		goto out;
++
+ 	band_idx = le32_get_bits(rxv_hdr[1], MT_RXV_HDR_BAND_IDX);
+ 	if (band_idx && !phy->mt76->band_idx) {
+ 		phy = mt7915_ext_phy(dev);
+@@ -1025,9 +1089,13 @@ bool mt7915_rx_check(struct mt76_dev *mdev, void *data, int len)
+ {
+ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
+ 	__le32 *rxd = (__le32 *)data;
+-	__le32 *end = (__le32 *)&rxd[len / 4];
++	__le32 *end;
+ 	enum rx_pkt_type type;
+ 
++	if (unlikely(len < 0 || (size_t)len < sizeof(*rxd)))
++		return false;
++
++	end = (__le32 *)&rxd[len / 4];
+ 	type = le32_get_bits(rxd[0], MT_RXD0_PKT_TYPE);
+ 
+ 	switch (type) {
+@@ -1054,10 +1122,22 @@ void mt7915_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ {
+ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
+ 	__le32 *rxd = (__le32 *)skb->data;
+-	__le32 *end = (__le32 *)&skb->data[skb->len];
++	__le32 *end;
+ 	enum rx_pkt_type type;
+ 
++	if (unlikely(skb_headlen(skb) < sizeof(*rxd))) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
+ 	type = le32_get_bits(rxd[0], MT_RXD0_PKT_TYPE);
++	/* Control handlers consume contiguous buffers, unlike normal RX data. */
++	if (type != PKT_TYPE_NORMAL && unlikely(skb_linearize(skb))) {
++		dev_kfree_skb(skb);
++		return;
++	}
++	rxd = (__le32 *)skb->data;
++	end = (__le32 *)&skb->data[skb_headlen(skb)];
+ 
+ 	switch (type) {
+ 	case PKT_TYPE_TXRX_NOTIFY:
