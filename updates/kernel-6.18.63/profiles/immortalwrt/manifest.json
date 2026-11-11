@@ -1,0 +1,157 @@
+{
+  "kernel": "6.18.63",
+  "kernel_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.63.tar.xz",
+  "supported_kernels": {
+    "6.18.60": "3c2f44ef6acc021a7ad444d9a2e6ec1ef488ff09368793d0004a6080f69d621e",
+    "6.18.63": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71"
+  },
+  "mt76": {
+    "source_date": "2026-10-28",
+    "source_commit": "0936617dc529ff9da0385221d3fa6de732231177",
+    "mirror_sha256": "3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f"
+  },
+  "source": "ImmortalWrt",
+  "baseline_repository": "https://github.com/immortalwrt/immortalwrt",
+  "baseline_commit": "5fb9d9cd90ca751b5066a37517caa9fbc158ded7",
+  "also_tested_commit": "4765b657625ec5bbda74b44400465fe043802b30",
+  "patch": "patches/immortalwrt-6.18.60-to-6.18.63.patch",
+  "patch_sha256": "6e45f99264636fe22d5a3ffbbc2a918ecc85311e1c22ff949c53ea5d366116ed",
+  "extra_patches": [
+    {
+      "path": "patches/immortalwrt-4765b657-to-6.18.63.patch",
+      "sha256": "87b11214f46883e025cd4b0d20ced9eefb307b2b21231cd491497a083fadc301"
+    }
+  ],
+  "source_checks": [
+    {
+      "path": "package/kernel/mt76/Makefile",
+      "required_lines": [
+        "PKG_SOURCE_VERSION:=0936617dc529ff9da0385221d3fa6de732231177",
+        "PKG_MIRROR_HASH:=3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f"
+      ]
+    },
+    {
+      "path": "package/kernel/mac80211/Makefile",
+      "required_lines": [
+        "PKG_SOURCE_VERSION:=7.2",
+        "PKG_HASH:=6ec76a4cb0988b5382b2fc5053610a56ada90b8ef6a5a4f2807cd433badb9454"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "package/kernel/mac80211/patches/build/160-backports-sockaddr_unsized-is-in-6.18.57.patch",
+      "before": [
+        "914d51fe49968b26648b6e3a7c0df4b979c4c5929ea3e03157bc65e9aa31b792"
+      ],
+      "after": "1111a12b672b2f0d718eb46e3020c671edec0e16bc1f21292155e953e4f73fa6",
+      "payload": "files/package/kernel/mac80211/patches/build/160-backports-sockaddr_unsized-is-in-6.18.57.patch"
+    },
+    {
+      "path": "target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch",
+      "before": [
+        "3deda06d15126042e16fdad39b38c1cc098b5eff3005eb68fb121374060555c4"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch",
+      "before": [
+        "85aa4f0425703611307c39d0c71b803c272e048f3659fa254ee7fd6626697575"
+      ],
+      "after": "6df7248b4b1626f32534ee83b0ee2079049028ff8e45bc4f0eacc0164e0634e6",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch",
+      "before": [
+        "08ca57f6635bea2ddd2bc3810bec579aef0c4eb53e92cb89c517edaa303a9ea1"
+      ],
+      "after": "601ff2892b592ecf4d9784af7fb36b883a70ca2fee38ca1824efb1046bd6e95a",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch",
+      "before": [
+        "f8de817901c813f83a9eec461dc278430fd99f554b5cdc956437d6618ed1a4c0"
+      ],
+      "after": "90ea0a190daa790878065d7d1ec2fb9dcd546ff6aa41e2bada14b77d7cc2a6d1",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/441-v7.4-spi-spi-qpic-snand-publish-the-ECC-context-to-snandc.patch",
+      "before": [
+        "f5bd6e94af5529ded69a30e72d83bb018abcd02a7c640a686d61f09c8f12dabc"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/503-01-v7.3-ksmbd-enable-tcp-keepalive-for-accepted-connections.patch",
+      "before": [
+        "58271114f20ed07b0b768dd1530537121723ed08ca6e9ff0b0cbcd59b4294cc6"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/734-v7.3-net-ethernet-mtk_wed-increase-WED-v2-WDMA-RESV_BUFF-.patch",
+      "before": [
+        "23c1ac1c4d6580b666659840076732589d1157270e2d2e6279e3ec8a52f548d5"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/755-v7.3-net-sfp-add-quirk-for-HORACO-copper-SFP-module.patch",
+      "before": [
+        "411bf0ad3ca82b74a1e71f7736b6ace06902a581312a472d06843326a9afffab"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/856-01-v7.3-xhci-include-all-root-port-children-in-recovery-prevention-on-link-error.patch",
+      "before": [
+        null,
+        "27d83ce5cbfbf2b4d1c148dea83839338311185439135374ac0c884fbff090aa"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/kernel-6.18",
+      "before": [
+        "d81b55c60f2ffd9cf3b6ed2b5f3d78e4ed307d8a79f31835e1db8f73e5fa898d"
+      ],
+      "after": "358c81eed73458938f83cfd369fa799b2a630ba8afc355953c70e2c911600950",
+      "payload": "files/target/linux/generic/kernel-6.18"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch",
+      "before": [
+        "7898d34e14e4d2a0735ce5c5b68a274da597fe83632ce13ed529b7d9e402f5c3"
+      ],
+      "after": "a895eb9b95d9f1f905b58c92607e28185752f8da3bc759b55f16d5aed4d4643e",
+      "payload": "files/target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch"
+    },
+    {
+      "path": "target/linux/mediatek/patches-6.18/197-arm64-dts-mediatek-mt7986-correct-timer-frequency.patch",
+      "before": [
+        "146211213106a16812019a1df09f3937fd5734c3318d6eae132dc345c5acc8bb"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/qualcommax/patches-6.18/0090-v7.4-clk-qcom-gcc-ipq5018-mark-gpll0_main-clock-as-critical.patch",
+      "before": [
+        "420ef40f45bb3578a6c96bf890be4dc0d9a615e9b76899c7387ef5b15d4137f1"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch",
+      "before": [
+        "696cc17647c314ae9569aa84c211f919973a0f876549e417a9549ce968e98d6a"
+      ],
+      "after": "143e5e7a5d7e4b894b66e9594450a309762855de855847693c582c77d3192b4e",
+      "payload": "files/target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch"
+    }
+  ]
+}

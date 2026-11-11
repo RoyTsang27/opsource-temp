@@ -8,6 +8,8 @@ import os
 from pathlib import Path, PurePosixPath
 import shlex
 import stat
+import subprocess
+import sys
 import tempfile
 import urllib.request
 
@@ -34,9 +36,12 @@ def load_bundle(bundle):
     manifest = json.loads((bundle / 'manifest.json').read_text())
     if manifest['kernel'] != '6.18.63':
         raise ValueError('This updater only supports Linux 6.18.63')
-    patch = safe_path(bundle, manifest['patch'])
-    if digest(patch.read_bytes()) != manifest['patch_sha256']:
-        raise ValueError('The bundled source patch failed its checksum check')
+    patches = [{'path': manifest['patch'], 'sha256': manifest['patch_sha256']}]
+    patches.extend(manifest.get('extra_patches', []))
+    for entry in patches:
+        patch = safe_path(bundle, entry['path'])
+        if digest(patch.read_bytes()) != entry['sha256']:
+            raise ValueError('The bundled source patch failed its checksum check: ' + entry['path'])
     for entry in manifest['files']:
         if entry['after'] is not None:
             payload = safe_path(bundle, entry['payload']).read_bytes()
@@ -49,6 +54,11 @@ def build_plan(root, manifest, bundle):
     if not (root / 'rules.mk').is_file() or not (root / 'target/linux/generic/kernel-6.18').is_file():
         raise ValueError('Pass the OpenWrt build root, such as /home/ubuntu_2604/op')
     changes, conflicts = [], []
+    for check in manifest.get('source_checks', []):
+        path = safe_path(root, check['path'])
+        lines = path.read_text().splitlines() if path.is_file() else []
+        if any(line not in lines for line in check['required_lines']):
+            conflicts.append(check['path'] + ' (unsupported wireless source revision)')
     for entry in manifest['files']:
         path = safe_path(root, entry['path'])
         original = path.read_bytes() if path.exists() else None
@@ -82,6 +92,35 @@ def build_plan(root, manifest, bundle):
     if conflicts:
         raise ValueError('No source files were changed. Review these locally modified or unsupported files:\n  ' + '\n  '.join(conflicts))
     return changes
+
+
+def select_plan(root, bundle):
+    """Select a compatible source profile without changing the build directory."""
+    candidates = [bundle] + sorted((bundle / 'profiles').glob('*'))
+    failures = []
+    for candidate in candidates:
+        if not (candidate / 'manifest.json').is_file():
+            continue
+        manifest = load_bundle(candidate)
+        try:
+            changes = build_plan(root, manifest, candidate)
+        except ValueError as error:
+            failures.append((manifest.get('source', 'op-source'), str(error)))
+            continue
+        return manifest, changes
+    details = '\n\n'.join(source + ': ' + error for source, error in failures)
+    raise ValueError('No compatible OpenWrt/ImmortalWrt update profile.\n' + details)
+
+
+def rebuild(root, jobs):
+    commands = [['make', 'defconfig'], ['make', 'target/linux/clean'],
+                ['make', 'package/kernel/mac80211/clean'],
+                ['make', 'package/kernel/mt76/clean'],
+                ['make', 'target/linux/prepare', '-j1', 'V=s'],
+                ['make', '-j' + str(jobs), 'V=s']]
+    for command in commands:
+        print('+ ' + shlex.join(command), flush=True)
+        subprocess.run(command, cwd=root, check=True)
 
 
 def atomic_write(path, data, mode):
@@ -179,26 +218,48 @@ def download_kernel(root, manifest):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('directory', type=Path, help='Existing OpenWrt source/build root')
+    parser.add_argument('directory', type=Path, nargs='?', default=Path.cwd(),
+                        help='OpenWrt/ImmortalWrt build root (default: current directory)')
     parser.add_argument('--check', action='store_true', help='Check compatibility without changing files')
     parser.add_argument('--download', action='store_true', help='Also download the checksum-verified kernel into dl/')
+    parser.add_argument('--build', action='store_true', help='Also clean and rebuild the selected firmware on Linux')
+    parser.add_argument('--jobs', type=int, default=2, help='Parallel firmware build jobs with --build (default: 2)')
     args = parser.parse_args()
     if args.check and args.download:
         parser.error('--check and --download cannot be combined')
+    if args.check and args.build:
+        parser.error('--check and --build cannot be combined')
+    if args.jobs < 1:
+        parser.error('--jobs must be at least 1')
     root = args.directory.resolve()
     try:
-        manifest = load_bundle(BUNDLE)
-        changes = build_plan(root, manifest, BUNDLE)
-        print('Preflight passed: ' + str(len(changes)) + ' source file updates')
+        if args.build and sys.platform != 'linux':
+            raise ValueError('--build requires a Linux build host; omit it to update source only')
+        if args.build and not (root / '.config').is_file():
+            raise ValueError('Select your device with make menuconfig before using --build')
+        manifest, changes = select_plan(root, BUNDLE)
+        print('Detected source: ' + manifest.get('source', 'op-source (OpenWrt)'))
+        print('Preflight passed: ' + str(len(changes)) + ' source file updates', flush=True)
         if args.check:
             return
         if args.download:
             download_kernel(root, manifest)
         apply(root, changes, manifest['kernel'])
+        if args.build:
+            rebuild(root, args.jobs)
+            print('Firmware build completed; output is in ' + str(root / 'bin/targets'))
+            return
         print('Source is ready for Linux ' + manifest['kernel'] + '. Rebuild the selected target:')
         print('  cd ' + shlex.quote(str(root)))
         print('  make defconfig\n  make target/linux/clean\n  make package/kernel/mac80211/clean\n  make package/kernel/mt76/clean')
-        print('  make target/linux/prepare -j1 V=s\n  make -j2 V=s')
+        print('  make target/linux/prepare -j1 V=s\n  make -j' + str(args.jobs) + ' V=s')
+        print('Or let the kit run these steps: sh ' + shlex.quote(str(BUNDLE / 'update.sh'))
+              + ' ' + shlex.quote(str(root)) + ' --build --jobs ' + str(args.jobs))
+    except subprocess.CalledProcessError as error:
+        parser.exit(error.returncode if error.returncode > 0 else 1,
+                    'Build stopped at: ' + shlex.join(error.cmd)
+                    + '\nSource update and backup are retained. Fix the reported build error, then resume in '
+                    + str(root) + ' with: make -j' + str(args.jobs) + ' V=s\n')
     except (OSError, ValueError) as error:
         parser.exit(1, str(error) + '\n')
 

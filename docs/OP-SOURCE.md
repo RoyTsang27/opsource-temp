@@ -20,7 +20,10 @@ commit. All source copyright notices and licenses are retained.
 The [2026-11-06 upstream security audit](UPSTREAM-SECURITY-2026-11-06.md)
 records the earlier kernel updates and selected package fixes. The
 [Linux 6.18.63 migration kit](../updates/kernel-6.18.63/) covers the current
-kernel, latest mt76 and an existing op-source 6.18.60 build directory.
+kernel, latest verified mt76 and existing op-source or official ImmortalWrt
+6.18.60 build directories. From the build root, run
+`sh /path/to/kernel-6.18.63-update/update.sh`; add `--build` to update and
+rebuild firmware on Linux. Source detection and preflight are automatic.
 
 ## Device-Build customizations
 

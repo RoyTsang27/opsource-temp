@@ -1,0 +1,406 @@
+{
+  "checked_on": "2026-11-12",
+  "host": "macOS arm64",
+  "kernel": "6.18.63",
+  "kernel_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "patch_fuzz": 0,
+  "patch_rejects": 0,
+  "immortalwrt": {
+    "repository": "https://github.com/immortalwrt/immortalwrt",
+    "6.18.60_bump": {
+      "commit": "5fb9d9cd90ca751b5066a37517caa9fbc158ded7",
+      "kernel_stacks": {
+        "generic": {
+          "patches": 502,
+          "failure": null
+        },
+        "airoha": {
+          "patches": 653,
+          "failure": null
+        },
+        "apm821xx": {
+          "patches": 509,
+          "failure": null
+        },
+        "armsr": {
+          "patches": 505,
+          "failure": null
+        },
+        "ath79": {
+          "patches": 539,
+          "failure": null
+        },
+        "bcm27xx": {
+          "patches": 1408,
+          "failure": null
+        },
+        "bcm47xx": {
+          "patches": 517,
+          "failure": null
+        },
+        "bcm4908": {
+          "patches": 505,
+          "failure": null
+        },
+        "bcm53xx": {
+          "patches": 542,
+          "failure": null
+        },
+        "bmips": {
+          "patches": 516,
+          "failure": null
+        },
+        "d1": {
+          "patches": 504,
+          "failure": null
+        },
+        "econet": {
+          "patches": 563,
+          "failure": null
+        },
+        "gemini": {
+          "patches": 520,
+          "failure": null
+        },
+        "imx": {
+          "patches": 511,
+          "failure": null
+        },
+        "ipq40xx": {
+          "patches": 525,
+          "failure": null
+        },
+        "ipq806x": {
+          "patches": 528,
+          "failure": null
+        },
+        "ixp4xx": {
+          "patches": 505,
+          "failure": null
+        },
+        "kirkwood": {
+          "patches": 525,
+          "failure": null
+        },
+        "lantiq": {
+          "patches": 523,
+          "failure": null
+        },
+        "layerscape": {
+          "patches": 514,
+          "failure": null
+        },
+        "mediatek": {
+          "patches": 641,
+          "failure": null
+        },
+        "microchipsw": {
+          "patches": 529,
+          "failure": null
+        },
+        "mpc85xx": {
+          "patches": 520,
+          "failure": null
+        },
+        "mvebu": {
+          "patches": 548,
+          "failure": null
+        },
+        "octeon": {
+          "patches": 517,
+          "failure": null
+        },
+        "omap": {
+          "patches": 503,
+          "failure": null
+        },
+        "pistachio": {
+          "patches": 515,
+          "failure": null
+        },
+        "qualcommax": {
+          "patches": 598,
+          "failure": null
+        },
+        "qualcommbe": {
+          "patches": 573,
+          "failure": null
+        },
+        "ramips": {
+          "patches": 548,
+          "failure": null
+        },
+        "realtek": {
+          "patches": 613,
+          "failure": null
+        },
+        "rockchip": {
+          "patches": 735,
+          "failure": null
+        },
+        "sifiveu": {
+          "patches": 503,
+          "failure": null
+        },
+        "siflower": {
+          "patches": 518,
+          "failure": null
+        },
+        "starfive": {
+          "patches": 558,
+          "failure": null
+        },
+        "stm32": {
+          "patches": 505,
+          "failure": null
+        },
+        "sunxi": {
+          "patches": 525,
+          "failure": null
+        },
+        "tegra": {
+          "patches": 503,
+          "failure": null
+        },
+        "uml": {
+          "patches": 503,
+          "failure": null
+        },
+        "x86": {
+          "patches": 504,
+          "failure": null
+        },
+        "zynq": {
+          "patches": 504,
+          "failure": null
+        }
+      }
+    },
+    "master_snapshot": {
+      "commit": "4765b657625ec5bbda74b44400465fe043802b30",
+      "kernel_stacks": {
+        "generic": {
+          "patches": 571,
+          "failure": null
+        },
+        "airoha": {
+          "patches": 722,
+          "failure": null
+        },
+        "apm821xx": {
+          "patches": 579,
+          "failure": null
+        },
+        "armsr": {
+          "patches": 574,
+          "failure": null
+        },
+        "ath79": {
+          "patches": 611,
+          "failure": null
+        },
+        "bcm27xx": {
+          "patches": 1477,
+          "failure": null
+        },
+        "bcm47xx": {
+          "patches": 586,
+          "failure": null
+        },
+        "bcm4908": {
+          "patches": 574,
+          "failure": null
+        },
+        "bcm53xx": {
+          "patches": 617,
+          "failure": null
+        },
+        "bmips": {
+          "patches": 585,
+          "failure": null
+        },
+        "d1": {
+          "patches": 573,
+          "failure": null
+        },
+        "econet": {
+          "patches": 632,
+          "failure": null
+        },
+        "gemini": {
+          "patches": 590,
+          "failure": null
+        },
+        "imx": {
+          "patches": 580,
+          "failure": null
+        },
+        "ipq40xx": {
+          "patches": 596,
+          "failure": null
+        },
+        "ipq806x": {
+          "patches": 597,
+          "failure": null
+        },
+        "ixp4xx": {
+          "patches": 574,
+          "failure": null
+        },
+        "kirkwood": {
+          "patches": 594,
+          "failure": null
+        },
+        "lantiq": {
+          "patches": 592,
+          "failure": null
+        },
+        "layerscape": {
+          "patches": 583,
+          "failure": null
+        },
+        "mediatek": {
+          "patches": 715,
+          "failure": null
+        },
+        "microchipsw": {
+          "patches": 598,
+          "failure": null
+        },
+        "mpc85xx": {
+          "patches": 589,
+          "failure": null
+        },
+        "mvebu": {
+          "patches": 617,
+          "failure": null
+        },
+        "octeon": {
+          "patches": 586,
+          "failure": null
+        },
+        "omap": {
+          "patches": 572,
+          "failure": null
+        },
+        "pistachio": {
+          "patches": 584,
+          "failure": null
+        },
+        "qualcommax": {
+          "patches": 668,
+          "failure": null
+        },
+        "qualcommbe": {
+          "patches": 642,
+          "failure": null
+        },
+        "ramips": {
+          "patches": 617,
+          "failure": null
+        },
+        "realtek": {
+          "patches": 683,
+          "failure": null
+        },
+        "rockchip": {
+          "patches": 854,
+          "failure": null
+        },
+        "sifiveu": {
+          "patches": 572,
+          "failure": null
+        },
+        "siflower": {
+          "patches": 587,
+          "failure": null
+        },
+        "starfive": {
+          "patches": 627,
+          "failure": null
+        },
+        "stm32": {
+          "patches": 574,
+          "failure": null
+        },
+        "sunxi": {
+          "patches": 632,
+          "failure": null
+        },
+        "tegra": {
+          "patches": 572,
+          "failure": null
+        },
+        "uml": {
+          "patches": 572,
+          "failure": null
+        },
+        "x86": {
+          "patches": 575,
+          "failure": null
+        },
+        "zynq": {
+          "patches": 573,
+          "failure": null
+        }
+      }
+    },
+    "wireless": {
+      "candidate": {
+        "mac80211": 256,
+        "mt76": 3,
+        "socket_aarch64": [
+          "6.18.60",
+          "6.18.61",
+          "6.18.62",
+          "6.18.63"
+        ]
+      },
+      "candidate-baseline": {
+        "mac80211": 250,
+        "mt76": 2,
+        "socket_aarch64": [
+          "6.18.60",
+          "6.18.61",
+          "6.18.62",
+          "6.18.63"
+        ]
+      }
+    },
+    "source_changes": {
+      "guarded_paths": 15,
+      "removed_native_duplicates": 8,
+      "refreshed_kernel_patches": 5,
+      "socket_guard": "Native struct in 6.18.57-60; backport struct restored in 6.18.61+"
+    }
+  },
+  "migration": {
+    "archive": "op-source-kernel-6.18.63-update.tar.gz",
+    "sha256": "ff1fd6db2ff03c249156b2ed37946506b5d041b5f992c8ce46c0ba710cd4eb1b",
+    "actual_upstream_snapshots_tested": 2,
+    "checks": [
+      "extracted shell launcher",
+      "automatic profile selection",
+      "current directory default and explicit path",
+      "check mode leaves all files unchanged",
+      "all changed source outputs match the manifest",
+      "originals and backup journal verified",
+      "10563 / 10996 other source and build files preserved",
+      "plain source patches match updater output",
+      "repeat update is a no-op",
+      "local patches and unsupported driver revisions rejected before writes",
+      "source write failure rollback",
+      "build command order, job limit and stop on failure"
+    ]
+  },
+  "unit_tests": {
+    "run": 89,
+    "passed": 88,
+    "skipped": 1
+  },
+  "limitations": [
+    "No complete firmware compilation",
+    "No hardware boot test",
+    "Automatic build command flow tested with mocked make invocations on macOS"
+  ]
+}
