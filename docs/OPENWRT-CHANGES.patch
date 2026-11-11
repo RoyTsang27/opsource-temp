@@ -1,0 +1,2455 @@
+diff --git a/.github/workflows/build-pr-profile.yml b/.github/upstream-workflows/build-pr-profile.yml
+similarity index 100%
+rename from .github/workflows/build-pr-profile.yml
+rename to .github/upstream-workflows/build-pr-profile.yml
+diff --git a/.github/workflows/coverity.yml b/.github/upstream-workflows/coverity.yml
+similarity index 100%
+rename from .github/workflows/coverity.yml
+rename to .github/upstream-workflows/coverity.yml
+diff --git a/.github/workflows/github-release.yml b/.github/upstream-workflows/github-release.yml
+similarity index 100%
+rename from .github/workflows/github-release.yml
+rename to .github/upstream-workflows/github-release.yml
+diff --git a/.github/workflows/kernel.yml b/.github/upstream-workflows/kernel.yml
+similarity index 100%
+rename from .github/workflows/kernel.yml
+rename to .github/upstream-workflows/kernel.yml
+diff --git a/.github/workflows/label-kernel.yml b/.github/upstream-workflows/label-kernel.yml
+similarity index 100%
+rename from .github/workflows/label-kernel.yml
+rename to .github/upstream-workflows/label-kernel.yml
+diff --git a/.github/workflows/label-target.yml b/.github/upstream-workflows/label-target.yml
+similarity index 100%
+rename from .github/workflows/label-target.yml
+rename to .github/upstream-workflows/label-target.yml
+diff --git a/.github/workflows/llm-review.yml b/.github/upstream-workflows/llm-review.yml
+similarity index 100%
+rename from .github/workflows/llm-review.yml
+rename to .github/upstream-workflows/llm-review.yml
+diff --git a/.github/workflows/packages.yml b/.github/upstream-workflows/packages.yml
+similarity index 100%
+rename from .github/workflows/packages.yml
+rename to .github/upstream-workflows/packages.yml
+diff --git a/.github/workflows/push-containers.yml b/.github/upstream-workflows/push-containers.yml
+similarity index 100%
+rename from .github/workflows/push-containers.yml
+rename to .github/upstream-workflows/push-containers.yml
+diff --git a/.github/workflows/scripts/ci_helpers.sh b/.github/upstream-workflows/scripts/ci_helpers.sh
+similarity index 100%
+rename from .github/workflows/scripts/ci_helpers.sh
+rename to .github/upstream-workflows/scripts/ci_helpers.sh
+diff --git a/.github/workflows/scripts/show_build_failures.sh b/.github/upstream-workflows/scripts/show_build_failures.sh
+similarity index 100%
+rename from .github/workflows/scripts/show_build_failures.sh
+rename to .github/upstream-workflows/scripts/show_build_failures.sh
+diff --git a/.github/workflows/toolchain.yml b/.github/upstream-workflows/toolchain.yml
+similarity index 100%
+rename from .github/workflows/toolchain.yml
+rename to .github/upstream-workflows/toolchain.yml
+diff --git a/.github/workflows/tools.yml b/.github/upstream-workflows/tools.yml
+similarity index 100%
+rename from .github/workflows/tools.yml
+rename to .github/upstream-workflows/tools.yml
+diff --git a/.github/workflows/device-build.yml b/.github/workflows/device-build.yml
+new file mode 100644
+index 0000000..264139a
+--- /dev/null
++++ b/.github/workflows/device-build.yml
+@@ -0,0 +1,164 @@
++name: OpenWrt Device Build
++
++on:
++  push:
++    branches: [main, 'codex/kernel-*']
++    paths:
++      - 'target/**'
++      - 'package/**'
++      - 'include/**'
++      - 'tools/**'
++      - 'toolchain/**'
++      - 'Makefile'
++      - 'rules.mk'
++      - 'Config.in'
++      - 'config/**'
++      - 'configs/**'
++      - 'scripts/**'
++      - 'feeds.conf.default'
++      - 'feeds.conf.release'
++      - '.github/workflows/device-build.yml'
++  pull_request:
++    paths:
++      - 'target/**'
++      - 'package/**'
++      - 'include/**'
++      - 'tools/**'
++      - 'toolchain/**'
++      - 'Makefile'
++      - 'rules.mk'
++      - 'Config.in'
++      - 'config/**'
++      - 'configs/**'
++      - 'scripts/**'
++      - 'feeds.conf.default'
++      - 'feeds.conf.release'
++      - '.github/workflows/device-build.yml'
++  workflow_dispatch:
++    inputs:
++      device:
++        description: Device or default three-device set
++        type: choice
++        default: all
++        options: [all, ax3000t, tr3000, tr1200, ax3000t-ubootmod, tr3000-256mb, tr3000-ubootmod]
++
++permissions:
++  contents: read
++
++concurrency:
++  group: op-source-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}-${{ inputs.device || 'all' }}
++  cancel-in-progress: true
++
++defaults:
++  run:
++    shell: bash
++
++jobs:
++  plan:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 10
++    outputs:
++      matrix: ${{ steps.plan.outputs.matrix }}
++    steps:
++      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
++        with:
++          persist-credentials: false
++      - name: Check source and select devices
++        id: plan
++        env:
++          DEVICE: ${{ inputs.device || 'all' }}
++        run: |
++          python3 scripts/device-build.py check-source
++          python3 -m unittest discover -s tests -p test_device_build.py -v
++          printf 'matrix=%s\n' "$(python3 scripts/device-build.py matrix "$DEVICE")" >> "$GITHUB_OUTPUT"
++
++  build:
++    name: Compile ${{ matrix.device }}
++    needs: plan
++    runs-on: ubuntu-24.04
++    timeout-minutes: 360
++    strategy:
++      fail-fast: false
++      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
++    steps:
++      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
++        with:
++          persist-credentials: false
++      - name: Free build space
++        run: |
++          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
++          sudo apt-get clean
++          df -h .
++      - name: Install build prerequisites
++        env:
++          DEBIAN_FRONTEND: noninteractive
++        run: |
++          sudo apt-get update
++          sudo apt-get install -y --no-install-recommends \
++            asciidoc autoconf automake autopoint binutils bison build-essential \
++            bzip2 ccache clang cmake cpio curl device-tree-compiler file flex gawk \
++            gettext git g++-multilib gcc-multilib gperf help2man intltool \
++            libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev \
++            libmpfr-dev libncurses-dev libpython3-dev libreadline-dev libssl-dev \
++            libtool libyaml-dev lld llvm ninja-build p7zip-full patch pkgconf \
++            python3 python3-docutils python3-ply python3-pyelftools python3-setuptools \
++            qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo \
++            uglifyjs unzip wget xmlto xxd xz-utils zlib1g-dev zstd
++      - name: Cache source downloads
++        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
++        with:
++          path: dl
++          key: op-source-dl-${{ runner.os }}-${{ matrix.device }}-${{ hashFiles('feeds.conf.release', 'target/linux/generic/kernel-6.18', 'configs/devices/*.config') }}
++          restore-keys: |
++            op-source-dl-${{ runner.os }}-${{ matrix.device }}-
++      - name: Install pinned feeds
++        run: |
++          cp feeds.conf.release feeds.conf
++          ./scripts/feeds update -a
++          ./scripts/feeds install -a
++      - name: Configure one device
++        env:
++          DEVICE: ${{ matrix.device }}
++        run: |
++          mkdir -p logs
++          python3 scripts/device-build.py configure "$DEVICE" 2>&1 | tee logs/configure.log
++          ./scripts/diffconfig.sh > logs/resolved.config
++      - name: Download sources
++        run: make download -j4 V=s 2>&1 | tee logs/download.log
++      - name: Prepare Linux 6.18.56
++        run: make target/linux/prepare -j2 V=s 2>&1 | tee logs/kernel-prepare.log
++      - name: Compile firmware
++        run: make -j"$(nproc)" V=s 2>&1 | tee logs/build.log
++      - name: Package firmware and source provenance
++        env:
++          DEVICE: ${{ matrix.device }}
++          TARGET: ${{ matrix.target }}
++          SUBTARGET: ${{ matrix.subtarget }}
++        run: |
++          output="bin/targets/$TARGET/$SUBTARGET"
++          test -f "$output/profiles.json"
++          python3 scripts/device-build.py check-config "$DEVICE"
++          python3 scripts/device-build.py check-images "$DEVICE" "$output"
++          bash scripts/verify-release.sh "$output"
++          cp feeds.conf.release "$output/feeds.conf.release"
++          cp config/device-build.json "$output/device-build.json"
++          cp logs/resolved.config "$output/build.config"
++          printf '%s\n' "$GITHUB_SHA" > "$output/source-commit.txt"
++          mkdir -p artifacts
++          tar --zstd -cf "artifacts/op-source-$DEVICE-linux-6.18.56.tar.zst" -C "$output" .
++          (cd artifacts && sha256sum -- *.tar.zst > sha256sums)
++      - name: Upload firmware
++        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
++        with:
++          name: op-source-${{ matrix.device }}-linux-6.18.56
++          path: artifacts/*
++          if-no-files-found: error
++          retention-days: 14
++      - name: Upload build diagnostics
++        if: always()
++        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
++        with:
++          name: op-source-logs-${{ matrix.device }}
++          path: logs/*
++          if-no-files-found: ignore
++          retention-days: 7
+diff --git a/.github/workflows/source-checks.yml b/.github/workflows/source-checks.yml
+new file mode 100644
+index 0000000..8110a1d
+--- /dev/null
++++ b/.github/workflows/source-checks.yml
+@@ -0,0 +1,32 @@
++name: Source and signing checks
++
++on:
++  push:
++  pull_request:
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++jobs:
++  checks:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 30
++    steps:
++      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
++        with:
++          persist-credentials: false
++      - name: Check source and regression tests
++        run: |
++          python3 scripts/device-build.py check-source
++          python3 -m unittest discover -s tests -v
++          bash -n scripts/verify-release.sh
++      - name: Test real signing tools
++        run: |
++          sudo apt-get update
++          sudo apt-get install -y --no-install-recommends cmake zstd gawk
++          python3 scripts/build-signing-test-tools.py "$RUNNER_TEMP/signing-tools"
++          OP_SOURCE_SIGNING_TOOLS="$RUNNER_TEMP/signing-tools/install/bin" \
++            python3 -m unittest discover -s tests -p test_signing_integration.py -v
++      - name: Validate workflows
++        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+diff --git a/.gitignore b/.gitignore
+index ad04755..5ade1db 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -35,3 +35,9 @@ git-src
+ .cproject
+ .ccache
+ .vscode*
++
++/.config.device-build.backup
++/artifacts
++/__pycache__
++/tests/__pycache__
++/scripts/__pycache__
+diff --git a/README.OpenWrt.md b/README.OpenWrt.md
+new file mode 100644
+index 0000000..dd9f443
+--- /dev/null
++++ b/README.OpenWrt.md
+@@ -0,0 +1,108 @@
++![OpenWrt logo](include/logo.png)
++
++OpenWrt Project is a Linux operating system targeting embedded devices. Instead
++of trying to create a single, static firmware, OpenWrt provides a fully
++writable filesystem with package management. This frees you from the
++application selection and configuration provided by the vendor and allows you
++to customize the device through the use of packages to suit any application.
++For developers, OpenWrt is the framework to build an application without having
++to build a complete firmware around it; for users this means the ability for
++full customization, to use the device in ways never envisioned.
++
++Sunshine!
++
++## Download
++
++Built firmware images are available for many architectures and come with a
++package selection to be used as WiFi home router. To quickly find a factory
++image usable to migrate from a vendor stock firmware to OpenWrt, try the
++*Firmware Selector*.
++
++* [OpenWrt Firmware Selector](https://firmware-selector.openwrt.org/)
++
++If your device is supported, please follow the **Info** link to see install
++instructions or consult the support resources listed below.
++
++##
++
++An advanced user may require additional or specific package. (Toolchain, SDK, ...) For everything else than simple firmware download, try the wiki download page:
++
++* [OpenWrt Wiki Download](https://openwrt.org/downloads)
++
++## Development
++
++To build your own firmware you need a GNU/Linux, BSD or macOS system (case
++sensitive filesystem required). Cygwin is unsupported because of the lack of a
++case sensitive file system.
++
++### Requirements
++
++You need the following tools to compile OpenWrt, the package names vary between
++distributions. A complete list with distribution specific packages is found in
++the [Build System Setup](https://openwrt.org/docs/guide-developer/build-system/install-buildsystem)
++documentation.
++
++```
++binutils bzip2 diff find flex gawk gcc-6+ getopt grep install libc-dev libz-dev
++make4.1+ perl python3.8+ rsync subversion unzip which
++```
++
++### Quickstart
++
++1. Run `./scripts/feeds update -a` to obtain all the latest package definitions
++   defined in feeds.conf / feeds.conf.default
++
++2. Run `./scripts/feeds install -a` to install symlinks for all obtained
++   packages into package/feeds/
++
++3. Run `make menuconfig` to select your preferred configuration for the
++   toolchain, target system & firmware packages.
++
++4. Run `make` to build your firmware. This will download all sources, build the
++   cross-compile toolchain and then cross-compile the GNU/Linux kernel & all chosen
++   applications for your target system.
++
++### Related Repositories
++
++The main repository uses multiple sub-repositories to manage packages of
++different categories. All packages are installed via the OpenWrt package
++manager called `opkg`. If you're looking to develop the web interface or port
++packages to OpenWrt, please find the fitting repository below.
++
++* [LuCI Web Interface](https://github.com/openwrt/luci): Modern and modular
++  interface to control the device via a web browser.
++
++* [OpenWrt Packages](https://github.com/openwrt/packages): Community repository
++  of ported packages.
++
++* [OpenWrt Routing](https://github.com/openwrt/routing): Packages specifically
++  focused on (mesh) routing.
++
++* [OpenWrt Video](https://github.com/openwrt/video): Packages specifically
++  focused on display servers and clients (Xorg and Wayland).
++
++## Support Information
++
++For a list of supported devices see the [OpenWrt Hardware Database](https://openwrt.org/supported_devices)
++
++### Documentation
++
++* [Quick Start Guide](https://openwrt.org/docs/guide-quick-start/start)
++* [User Guide](https://openwrt.org/docs/guide-user/start)
++* [Developer Documentation](https://openwrt.org/docs/guide-developer/start)
++* [Technical Reference](https://openwrt.org/docs/techref/start)
++
++### Support Community
++
++* [Forum](https://forum.openwrt.org): For usage, projects, discussions and hardware advise.
++* [Support Chat](https://webchat.oftc.net/#openwrt): Channel `#openwrt` on **oftc.net**.
++
++### Developer Community
++
++* [Bug Reports](https://bugs.openwrt.org): Report bugs in OpenWrt
++* [Dev Mailing List](https://lists.openwrt.org/mailman/listinfo/openwrt-devel): Send patches
++* [Dev Chat](https://webchat.oftc.net/#openwrt-devel): Channel `#openwrt-devel` on **oftc.net**.
++
++## License
++
++OpenWrt is licensed under GPL-2.0
+diff --git a/README.md b/README.md
+index dd9f443..fc56d55 100644
+--- a/README.md
++++ b/README.md
+@@ -1,108 +1,119 @@
+-![OpenWrt logo](include/logo.png)
+-
+-OpenWrt Project is a Linux operating system targeting embedded devices. Instead
+-of trying to create a single, static firmware, OpenWrt provides a fully
+-writable filesystem with package management. This frees you from the
+-application selection and configuration provided by the vendor and allows you
+-to customize the device through the use of packages to suit any application.
+-For developers, OpenWrt is the framework to build an application without having
+-to build a complete firmware around it; for users this means the ability for
+-full customization, to use the device in ways never envisioned.
+-
+-Sunshine!
+-
+-## Download
+-
+-Built firmware images are available for many architectures and come with a
+-package selection to be used as WiFi home router. To quickly find a factory
+-image usable to migrate from a vendor stock firmware to OpenWrt, try the
+-*Firmware Selector*.
+-
+-* [OpenWrt Firmware Selector](https://firmware-selector.openwrt.org/)
+-
+-If your device is supported, please follow the **Info** link to see install
+-instructions or consult the support resources listed below.
+-
+-##
+-
+-An advanced user may require additional or specific package. (Toolchain, SDK, ...) For everything else than simple firmware download, try the wiki download page:
+-
+-* [OpenWrt Wiki Download](https://openwrt.org/downloads)
+-
+-## Development
+-
+-To build your own firmware you need a GNU/Linux, BSD or macOS system (case
+-sensitive filesystem required). Cygwin is unsupported because of the lack of a
+-case sensitive file system.
+-
+-### Requirements
+-
+-You need the following tools to compile OpenWrt, the package names vary between
+-distributions. A complete list with distribution specific packages is found in
+-the [Build System Setup](https://openwrt.org/docs/guide-developer/build-system/install-buildsystem)
+-documentation.
+-
++# op-source
++
++OpenWrt source for Xiaomi AX3000T, Cudy TR3000 and Cudy TR1200, with
++**Linux 6.18.56** and isolated device builds. The intended GitHub repository is
++the private `tdsafgen1888asd/op-source` repository.
++
++The complete source is based on official
++[OpenWrt main](https://github.com/openwrt/openwrt/tree/0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d),
++commit `0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d`. Device presets, build
++automation, the TR1200 partition correction and audited download/signing fixes
++are ported from `tdsafgen1888asd/Device-Build` at
++`db96277fbc98282751cb1d70b83bc1cd8156eb4d`. Firmware uses OpenWrt branding and
++official OpenWrt package feeds. Both source commits are recorded in
++[config/device-build.json](config/device-build.json).
++
++## Devices
++
++| Selector | Device / layout | Target | Image profile |
++| --- | --- | --- | --- |
++| `ax3000t` | Xiaomi Mi Router AX3000T, stock layout | `mediatek/filogic` | `xiaomi_mi-router-ax3000t` |
++| `tr3000` | Cudy TR3000 v1, stock layout | `mediatek/filogic` | `cudy_tr3000-v1` |
++| `tr1200` | Cudy TR1200 v1 | `ramips/mt76x8` | `cudy_tr1200-v1` |
++| `ax3000t-ubootmod` | AX3000T, OpenWrt U-Boot layout | `mediatek/filogic` | `xiaomi_mi-router-ax3000t-ubootmod` |
++| `tr3000-256mb` | TR3000 256MB v1, stock layout | `mediatek/filogic` | `cudy_tr3000-256mb-v1` |
++| `tr3000-ubootmod` | TR3000 v1, OpenWrt U-Boot layout | `mediatek/filogic` | `cudy_tr3000-v1-ubootmod` |
++
++The first three selectors form the default build set. Optional variants are
++selected explicitly. Choose the profile matching the hardware revision and
++installed bootloader/flash layout. The TR3000 256MB selector describes the
++separate upstream flash variant.
++
++Each preset selects one device and retains its upstream Wi-Fi, networking,
++calibration and upgrade support. MediaTek presets include LuCI HTTPS with
++OpenSSL; TR1200 uses LuCI's smaller TLS backend for its 16MB flash. Package and
++firmware signing are enabled. Image checks require a matching sysupgrade image,
++target, profile, kernel version, file size and SHA256 checksum.
++
++## Compile locally
++
++Use Ubuntu 24.04, GNU make 4.1+, a case-sensitive filesystem and at least 40GB
++of free build space. The complete dependency list is in
++[the build workflow](.github/workflows/device-build.yml).
++
++```sh
++git clone https://github.com/tdsafgen1888asd/op-source.git
++cd op-source
++cp feeds.conf.release feeds.conf
++./scripts/feeds update -a
++./scripts/feeds install -a
++
++python3 scripts/device-build.py list
++python3 scripts/device-build.py configure ax3000t
++make download -j4
++make -j"$(nproc)" V=s
++python3 scripts/device-build.py check-images ax3000t bin/targets/mediatek/filogic
++bash scripts/verify-release.sh bin/targets/mediatek/filogic
+ ```
+-binutils bzip2 diff find flex gawk gcc-6+ getopt grep install libc-dev libz-dev
+-make4.1+ perl python3.8+ rsync subversion unzip which
+-```
+-
+-### Quickstart
+ 
+-1. Run `./scripts/feeds update -a` to obtain all the latest package definitions
+-   defined in feeds.conf / feeds.conf.default
+-
+-2. Run `./scripts/feeds install -a` to install symlinks for all obtained
+-   packages into package/feeds/
+-
+-3. Run `make menuconfig` to select your preferred configuration for the
+-   toolchain, target system & firmware packages.
+-
+-4. Run `make` to build your firmware. This will download all sources, build the
+-   cross-compile toolchain and then cross-compile the GNU/Linux kernel & all chosen
+-   applications for your target system.
+-
+-### Related Repositories
+-
+-The main repository uses multiple sub-repositories to manage packages of
+-different categories. All packages are installed via the OpenWrt package
+-manager called `opkg`. If you're looking to develop the web interface or port
+-packages to OpenWrt, please find the fitting repository below.
+-
+-* [LuCI Web Interface](https://github.com/openwrt/luci): Modern and modular
+-  interface to control the device via a web browser.
+-
+-* [OpenWrt Packages](https://github.com/openwrt/packages): Community repository
+-  of ported packages.
+-
+-* [OpenWrt Routing](https://github.com/openwrt/routing): Packages specifically
+-  focused on (mesh) routing.
+-
+-* [OpenWrt Video](https://github.com/openwrt/video): Packages specifically
+-  focused on display servers and clients (Xorg and Wayland).
+-
+-## Support Information
+-
+-For a list of supported devices see the [OpenWrt Hardware Database](https://openwrt.org/supported_devices)
+-
+-### Documentation
+-
+-* [Quick Start Guide](https://openwrt.org/docs/guide-quick-start/start)
+-* [User Guide](https://openwrt.org/docs/guide-user/start)
+-* [Developer Documentation](https://openwrt.org/docs/guide-developer/start)
+-* [Technical Reference](https://openwrt.org/docs/techref/start)
+-
+-### Support Community
+-
+-* [Forum](https://forum.openwrt.org): For usage, projects, discussions and hardware advise.
+-* [Support Chat](https://webchat.oftc.net/#openwrt): Channel `#openwrt` on **oftc.net**.
++The private repository requires GitHub authentication to clone. Use `configure
++tr3000` or `configure tr1200` for the other default devices. TR1200 images go to
++`bin/targets/ramips/mt76x8/`. Use separate checkouts for concurrent device builds
++or different target architectures. Existing `.config` files are backed up as
++`.config.device-build.backup` by the configuration helper.
++
++Presets are in `configs/devices/`; `common.config` provides shared settings.
++For custom packages, run `make menuconfig` after selecting the device and then
++`python3 scripts/device-build.py check-config DEVICE` before compiling.
++
++Development feeds are in `feeds.conf.default`. The documented procedure and CI
++use `feeds.conf.release`, which pins all five official feeds to immutable
++commits. Refresh these pins deliberately and test both target architectures.
++
++## GitHub Actions
++
++**OpenWrt Device Build** compiles the three default devices in independent
++Ubuntu 24.04 jobs on relevant pushes to `main` and pull requests. Use
++**Actions → OpenWrt Device Build → Run workflow** to select `all` or any of the
++six selectors. Each job has its own configuration, toolchain, firmware and
++diagnostic artifacts, with a cache for source downloads.
++
++Uploads require valid image metadata and successful verification of every
++sysupgrade image's signature using the built host tools. Archives include
++checksums, the resolved build configuration, pinned feeds, source commit and
++device manifest. CI uses disposable signing keys. For firmware distribution,
++manage stable signing keys; different build keys imply different trust anchors.
++The optional `REQUIRE_IMAGE_SIGNATURE` setting requires trusted signatures
++during sysupgrade and should be used with stable owner-managed keys.
++
++**Source and signing checks** runs the device, download and signing regression
++tests, builds the pinned host signing tools and tests actual signing and
++tampering rejection. Official OpenWrt's broader workflows are preserved for
++reference in `.github/upstream-workflows/`.
++
++## Validation
++
++```sh
++python3 scripts/device-build.py check-source
++python3 -m unittest discover -s tests -v
++```
+ 
+-### Developer Community
++The Linux 6.18.56 archive was verified against
++[kernel.org's checksum list](https://cdn.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc).
++All **592 generic + MediaTek patches** and **498 generic + Ralink patches**
++apply to the verified kernel sources and target overlays. Source checks pass
++for all six profiles; **41 local regression tests pass**. Five tests using
++compiled signing tools are delegated to Linux CI. Both active workflows pass
++`actionlint`.
+ 
+-* [Bug Reports](https://bugs.openwrt.org): Report bugs in OpenWrt
+-* [Dev Mailing List](https://lists.openwrt.org/mailman/listinfo/openwrt-devel): Send patches
+-* [Dev Chat](https://webchat.oftc.net/#openwrt-devel): Channel `#openwrt-devel` on **oftc.net**.
++Full firmware compilation, image-size checks and physical boot/Wi-Fi/USB/
++sysupgrade validation remain to be confirmed. See
++[source provenance and validation](docs/OP-SOURCE.md) for the exact changes and
++scope. The original upstream documentation is retained in
++[README.OpenWrt.md](README.OpenWrt.md).
+ 
+ ## License
+ 
+-OpenWrt is licensed under GPL-2.0
++The OpenWrt build system is distributed under GPL-2.0. Individual files and
++packages retain their original licenses and copyright notices. See
++[COPYING](COPYING), [LICENSES](LICENSES) and package-specific license files.
+diff --git a/config/Config-build.in b/config/Config-build.in
+index cdc1b5d..24ba54b 100644
+--- a/config/Config-build.in
++++ b/config/Config-build.in
+@@ -92,6 +92,15 @@ menu "Global build settings"
+ 		  their authenticity before flashing. OpenWrt's build infrastructure
+ 		  signs images with temporary keys; disabling this drops the signature.
+ 
++	config REQUIRE_IMAGE_SIGNATURE
++		bool "Require trusted signatures during sysupgrade"
++		depends on SIGN_FIRMWARE
++		select PACKAGE_ucert
++		help
++		  Reject unsigned images and images signed by an untrusted key.
++		  Use a stable firmware signing key for release builds. Local builds
++		  with different keys require an explicit sysupgrade force override.
++
+ 	comment "General build options"
+ 
+ 	config TESTING_KERNEL
+diff --git a/config/device-build.json b/config/device-build.json
+new file mode 100644
+index 0000000..dfc69da
+--- /dev/null
++++ b/config/device-build.json
+@@ -0,0 +1,72 @@
++{
++  "name": "op-source",
++  "repository": "tdsafgen1888asd/op-source",
++  "kernel": "6.18.56",
++  "source": {
++    "url": "https://github.com/openwrt/openwrt",
++    "branch": "main",
++    "commit": "0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d"
++  },
++  "default_devices": [
++    "ax3000t",
++    "tr3000",
++    "tr1200"
++  ],
++  "devices": {
++    "ax3000t": {
++      "name": "Xiaomi Mi Router AX3000T (stock layout)",
++      "target": "mediatek",
++      "subtarget": "filogic",
++      "profile": "xiaomi_mi-router-ax3000t",
++      "dts": "mt7981b-xiaomi-mi-router-ax3000t",
++      "compatible": "xiaomi,mi-router-ax3000t"
++    },
++    "ax3000t-ubootmod": {
++      "name": "Xiaomi Mi Router AX3000T (OpenWrt U-Boot layout)",
++      "target": "mediatek",
++      "subtarget": "filogic",
++      "profile": "xiaomi_mi-router-ax3000t-ubootmod",
++      "dts": "mt7981b-xiaomi-mi-router-ax3000t-ubootmod",
++      "compatible": "xiaomi,mi-router-ax3000t-ubootmod"
++    },
++    "tr3000": {
++      "name": "Cudy TR3000 v1 (stock layout)",
++      "target": "mediatek",
++      "subtarget": "filogic",
++      "profile": "cudy_tr3000-v1",
++      "dts": "mt7981b-cudy-tr3000-v1",
++      "compatible": "cudy,tr3000-v1"
++    },
++    "tr3000-256mb": {
++      "name": "Cudy TR3000 256MB v1 (stock layout)",
++      "target": "mediatek",
++      "subtarget": "filogic",
++      "profile": "cudy_tr3000-256mb-v1",
++      "dts": "mt7981b-cudy-tr3000-256mb-v1",
++      "compatible": "cudy,tr3000-256mb-v1"
++    },
++    "tr3000-ubootmod": {
++      "name": "Cudy TR3000 v1 (OpenWrt U-Boot layout)",
++      "target": "mediatek",
++      "subtarget": "filogic",
++      "profile": "cudy_tr3000-v1-ubootmod",
++      "dts": "mt7981b-cudy-tr3000-v1-ubootmod",
++      "compatible": "cudy,tr3000-v1-ubootmod"
++    },
++    "tr1200": {
++      "name": "Cudy TR1200 v1",
++      "target": "ramips",
++      "subtarget": "mt76x8",
++      "profile": "cudy_tr1200-v1",
++      "dts": "mt7628an_cudy_tr1200-v1",
++      "compatible": "cudy,tr1200-v1"
++    }
++  },
++  "visibility": "private",
++  "distribution": "OpenWrt",
++  "derived_from": {
++    "url": "https://github.com/tdsafgen1888asd/Device-Build",
++    "branch": "main",
++    "commit": "db96277fbc98282751cb1d70b83bc1cd8156eb4d"
++  }
++}
+diff --git a/configs/devices/ax3000t-ubootmod.config b/configs/devices/ax3000t-ubootmod.config
+new file mode 100644
+index 0000000..138008a
+--- /dev/null
++++ b/configs/devices/ax3000t-ubootmod.config
+@@ -0,0 +1,5 @@
++CONFIG_TARGET_mediatek=y
++CONFIG_TARGET_mediatek_filogic=y
++CONFIG_TARGET_mediatek_filogic_DEVICE_xiaomi_mi-router-ax3000t-ubootmod=y
++CONFIG_TARGET_ROOTFS_INITRAMFS=y
++CONFIG_PACKAGE_luci-ssl-openssl=y
+diff --git a/configs/devices/ax3000t.config b/configs/devices/ax3000t.config
+new file mode 100644
+index 0000000..4d14c3f
+--- /dev/null
++++ b/configs/devices/ax3000t.config
+@@ -0,0 +1,5 @@
++CONFIG_TARGET_mediatek=y
++CONFIG_TARGET_mediatek_filogic=y
++CONFIG_TARGET_mediatek_filogic_DEVICE_xiaomi_mi-router-ax3000t=y
++CONFIG_TARGET_ROOTFS_INITRAMFS=y
++CONFIG_PACKAGE_luci-ssl-openssl=y
+diff --git a/configs/devices/common.config b/configs/devices/common.config
+new file mode 100644
+index 0000000..cf077c6
+--- /dev/null
++++ b/configs/devices/common.config
+@@ -0,0 +1,17 @@
++# op-source: shared build settings. Target profiles supply Wi-Fi/USB drivers.
++CONFIG_USE_APK=y
++CONFIG_TARGET_ROOTFS_SQUASHFS=y
++CONFIG_SIGN_FIRMWARE=y
++CONFIG_SIGNED_PACKAGES=y
++CONFIG_SIGN_EACH_PACKAGE=y
++CONFIG_SIGNATURE_CHECK=y
++CONFIG_DOWNLOAD_CHECK_CERTIFICATE=y
++CONFIG_JSON_OVERVIEW_IMAGE_INFO=y
++CONFIG_PACKAGE_ca-bundle=y
++# CONFIG_ALL is not set
++# CONFIG_ALL_KMODS is not set
++# CONFIG_ALL_NONSHARED is not set
++# CONFIG_TARGET_ALL_PROFILES is not set
++# CONFIG_TARGET_MULTI_PROFILE is not set
++# CONFIG_SDK is not set
++# CONFIG_IB is not set
+diff --git a/configs/devices/tr1200.config b/configs/devices/tr1200.config
+new file mode 100644
+index 0000000..0b35825
+--- /dev/null
++++ b/configs/devices/tr1200.config
+@@ -0,0 +1,6 @@
++CONFIG_TARGET_ramips=y
++CONFIG_TARGET_ramips_mt76x8=y
++CONFIG_TARGET_ramips_mt76x8_DEVICE_cudy_tr1200-v1=y
++# TR1200 has 16MB flash: use LuCI's smaller default TLS backend.
++CONFIG_PACKAGE_luci-ssl=y
++# CONFIG_TARGET_ROOTFS_INITRAMFS is not set
+diff --git a/configs/devices/tr3000-256mb.config b/configs/devices/tr3000-256mb.config
+new file mode 100644
+index 0000000..e91a9f5
+--- /dev/null
++++ b/configs/devices/tr3000-256mb.config
+@@ -0,0 +1,5 @@
++CONFIG_TARGET_mediatek=y
++CONFIG_TARGET_mediatek_filogic=y
++CONFIG_TARGET_mediatek_filogic_DEVICE_cudy_tr3000-256mb-v1=y
++CONFIG_TARGET_ROOTFS_INITRAMFS=y
++CONFIG_PACKAGE_luci-ssl-openssl=y
+diff --git a/configs/devices/tr3000-ubootmod.config b/configs/devices/tr3000-ubootmod.config
+new file mode 100644
+index 0000000..cd9dbec
+--- /dev/null
++++ b/configs/devices/tr3000-ubootmod.config
+@@ -0,0 +1,5 @@
++CONFIG_TARGET_mediatek=y
++CONFIG_TARGET_mediatek_filogic=y
++CONFIG_TARGET_mediatek_filogic_DEVICE_cudy_tr3000-v1-ubootmod=y
++CONFIG_TARGET_ROOTFS_INITRAMFS=y
++CONFIG_PACKAGE_luci-ssl-openssl=y
+diff --git a/configs/devices/tr3000.config b/configs/devices/tr3000.config
+new file mode 100644
+index 0000000..e11d1b7
+--- /dev/null
++++ b/configs/devices/tr3000.config
+@@ -0,0 +1,5 @@
++CONFIG_TARGET_mediatek=y
++CONFIG_TARGET_mediatek_filogic=y
++CONFIG_TARGET_mediatek_filogic_DEVICE_cudy_tr3000-v1=y
++CONFIG_TARGET_ROOTFS_INITRAMFS=y
++CONFIG_PACKAGE_luci-ssl-openssl=y
+diff --git a/docs/OP-SOURCE.md b/docs/OP-SOURCE.md
+new file mode 100644
+index 0000000..b7e4668
+--- /dev/null
++++ b/docs/OP-SOURCE.md
+@@ -0,0 +1,87 @@
++# op-source provenance and validation
++
++## Source baselines
++
++| Item | Recorded value |
++| --- | --- |
++| Repository | `tdsafgen1888asd/op-source` (private) |
++| Base | Official `openwrt/openwrt`, branch `main` |
++| Base commit | `0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d` |
++| Customization reference | `tdsafgen1888asd/Device-Build`, branch `main` |
++| Reference commit | `db96277fbc98282751cb1d70b83bc1cd8156eb4d` |
++| Import date | 2026-10-13, Asia/Shanghai |
++| Kernel | Linux 6.18.56 |
++| Kernel archive SHA256 | `4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89` |
++
++The source is an independent snapshot of the official OpenWrt tree with the
++listed customizations. Upstream history is available at the recorded base
++commit. All source copyright notices and licenses are retained.
++
++## Device-Build customizations
++
++- Import six one-device presets and the manifest-driven device selector, with
++  AX3000T stock, TR3000 v1 stock and TR1200 v1 as the default build matrix.
++- Port isolated Ubuntu builds, metadata/hash checks and source provenance
++  artifacts. Verify actual firmware signatures before uploading artifacts.
++- Preserve OpenWrt's device trees, image recipes, drivers, network configuration
++  and calibration mappings for these profiles.
++- Correct TR1200's `partition@fe0000` address to `0xfe0000`, matching its unit
++  address and end-of-flash backup partition.
++- Port verified TLS, archive-member validation, private temporary download
++  directories and safe cache handling from the audited download helper.
++- Generate firmware signing material and install the trust anchor for APK
++  builds. Port the optional trusted-signature policy and fail-closed signing
++  recipes into current OpenWrt files while retaining upstream's other changes.
++- Port the ucert append exit-status and buffered-close error fix, retaining the
++  upstream source pin and raising the package release to 2.
++- Replace the reference's ImmortalWrt feeds with pinned official OpenWrt feeds.
++  Firmware distribution and manufacturer defaults remain OpenWrt.
++
++The inherited PON/Airoha-specific integration is outside the three-device port;
++other devices use their definitions from the recorded official OpenWrt base.
++
++## Linux 6.18.55 to 6.18.56
++
++The official source snapshot selects Linux 6.18.55 for MediaTek and Ralink.
++Update the generic kernel version/hash to 6.18.56 and retain current official
++OpenWrt kernel patches, with these stable-kernel adjustments:
++
++1. Remove `438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch`.
++   Linux 6.18.56 already limits quad-enable register updates to devices with
++   `SPINAND_HAS_QE_BIT` and returns zero from successful chip configuration.
++2. Remove `782-v7.3-USB-serial-option-add-Quectel-EG060W.patch`, whose USB serial
++   device support is already present in 6.18.56.
++3. Remove `787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch`, whose Quectel
++   `2c7c:030b` QMI device entry is already present in 6.18.56.
++4. Refresh the LoongArch vDSO prefix-map patch around the stable kernel's
++   `CONFIG_CC_OPT_INLINE_MEMSET` line using Device-Build's tested context.
++
++Removing duplicate backports preserves the fixes present in the stable kernel.
++The Ralink PWM fixes in current OpenWrt already match the corrected reference.
++
++## Checks on 2026-10-13
++
++- Verified the downloaded official `linux-6.18.56.tar.xz` against the recorded
++  SHA256 and kernel.org's published list.
++- Applied all 592 active generic/MediaTek patches and all 498 active
++  generic/Ralink patches in build-system order, with generic and target file
++  overlays. Every patch applied and no `.rej` files remained.
++- Passed source checks for all six device profiles.
++- Passed 41 local regression tests for selection, image metadata/hashes,
++  archive extraction, TLS/cache handling and signing orchestration. The five
++  real-host-signing-tool integration tests require Linux CI and were skipped
++  locally because their compiled tools were unavailable.
++- Passed `actionlint` for both active workflows and shell syntax validation for
++  the signature verification helper.
++
++Patch applicability and source assertions do not establish successful kernel or
++firmware compilation. The local macOS host has GNU make 3.81; Linux configuration
++resolution and full builds are delegated to GitHub Actions. TR1200 image size,
++physical boot, calibration, Wi-Fi, USB and upgrade behavior require completed
++firmware builds and hardware testing.
++
++The local checks use original kernel contents of all patch-referenced files,
++plus target overlays. They do not compile the kernel. Signed-image integration
++CI builds the actual pinned json-c, libubox, usign, ucert and fwtool sources,
++applies their package patches and tests successful verification, write/flush
++errors, truncated signatures and tampered firmware.
+diff --git a/feeds.conf.release b/feeds.conf.release
+new file mode 100644
+index 0000000..03e4679
+--- /dev/null
++++ b/feeds.conf.release
+@@ -0,0 +1,6 @@
++# Official OpenWrt feeds pinned on 2026-10-13; update deliberately.
++src-git packages https://git.openwrt.org/feed/packages.git^a855effe82552e22cefc973cdd5af175c9364414
++src-git luci https://git.openwrt.org/project/luci.git^d12d55376188343d790fa40377c084245a4d2b86
++src-git routing https://git.openwrt.org/feed/routing.git^4b9891b9136259f93294a424507ed24c5e8c1cbd
++src-git telephony https://git.openwrt.org/feed/telephony.git^5d68d53c160a325ea9d03fce393e051573bcc736
++src-git video https://github.com/openwrt/video.git^6917907d4d6c670cf85be525d23216595655061d
+diff --git a/include/image-commands.mk b/include/image-commands.mk
+index 1bf9b9b..25264c8 100644
+--- a/include/image-commands.mk
++++ b/include/image-commands.mk
+@@ -94,11 +94,14 @@ metadata_json = \
+ define Build/append-metadata
+ 	$(if $(SUPPORTED_DEVICES),-echo $(call metadata_json) | fwtool -I - $@)
+ 	sha256sum "$@" | cut -d" " -f1 > "$@.sha256sum"
+-	$(if $(CONFIG_SIGN_FIRMWARE),[ ! -s "$(BUILD_KEY)" -o ! -s "$(BUILD_KEY).ucert" -o ! -s "$@" ] || { \
+-		cp "$(BUILD_KEY).ucert" "$@.ucert" ;\
+-		usign -S -m "$@" -s "$(BUILD_KEY)" -x "$@.sig" ;\
+-		ucert -A -c "$@.ucert" -x "$@.sig" ;\
+-		fwtool -S "$@.ucert" "$@" ;\
++	$(if $(CONFIG_SIGN_FIRMWARE),{ \
++		test -s "$(BUILD_KEY)" && test -s "$(BUILD_KEY).ucert" && test -s "$@" || { \
++			echo 'Firmware signing requires a key and certificate and nonempty image' >&2; exit 1; \
++		}; \
++		cp "$(BUILD_KEY).ucert" "$@.ucert" || { echo 'Firmware certificate copy failed' >&2; exit 1; }; \
++		usign -S -m "$@" -s "$(BUILD_KEY)" -x "$@.sig" || { echo 'Firmware usign signing failed' >&2; exit 1; }; \
++		ucert -A -c "$@.ucert" -x "$@.sig" || { echo 'Firmware ucert append failed' >&2; exit 1; }; \
++		fwtool -S "$@.ucert" "$@" || { echo 'Firmware signature attachment failed' >&2; exit 1; }; \
+ 	})
+ endef
+ 
+@@ -125,11 +128,14 @@ metadata_gl_json = \
+ define Build/append-gl-metadata
+ 	$(if $(SUPPORTED_DEVICES),-echo $(call metadata_gl_json,$(SUPPORTED_DEVICES)) | fwtool -I - $@)
+ 	sha256sum "$@" | cut -d" " -f1 > "$@.sha256sum"
+-	$(if $(CONFIG_SIGN_FIRMWARE),[ ! -s "$(BUILD_KEY)" -o ! -s "$(BUILD_KEY).ucert" -o ! -s "$@" ] || { \
+-		cp "$(BUILD_KEY).ucert" "$@.ucert" ;\
+-		usign -S -m "$@" -s "$(BUILD_KEY)" -x "$@.sig" ;\
+-		ucert -A -c "$@.ucert" -x "$@.sig" ;\
+-		fwtool -S "$@.ucert" "$@" ;\
++	$(if $(CONFIG_SIGN_FIRMWARE),{ \
++		test -s "$(BUILD_KEY)" && test -s "$(BUILD_KEY).ucert" && test -s "$@" || { \
++			echo 'Firmware signing requires a key and certificate and nonempty image' >&2; exit 1; \
++		}; \
++		cp "$(BUILD_KEY).ucert" "$@.ucert" || { echo 'Firmware certificate copy failed' >&2; exit 1; }; \
++		usign -S -m "$@" -s "$(BUILD_KEY)" -x "$@.sig" || { echo 'Firmware usign signing failed' >&2; exit 1; }; \
++		ucert -A -c "$@.ucert" -x "$@.sig" || { echo 'Firmware ucert append failed' >&2; exit 1; }; \
++		fwtool -S "$@.ucert" "$@" || { echo 'Firmware signature attachment failed' >&2; exit 1; }; \
+ 	})
+ endef
+ 
+diff --git a/package/base-files/Makefile b/package/base-files/Makefile
+index 910a3da..170309c 100644
+--- a/package/base-files/Makefile
++++ b/package/base-files/Makefile
+@@ -21,7 +21,7 @@ PKG_LICENSE:=GPL-2.0
+ 
+ # Extend depends from version.mk
+ PKG_CONFIG_DEPENDS += \
+-	CONFIG_SIGNED_PACKAGES \
++	CONFIG_SIGNED_PACKAGES CONFIG_SIGN_FIRMWARE CONFIG_REQUIRE_IMAGE_SIGNATURE \
+ 	CONFIG_TARGET_INIT_PATH \
+ 	CONFIG_TARGET_PREINIT_DISABLE_FAILSAFE \
+ 	CONFIG_TARGET_SERIAL \
+@@ -44,6 +44,7 @@ define Package/base-files
+   CATEGORY:=Base system
+   DEPENDS:= \
+ 	+netifd +libc +jsonfilter +SIGNED_PACKAGES:usign +SIGNED_PACKAGES:openwrt-keyring \
++	+SIGN_FIRMWARE:usign +REQUIRE_IMAGE_SIGNATURE:ucert \
+ 	+NAND_SUPPORT:ubi-utils +fstools +fwtool \
+ 	+SELINUX:procd-selinux +!SELINUX:procd +USE_SECCOMP:procd-seccomp \
+ 	+SELINUX:busybox-selinux +!SELINUX:busybox \
+@@ -123,6 +124,30 @@ define Build/Compile/Default
+ endef
+ Build/Compile = $(Build/Compile/Default)
+ 
++ifneq ($(filter y,$(CONFIG_SIGN_FIRMWARE) $(if $(CONFIG_USE_APK),,$(CONFIG_SIGNED_PACKAGES))),)
++  define Build/Configure
++	umask 077; [ -s $(BUILD_KEY) -a -s $(BUILD_KEY).pub ] || \
++		$(STAGING_DIR_HOST)/bin/usign -G -s $(BUILD_KEY) -p $(BUILD_KEY).pub -c "Local build key"
++
++	umask 077; [ -s $(BUILD_KEY).ucert ] || \
++		$(STAGING_DIR_HOST)/bin/ucert -I -c $(BUILD_KEY).ucert -p $(BUILD_KEY).pub -s $(BUILD_KEY)
++  endef
++endif
++
++ifdef CONFIG_SIGN_FIRMWARE
++  define Package/base-files/install-firmware-key
++	mkdir -p $(1)/etc/opkg/keys
++	$(CP) $(BUILD_KEY).pub $(1)/etc/opkg/keys/`$(STAGING_DIR_HOST)/bin/usign -F -p $(BUILD_KEY).pub`
++  endef
++endif
++
++ifdef CONFIG_REQUIRE_IMAGE_SIGNATURE
++  define Package/base-files/install-signature-policy
++	mkdir -p $(1)/lib/upgrade
++	echo 'REQUIRE_IMAGE_SIGNATURE=1' > $(1)/lib/upgrade/require-signature.sh
++  endef
++endif
++
+ ifneq ($(CONFIG_USE_APK),)
+ ifndef CONFIG_BUILDBOT
+   define Package/base-files/install-key
+@@ -132,15 +157,6 @@ ifndef CONFIG_BUILDBOT
+ endif
+ else
+ ifdef CONFIG_SIGNED_PACKAGES
+-  define Build/Configure
+-	[ -s $(BUILD_KEY) -a -s $(BUILD_KEY).pub ] || \
+-		$(STAGING_DIR_HOST)/bin/usign -G -s $(BUILD_KEY) -p $(BUILD_KEY).pub -c "Local build key"
+-
+-	[ -s $(BUILD_KEY).ucert ] || \
+-		$(STAGING_DIR_HOST)/bin/ucert -I -c $(BUILD_KEY).ucert -p $(BUILD_KEY).pub -s $(BUILD_KEY)
+-
+-  endef
+-
+ ifndef CONFIG_BUILDBOT
+   define Package/base-files/install-key
+ 	mkdir -p $(1)/etc/opkg/keys
+@@ -172,6 +188,8 @@ endif
+ define Package/base-files/install
+ 	$(CP) ./files/* $(1)/
+ 	$(Package/base-files/install-key)
++	$(Package/base-files/install-firmware-key)
++	$(Package/base-files/install-signature-policy)
+ 	$(Package/base-files/nand-support)
+ 	$(Package/base-files/legacy-sdcard-support)
+ 	$(Package/base-files/emmc-support)
+diff --git a/package/system/ucert/Makefile b/package/system/ucert/Makefile
+index 53b3480..6ecf17c 100644
+--- a/package/system/ucert/Makefile
++++ b/package/system/ucert/Makefile
+@@ -1,7 +1,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=ucert
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE_PROTO:=git
+ PKG_SOURCE_URL=$(PROJECT_GIT)/project/ucert.git
+diff --git a/package/system/ucert/patches/001-fix-append-exit-status-and-close-errors.patch b/package/system/ucert/patches/001-fix-append-exit-status-and-close-errors.patch
+new file mode 100644
+index 0000000..ba3dacd
+--- /dev/null
++++ b/package/system/ucert/patches/001-fix-append-exit-status-and-close-errors.patch
+@@ -0,0 +1,29 @@
++From: Roy Tsang <318981795+RoyTsang27@users.noreply.github.com>
++Subject: [PATCH] ucert: report append success with exit status zero
++
++write_file() returns a boolean, but cert_append() passes it straight to
++main(). Successful appends therefore exit with status 1, and failed writes
++can exit with status 0. Invert the boolean for the command's exit status.
++Also check fclose(): a buffered write can fail only when flushed on close.
++
++--- a/ucert.c
+++++ b/ucert.c
++@@ -119,8 +119,7 @@ static bool write_file(const char *filen
++ 		return false;
++ 
++ 	outlen = fwrite(buf, 1, len, f);
++-	fclose(f);
++-	return (outlen == len);
+++	return fclose(f) == 0 && outlen == len;
++ }
++ /* reads a whole file to a buffer - returns -1 on errors and sets errno */
++ static ssize_t read_file(const char *filename, void *buf, size_t len, size_t minlen) {
++@@ -214,7 +214,7 @@ static int cert_append(const char *certf
++ 	}
++ 	blob_buf_init(&sigbuf, 0);
++ 	blob_put(&sigbuf, CERT_ATTR_SIGNATURE, filebuf, len);
++-	ret = write_file(certfile, sigbuf.head, blob_raw_len(sigbuf.head), true);
+++	ret = !write_file(certfile, sigbuf.head, blob_raw_len(sigbuf.head), true);
++ 	blob_buf_free(&sigbuf);
++ 	return ret;
++ }
+diff --git a/scripts/build-signing-test-tools.py b/scripts/build-signing-test-tools.py
+new file mode 100644
+index 0000000..cf8474a
+--- /dev/null
++++ b/scripts/build-signing-test-tools.py
+@@ -0,0 +1,83 @@
++#!/usr/bin/env python3
++"""Build the pinned OpenWrt host signing tools for integration tests."""
++import argparse
++import hashlib
++import os
++from pathlib import Path
++import re
++import subprocess
++import urllib.request
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def field(source, name, pattern):
++    match = re.search(r'^' + name + r'\s*:?=\s*(' + pattern + r')\s*$', source, re.M)
++    if not match:
++        raise ValueError('Invalid package field: ' + name)
++    return match.group(1)
++
++
++def build(work):
++    prefix = work / 'install'
++    env = dict(os.environ)
++    env['PKG_CONFIG_PATH'] = str(prefix / 'lib/pkgconfig')
++    packages = (
++        ('json-c', 'package/libs/libjson-c', ['-DBUILD_SHARED_LIBS=OFF', '-DDISABLE_EXTRA_LIBS=TRUE']),
++        ('libubox', 'package/libs/libubox', ['-DBUILD_LUA=OFF', '-DBUILD_EXAMPLES=OFF']),
++        ('usign', 'package/system/usign', []),
++        ('ucert', 'package/system/ucert', ['-DUCERT_FULL=1', '-DUCERT_HOST_BUILD=1',
++                                        '-DUSE_RPATH=' + str(prefix / 'lib')]),
++        ('fwtool', 'package/system/fwtool', []),
++    )
++    for name, package, options in packages:
++        package = ROOT / package
++        makefile = (package / 'Makefile').read_text()
++        if name == 'json-c':
++            version = field(makefile, 'PKG_VERSION', r'\d+(?:\.\d+)+')
++            filename = 'json-c-' + version + '-nodoc.tar.gz'
++            url = 'https://s3.amazonaws.com/json-c_releases/releases/' + filename
++            checksum = field(makefile, 'PKG_HASH', '[0-9a-f]{64}')
++        else:
++            date = field(makefile, 'PKG_SOURCE_DATE', r'\d{4}-\d{2}-\d{2}')
++            commit = field(makefile, 'PKG_SOURCE_VERSION', '[0-9a-f]{40}')
++            filename = name + '-' + date.replace('-', '.') + '~' + commit[:8] + '.tar.zst'
++            url = 'https://sources.openwrt.org/' + filename
++            checksum = field(makefile, 'PKG_MIRROR_HASH', '[0-9a-f]{64}')
++        with urllib.request.urlopen(url, timeout=60) as response:
++            data = response.read(32 * 1024 * 1024 + 1)
++        if len(data) > 32 * 1024 * 1024 or hashlib.sha256(data).hexdigest() != checksum:
++            raise ValueError('Source checksum failed: ' + filename)
++        archive = work / filename
++        archive.write_bytes(data)
++        source = work / name
++        source.mkdir()
++        # Extract only after matching the package's trusted source checksum.
++        subprocess.run(['tar', '-xf', str(archive), '-C', str(source),
++                        '--strip-components=1', '--no-same-owner'], check=True)
++        for patch in sorted((package / 'patches').glob('*.patch')):
++            with patch.open('rb') as stream:
++                subprocess.run(['patch', '-p1', '-d', str(source)], stdin=stream, check=True)
++        output = work / (name + '-build')
++        subprocess.run(['cmake', '-S', str(source), '-B', str(output),
++                        '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
++                        '-DCMAKE_INSTALL_PREFIX=' + str(prefix),
++                        '-DCMAKE_PREFIX_PATH=' + str(prefix),
++                        '-DCMAKE_INSTALL_RPATH=' + str(prefix / 'lib')] + options,
++                       env=env, check=True)
++        subprocess.run(['cmake', '--build', str(output), '-j2'], env=env, check=True)
++        subprocess.run(['cmake', '--install', str(output)], env=env, check=True)
++    print('Signing test tools: ' + str(prefix / 'bin'))
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('work', type=Path, help='New empty build directory')
++    args = parser.parse_args()
++    work = args.work.resolve()
++    work.mkdir(parents=True, exist_ok=False)
++    build(work)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/device-build.py b/scripts/device-build.py
+new file mode 100644
+index 0000000..4391dfb
+--- /dev/null
++++ b/scripts/device-build.py
+@@ -0,0 +1,178 @@
++#!/usr/bin/env python3
++"""Select and verify a op-source profile before compiling firmware."""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import re
++import subprocess
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def manifest():
++    return json.loads((ROOT / 'config/device-build.json').read_text())
++
++
++def device(name):
++    devices = manifest()['devices']
++    if name not in devices:
++        raise ValueError('Unknown device: ' + name)
++    return devices[name]
++
++
++def selections(text):
++    return set(re.findall(r'^CONFIG_TARGET_[^\s=]+_DEVICE_[^\s=]+=y$', text, re.M))
++
++
++def check_config(name, path):
++    entry = device(name)
++    settings = set(Path(path).read_text().splitlines())
++    expected = 'CONFIG_TARGET_{target}_{subtarget}_DEVICE_{profile}=y'.format(**entry)
++    if selections('\n'.join(settings)) != {expected}:
++        raise ValueError('Configuration must select exactly one device: ' + expected)
++    required = [
++        'CONFIG_TARGET_' + entry['target'] + '=y',
++        'CONFIG_TARGET_' + entry['target'] + '_' + entry['subtarget'] + '=y',
++        'CONFIG_TARGET_ROOTFS_SQUASHFS=y',
++        'CONFIG_SIGN_FIRMWARE=y',
++        'CONFIG_DOWNLOAD_CHECK_CERTIFICATE=y',
++        'CONFIG_USE_APK=y',
++    ]
++    required += (['CONFIG_PACKAGE_kmod-mt7915e=y', 'CONFIG_PACKAGE_kmod-mt7981-firmware=y',
++                  'CONFIG_PACKAGE_mt7981-wo-firmware=y', 'CONFIG_PACKAGE_luci-ssl-openssl=y']
++                 if entry['target'] == 'mediatek' else
++                 ['CONFIG_PACKAGE_kmod-mt7603=y', 'CONFIG_PACKAGE_kmod-mt7615e=y',
++                  'CONFIG_PACKAGE_kmod-mt7663-firmware-ap=y', 'CONFIG_PACKAGE_kmod-usb2=y',
++                  'CONFIG_PACKAGE_luci-ssl=y'])
++    missing = [setting for setting in required if setting not in settings]
++    if missing:
++        raise ValueError('Resolved configuration is missing: ' + ', '.join(missing))
++    if any(setting in settings for setting in
++           ['CONFIG_ALL=y', 'CONFIG_ALL_KMODS=y', 'CONFIG_ALL_NONSHARED=y',
++            'CONFIG_TARGET_ALL_PROFILES=y', 'CONFIG_TARGET_MULTI_PROFILE=y']):
++        raise ValueError('Broad package/profile selection would defeat isolated device builds')
++
++
++def check_source():
++    data = manifest()
++    details = (ROOT / 'target/linux/generic/kernel-6.18').read_text()
++    if not re.search(r'^LINUX_VERSION-6\.18\s*=\s*\.56$', details, re.M):
++        raise ValueError('op-source requires Linux ' + data['kernel'])
++    checksum = '4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89'
++    if not re.search(r'^LINUX_KERNEL_HASH-6\.18\.56\s*=\s*' + checksum + '$', details, re.M):
++        raise ValueError('Linux 6.18.56 source checksum does not match kernel.org')
++    for name, entry in data['devices'].items():
++        target = ROOT / 'target/linux' / entry['target']
++        if 'KERNEL_PATCHVER:=6.18' not in (target / 'Makefile').read_text():
++            raise ValueError(name + ': target does not select kernel 6.18')
++        image = (target / 'image' / (entry['subtarget'] + '.mk')).read_text()
++        match = re.search(r'^define Device/' + re.escape(entry['profile']) + r'\n(.*?)^endef$', image, re.M | re.S)
++        if not match or not re.search(r'^TARGET_DEVICES \+= ' + re.escape(entry['profile']) + '$', image, re.M):
++            raise ValueError(name + ': device image recipe is missing')
++        dts = (target / 'dts' / (entry['dts'] + '.dts')).read_text()
++        if '"' + entry['compatible'] + '"' not in dts:
++            raise ValueError(name + ': device-tree compatible is missing')
++        board = (target / entry['subtarget'] / 'base-files/etc/board.d/02_network').read_text()
++        if entry['compatible'] not in board:
++            raise ValueError(name + ': board network setup is missing')
++        profile = (ROOT / 'configs/devices' / (name + '.config')).read_text()
++        expected = 'CONFIG_TARGET_{target}_{subtarget}_DEVICE_{profile}=y'.format(**entry)
++        if selections(profile) != {expected}:
++            raise ValueError(name + ': preset selects the wrong device')
++        if not (target / entry['subtarget'] / 'config-6.18').exists():
++            raise ValueError(name + ': missing subtarget config-6.18')
++        if not (target / 'patches-6.18').exists():
++            raise ValueError(name + ': missing patches-6.18')
++    print('Source checks passed: Linux ' + data['kernel'] + ', ' + str(len(data['devices'])) + ' profiles')
++
++
++def check_images(name, directory):
++    entry = device(name)
++    output = Path(directory)
++    data = json.loads((output / 'profiles.json').read_text())
++    if data.get('target') != entry['target'] + '/' + entry['subtarget']:
++        raise ValueError('Firmware target does not match ' + name)
++    if data.get('linux_kernel', {}).get('version') != manifest()['kernel']:
++        raise ValueError('Firmware kernel does not match ' + manifest()['kernel'])
++    profiles = data.get('profiles', {})
++    if set(profiles) != {entry['profile']}:
++        raise ValueError('Firmware output must contain exactly the selected profile')
++    images = profiles[entry['profile']].get('images', [])
++    if not any(image.get('type') == 'sysupgrade' for image in images):
++        raise ValueError('No sysupgrade image was produced; check image size in the build log')
++    for image in images:
++        if Path(image['name']).name != image['name']:
++            raise ValueError('Invalid image filename in profiles.json')
++        path = output / image['name']
++        if not path.is_file() or path.stat().st_size != image['size']:
++            raise ValueError('Missing or incomplete firmware image: ' + image['name'])
++        with path.open('rb') as stream:
++            actual = hashlib.file_digest(stream, 'sha256').hexdigest()
++        if actual != image['sha256']:
++            raise ValueError('Firmware image checksum mismatch: ' + image['name'])
++
++
++def configure(name):
++    check_source()
++    device(name)
++    profile = ROOT / 'configs/devices' / (name + '.config')
++    text = (ROOT / 'configs/devices/common.config').read_text() + '\n' + profile.read_text()
++    config = ROOT / '.config'
++    if config.exists():
++        (ROOT / '.config.device-build.backup').write_bytes(config.read_bytes())
++    config.write_text(text)
++    subprocess.run(['make', 'defconfig'], cwd=ROOT, check=True)
++    check_config(name, config)
++    print('Configured ' + name + '; previous configuration saved in .config.device-build.backup when present')
++
++
++def matrix(name):
++    data = manifest()
++    names = data['default_devices'] if name == 'all' else [name]
++    result = []
++    for selected in names:
++        entry = device(selected)
++        result.append({'device': selected, 'target': entry['target'],
++                       'subtarget': entry['subtarget'], 'profile': entry['profile']})
++    return {'include': result}
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    commands = parser.add_subparsers(dest='command', required=True)
++    commands.add_parser('list')
++    commands.add_parser('check-source')
++    select = commands.add_parser('configure')
++    select.add_argument('device')
++    build_matrix = commands.add_parser('matrix')
++    build_matrix.add_argument('device', nargs='?', default='all')
++    check = commands.add_parser('check-config')
++    check.add_argument('device')
++    check.add_argument('path', nargs='?', default=str(ROOT / '.config'))
++    images = commands.add_parser('check-images')
++    images.add_argument('device')
++    images.add_argument('directory')
++    args = parser.parse_args()
++    try:
++        if args.command == 'list':
++            for name, entry in manifest()['devices'].items():
++                print(name + '\t' + entry['name'])
++        elif args.command == 'check-source':
++            check_source()
++        elif args.command == 'configure':
++            configure(args.device)
++        elif args.command == 'matrix':
++            print(json.dumps(matrix(args.device), separators=(',', ':')))
++        elif args.command == 'check-config':
++            check_config(args.device, args.path)
++            print('Resolved configuration checks passed for ' + args.device)
++        else:
++            check_images(args.device, args.directory)
++            print('Firmware image checks passed for ' + args.device)
++    except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
++        parser.exit(1, str(error) + '\n')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/dl_github_archive.py b/scripts/dl_github_archive.py
+index 9eafaa8..e208411 100755
+--- a/scripts/dl_github_archive.py
++++ b/scripts/dl_github_archive.py
+@@ -14,11 +14,15 @@ import hashlib
+ import json
+ import os
+ import os.path
++import posixpath
+ import re
+ import shutil
+ import ssl
++import stat
+ import subprocess
+ import sys
++import tarfile
++import tempfile
+ import time
+ import urllib.request
+ 
+@@ -121,7 +125,66 @@ class Path(object):
+ 
+         return subdir name if and only if there exists one, otherwise raise PathException
+         """
+-        args = ('tar', '-C', into, '-xzf', path, '--no-same-permissions')
++        # The repacked hash is checked only AFTER extraction. Validate the
++        # complete member graph before allowing tar to write anything.
++        with tarfile.open(path, 'r:gz') as archive:
++            members = archive.getmembers()
++        names = set()
++        links = set()
++        roots = set()
++        for member in members:
++            name = member.name.rstrip('/')
++            parts = name.split('/')
++            if (not name or name.startswith('/') or
++                    any(p in ('', '.', '..') for p in parts) or
++                    not (member.isdir() or member.isfile() or
++                         member.issym() or member.islnk())):
++                raise PathException('unsafe archive member: %s' % member.name)
++            if name in names:
++                raise PathException('duplicate archive member: %s' % name)
++            names.add(name)
++            roots.add(parts[0])
++            if member.issym():
++                links.add(name)
++        if len(roots) != 1:
++            raise PathException('archive must contain a single root directory')
++        root = roots.pop()
++        if not any(m.name.rstrip('/') == root and m.isdir() for m in members):
++            raise PathException('archive root must be a directory')
++        for member in members:
++            name = member.name.rstrip('/')
++            paths = [name]
++            if member.issym() or member.islnk():
++                target = member.linkname
++                if target.startswith('/'):
++                    raise PathException('absolute archive link: %s' % name)
++                if member.issym():
++                    target = posixpath.join(posixpath.dirname(name), target)
++                # Check the unresolved path too: normalizing link/../file
++                # before checking would hide traversal through "link".
++                prefix = ''
++                for part in target.split('/'):
++                    prefix = posixpath.normpath(posixpath.join(prefix, part))
++                    if prefix in links:
++                        raise PathException('archive link traverses symlink: %s' % name)
++                target = posixpath.normpath(target)
++                if target != root and not target.startswith(root + '/'):
++                    raise PathException('archive link escapes root: %s' % name)
++                # Reject link chains as well as extraction through a symlink.
++                # Unusual archives can fall back to the git download method.
++                paths.append(target)
++                if target in links:
++                    raise PathException('archive link chain: %s' % name)
++                if member.islnk() and not any(
++                        m.name.rstrip('/') == target and m.isfile() for m in members):
++                    raise PathException('invalid archive hard link: %s' % name)
++            for entry in paths:
++                parent = posixpath.dirname(entry)
++                while parent:
++                    if parent in links:
++                        raise PathException('archive path traverses symlink: %s' % name)
++                    parent = posixpath.dirname(parent)
++        args = ('tar', '-C', into, '-xzf', path, '--no-same-owner', '--no-same-permissions')
+         subprocess.check_call(args, preexec_fn=lambda: os.umask(0o22))
+         dirs = os.listdir(into)
+         if len(dirs) == 1:
+@@ -158,13 +221,17 @@ class GitHubCommitTsCache(object):
+     __cachen = 2048
+ 
+     def __init__(self):
+-        Path.mkdir_all(TMPDIR_DL)
++        os.makedirs(TMPDIR_DL, mode=0o700, exist_ok=True)
++        info = os.lstat(TMPDIR_DL)
++        if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or
++                info.st_mode & 0o022):
++            raise DownloadGitHubError('Unsafe GitHub download scratch directory')
+         self.cachef = os.path.join(TMPDIR_DL, self.__cachef)
+         self.cache = {}
+ 
+     def get(self, k):
+         """Get timestamp with key ``k``."""
+-        fileno = os.open(self.cachef, os.O_RDONLY | os.O_CREAT)
++        fileno = self._open(os.O_RDONLY)
+         with os.fdopen(fileno) as fin:
+             try:
+                 fcntl.lockf(fileno, fcntl.LOCK_SH)
+@@ -178,7 +245,7 @@ class GitHubCommitTsCache(object):
+ 
+     def set(self, k, v):
+         """Update timestamp with ``k``."""
+-        fileno = os.open(self.cachef, os.O_RDWR | os.O_CREAT)
++        fileno = self._open(os.O_RDWR)
+         with os.fdopen(fileno, 'w+') as f:
+             try:
+                 fcntl.lockf(fileno, fcntl.LOCK_EX)
+@@ -188,15 +255,27 @@ class GitHubCommitTsCache(object):
+             finally:
+                 fcntl.lockf(fileno, fcntl.LOCK_UN)
+ 
++    def _open(self, flags):
++        fileno = os.open(self.cachef, flags | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
++        info = os.fstat(fileno)
++        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022:
++            os.close(fileno)
++            raise DownloadGitHubError('Unsafe GitHub timestamp cache file')
++        return fileno
++
+     def _cache_init(self, fin):
++        self.cache = {}
+         for line in fin:
+-            k, ts, updated = line.split()
+-            ts = int(ts)
+-            updated = int(updated)
++            try:
++                k, ts, updated = line.split()
++                ts = int(ts)
++                updated = int(updated)
++            except ValueError:
++                continue
+             self.cache[k] = (ts, updated)
+ 
+     def _cache_flush(self, fout):
+-        cache = sorted(self.cache.items(), key=lambda a: a[1][1])
++        cache = sorted(self.cache.items(), key=lambda a: a[1][1], reverse=True)
+         cache = cache[:self.__cachen]
+         self.cache = {}
+         os.ftruncate(fout.fileno(), 0)
+@@ -234,7 +313,7 @@ class DownloadGitHubTarball(object):
+     clone-then-pack method
+     """
+ 
+-    __repo_url_regex = re.compile(r'^(?:https|git)://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)')
++    __repo_url_regex = re.compile(r'^(?:https|git)://github\.com/(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)/?$')
+ 
+     def __init__(self, args):
+         self.dl_dir = args.dl_dir
+@@ -243,6 +322,9 @@ class DownloadGitHubTarball(object):
+         self.source = args.source
+         self.submodules = args.submodules
+         self.url = args.url
++        for value in (self.source, self.subdir):
++            if not value or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+~-]*', value):
++                raise self._error('Source and subdir must be simple filenames')
+         self._init_owner_repo()
+         self.xhash = args.hash
+         self._init_hasher()
+@@ -255,13 +337,13 @@ class DownloadGitHubTarball(object):
+         if self.submodules and self.submodules != ['skip']:
+             raise self._error('Fetching submodules is not yet supported')
+         self._init_commit_ts()
+-        with Path(TMPDIR_DL, keep=True) as dir_dl:
++        with tempfile.TemporaryDirectory(prefix='github-', dir=TMPDIR_DL) as workdir:
+             # fetch tarball from GitHub
+-            tarball_path = os.path.join(dir_dl.path, self.subdir + '.tar.gz.dl')
++            tarball_path = os.path.join(workdir, self.subdir + '.tar.gz.dl')
+             with Path(tarball_path, isdir=False):
+                 self._fetch(tarball_path)
+                 # unpack
+-                d = os.path.join(dir_dl.path, self.subdir + '.untar')
++                d = os.path.join(workdir, self.subdir + '.untar')
+                 with Path(d, preclean=True) as dir_untar:
+                     tarball_prefix = Path.untar(tarball_path, into=dir_untar.path)
+                     dir0 = os.path.join(dir_untar.path, tarball_prefix)
+@@ -272,7 +354,7 @@ class DownloadGitHubTarball(object):
+                     # rename subdir
+                     os.rename(dir0, dir1)
+                     # repack
+-                    into=os.path.join(TMPDIR_DL, self.source)
++                    into=os.path.join(workdir, self.source)
+                     Path.tar(dir_untar.path, self.subdir, into=into, ts=self.commit_ts)
+                     try:
+                         self._hash_check(into)
+@@ -305,22 +387,21 @@ class DownloadGitHubTarball(object):
+ 
+     def _init_hasher(self):
+         xhash = self.xhash
+-        if len(xhash) == 64:
++        if xhash and re.fullmatch(r'[0-9a-fA-F]{64}', xhash):
+             self.hasher = hashlib.sha256()
+-        elif len(xhash) == 32:
+-            self.hasher = hashlib.md5()
+         else:
+             raise self._error('Requires sha256sum for verification')
+-        self.xhash = xhash
++        self.xhash = xhash.lower()
+ 
+     def _hash_check(self, f):
++        hasher = self.hasher.copy()
+         with open(f, 'rb') as fin:
+             while True:
+                 d = fin.read(4096)
+                 if not d:
+                     break
+-                self.hasher.update(d)
+-        xhash = self.hasher.hexdigest()
++                hasher.update(d)
++        xhash = hasher.hexdigest()
+         if xhash != self.xhash:
+             raise self._error('Wrong hash (probably caused by .gitattributes), expecting {}, got {}'.format(self.xhash, xhash))
+ 
+@@ -368,8 +449,8 @@ class DownloadGitHubTarball(object):
+         raise self._error('Cannot fetch commit ts:{}'.format(reasons))
+ 
+     def _init_commit_ts_remote_get(self, url, attrpath):
+-        resp = self._make_request(url)
+-        data = resp.read()
++        with self._make_request(url) as resp:
++            data = resp.read()
+         date = json.loads(data)
+         for attr in attrpath:
+             date = date[attr]
+@@ -382,8 +463,7 @@ class DownloadGitHubTarball(object):
+         """Fetch tarball of the specified version ref."""
+         ref = self.version
+         url = self._make_repo_url_path('tarball', ref)
+-        resp = self._make_request(url)
+-        with open(path, 'wb') as fout:
++        with self._make_request(url) as resp, open(path, 'wb') as fout:
+             while True:
+                 d = resp.read(4096)
+                 if not d:
+@@ -404,8 +484,8 @@ class DownloadGitHubTarball(object):
+             'User-Agent': 'OpenWrt',
+         }
+         req = urllib.request.Request(url, headers=headers)
+-        sslcontext = ssl._create_unverified_context()
+-        fileobj = urllib.request.urlopen(req, context=sslcontext)
++        sslcontext = ssl.create_default_context()
++        fileobj = urllib.request.urlopen(req, context=sslcontext, timeout=30)
+         return fileobj
+ 
+     def _error(self, msg):
+diff --git a/scripts/verify-release.sh b/scripts/verify-release.sh
+new file mode 100644
+index 0000000..e77988a
+--- /dev/null
++++ b/scripts/verify-release.sh
+@@ -0,0 +1,23 @@
++#!/bin/bash
++# Verify every sysupgrade image before making it a release artifact.
++set -euo pipefail
++target_dir=${1:?Supply the target output directory}
++verify_dir=$(mktemp -d "${RUNNER_TEMP:-/tmp}/op-source-verify.XXXXXX")
++trap 'rm -rf "$verify_dir"' EXIT HUP INT TERM
++mkdir "$verify_dir/keys"
++cp key-build.pub "$verify_dir/keys/$(staging_dir/host/bin/usign -F -p key-build.pub)"
++
++count=0
++while IFS= read -r -d '' image; do
++    staging_dir/host/bin/fwtool -q -i "$verify_dir/metadata" "$image"
++    staging_dir/host/bin/fwtool -q -s "$verify_dir/certificate" "$image"
++    staging_dir/host/bin/fwtool -q -T -s /dev/null "$image" |
++        staging_dir/host/bin/ucert -V -m - -c "$verify_dir/certificate" -P "$verify_dir/keys"
++    count=$((count + 1))
++done < <(find "$target_dir" -type f \( -name '*-sysupgrade.bin' -o -name '*-sysupgrade.itb' \) -print0)
++
++if [ "$count" -eq 0 ]; then
++    echo 'No sysupgrade images were produced' >&2
++    exit 1
++fi
++printf 'Verified %s signed sysupgrade images\n' "$count"
+diff --git a/target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch b/target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch
+deleted file mode 100644
+index 6e92d45..0000000
+--- a/target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch
++++ /dev/null
+@@ -1,71 +0,0 @@
+-From 1c1a342aceec79528b3ba51f376eca2be5928fe7 Mon Sep 17 00:00:00 2001
+-From: Sagnik Sasmal <sagnik@sagnik.me>
+-Date: Thu, 10 Sep 2026 22:44:05 +0000
+-Subject: mtd: spinand: Do not update the QE bit on devices without one
+-
+-Commit be0b86c648bf ("mtd: spinand: Gather all the bus interface
+-steps in one single function") moved quad-enable setup into
+-spinand_configure_chip(). The new code only determines whether quad
+-mode is needed when SPINAND_HAS_QE_BIT is set, but calls
+-spinand_init_quad_enable() unconditionally. This clears configuration
+-register bit 0 on devices without a QE bit.
+-
+-That bit is not universally a QE bit. On the Winbond W25N02KV it is
+-H-DIS, which disables the active-low HOLD function. Clearing H-DIS
+-enables HOLD during single and dual I/O operations. If IO3 is not kept
+-high, the flash can pause a command and ignore clock and data.
+-
+-H-DIS is not restored by the FFh reset command, allowing the incorrect
+-state to survive an SoC warm reboot while the flash remains powered.
+-
+-Before the refactoring, spinand_init_quad_enable() returned without
+-touching the configuration register on devices without
+-SPINAND_HAS_QE_BIT. Restore that behavior by only calling the helper
+-when the flag is set.
+-
+-Return zero explicitly once SSDR configuration completes, as all errors
+-are returned immediately. This avoids returning an uninitialized value
+-when neither optional configuration step runs.
+-
+-The regression was reproduced on a JioRouter JIDU6401 with an MT7986
+-SoC and a W25N02KV. With Linux 6.18.44, sysupgrade failed and the
+-following warm reboot hung in BL2. With this change applied, both
+-sysupgrade and warm reboot completed successfully.
+-
+-Fixes: be0b86c648bf ("mtd: spinand: Gather all the bus interface steps in one single function")
+-Cc: stable@vger.kernel.org
+-Suggested-by: Miquel Raynal <miquel.raynal@bootlin.com>
+-Assisted-by: LLM
+-Signed-off-by: Sagnik Sasmal <sagnik@sagnik.me>
+-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+----
+- drivers/mtd/nand/spi/core.c | 10 +++++-----
+- 1 file changed, 5 insertions(+), 5 deletions(-)
+-
+---- a/drivers/mtd/nand/spi/core.c
+-+++ b/drivers/mtd/nand/spi/core.c
+-@@ -1494,11 +1494,11 @@ static int spinand_configure_chip(struct
+- 		    spinand->ssdr_op_templates.write_cache->data.buswidth == 4 ||
+- 		    spinand->ssdr_op_templates.update_cache->data.buswidth == 4)
+- 			quad_enable = true;
+--	}
+- 
+--	ret = spinand_init_quad_enable(spinand, quad_enable);
+--	if (ret)
+--		return ret;
+-+		ret = spinand_init_quad_enable(spinand, quad_enable);
+-+		if (ret)
+-+			return ret;
+-+	}
+- 
+- 	if (spinand->configure_chip) {
+- 		ret = spinand->configure_chip(spinand, SSDR);
+-@@ -1506,7 +1506,7 @@ static int spinand_configure_chip(struct
+- 			return ret;
+- 	}
+- 
+--	return ret;
+-+	return 0;
+- }
+- 
+- static int spinand_init_flash(struct spinand_device *spinand)
+diff --git a/target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch b/target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch
+deleted file mode 100644
+index e43bd55..0000000
+--- a/target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch
++++ /dev/null
+@@ -1,58 +0,0 @@
+-From cd243401994880b8b6810c53177bce56eebaece5 Mon Sep 17 00:00:00 2001
+-From: Carlo Szelinsky <github@szelinsky.de>
+-Date: Wed, 12 Aug 2026 13:42:28 +0300
+-Subject: [PATCH] USB: serial: option: add Quectel EG060W
+-
+-Add Quectel EG060W with product ID 0x6004.
+-The three vendor-specific interfaces are DIAG, NMEA and AT; the CDC-NCM
+-data interfaces are handled by the cdc_ncm driver.
+-
+-T:  Bus=01 Lev=01 Prnt=01 Port=01 Cnt=01 Dev#=  2 Spd=480  MxCh= 0
+-D:  Ver= 2.10 Cls=ef(misc ) Sub=02 Prot=01 MxPS=64 #Cfgs=  1
+-P:  Vendor=2c7c ProdID=6004 Rev= 3.18
+-S:  Manufacturer=Quectel
+-S:  Product=EG060W-EAAA
+-S:  SerialNumber=123456789ABCD
+-C:* #Ifs= 5 Cfg#= 1 Atr=e0 MxPwr=  2mA
+-A:  FirstIf#= 0 IfCount= 2 Cls=02(comm.) Sub=0d Prot=00
+-I:* If#= 0 Alt= 0 #EPs= 1 Cls=02(comm.) Sub=0d Prot=00 Driver=cdc_ncm
+-E:  Ad=82(I) Atr=03(Int.) MxPS=  16 Ivl=32ms
+-I:  If#= 1 Alt= 0 #EPs= 0 Cls=0a(data ) Sub=00 Prot=01 Driver=cdc_ncm
+-I:* If#= 1 Alt= 1 #EPs= 2 Cls=0a(data ) Sub=00 Prot=01 Driver=cdc_ncm
+-E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-I:* If#= 2 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=00 Prot=00 Driver=option
+-E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-I:* If#= 3 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=00 Prot=00 Driver=option
+-E:  Ad=84(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-I:* If#= 4 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=00 Prot=00 Driver=option
+-E:  Ad=85(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-
+-Cc: stable@vger.kernel.org
+-Signed-off-by: Carlo Szelinsky <github@szelinsky.de>
+-Signed-off-by: Johan Hovold <johan@kernel.org>
+----
+- drivers/usb/serial/option.c | 2 ++
+- 1 file changed, 2 insertions(+)
+-
+---- a/drivers/usb/serial/option.c
+-+++ b/drivers/usb/serial/option.c
+-@@ -281,6 +281,7 @@ static void option_instat_callback(struc
+- #define QUECTEL_PRODUCT_EC200U			0x0901
+- #define QUECTEL_PRODUCT_EG912Y			0x6001
+- #define QUECTEL_PRODUCT_EC200S_CN		0x6002
+-+#define QUECTEL_PRODUCT_EG060W			0x6004
+- #define QUECTEL_PRODUCT_EC200A			0x6005
+- #define QUECTEL_PRODUCT_EG916Q			0x6007
+- #define QUECTEL_PRODUCT_EM061K_LWW		0x6008
+-@@ -1269,6 +1270,7 @@ static const struct usb_device_id option
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200A, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200U, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200S_CN, 0xff, 0, 0) },
+-+	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG060W, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200T, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG912Y, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG916Q, 0xff, 0x00, 0x00) },
+diff --git a/target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch b/target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch
+deleted file mode 100644
+index 64f3b00..0000000
+--- a/target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch
++++ /dev/null
+@@ -1,60 +0,0 @@
+-From 0f2fd31f63c65c409bd336af3a42d478a9207c1f Mon Sep 17 00:00:00 2001
+-From: Gilberto Conde <gilbertorconde@gmail.com>
+-Date: Mon, 21 Sep 2026 10:34:26 +0100
+-Subject: [PATCH] net: usb: qmi_wwan: add Quectel EG120K-EA
+-
+-Add support for the Quectel EG120K-EA LTE Cat.12 module (USB ID
+-2c7c:030b). Its QMI interface (interface 4) uses class/subclass/protocol
+-ff/ff/ff like the other recent Quectel modules, so match it the same way.
+-
+-The product ID is shared with the EM060K, which the option driver
+-already knows and uses to claim the serial interfaces. Without a
+-qmi_wwan entry the data interface is left unbound.
+-
+-Tested on a GL.iNet GL-X2000, where the module is soldered down and
+-enumerates at SuperSpeed: cdc-wdm0 and wwan0 appear and ModemManager
+-brings up a data session.
+-
+-T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#=  2 Spd=5000 MxCh= 0
+-D:  Ver= 3.10 Cls=00(>ifc ) Sub=00 Prot=00 MxPS= 9 #Cfgs=  1
+-P:  Vendor=2c7c ProdID=030b Rev= 5.04
+-S:  Manufacturer=Quectel
+-S:  Product=EG120K-EA
+-S:  SerialNumber=45546267
+-C:* #Ifs= 6 Cfg#= 1 Atr=a0 MxPwr=896mA
+-I:* If#= 0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=30 Driver=option
+-E:  Ad=01(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=81(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 1 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=00 Prot=40 Driver=option
+-E:  Ad=83(I) Atr=03(Int.) MxPS=  10 Ivl=32ms
+-E:  Ad=82(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=02(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 2 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=40 Driver=option
+-E:  Ad=85(I) Atr=03(Int.) MxPS=  10 Ivl=32ms
+-E:  Ad=84(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=03(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 3 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=40 Driver=option
+-E:  Ad=87(I) Atr=03(Int.) MxPS=  10 Ivl=32ms
+-E:  Ad=86(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=04(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 4 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=ff Driver=qmi_wwan
+-E:  Ad=88(I) Atr=03(Int.) MxPS=   8 Ivl=32ms
+-E:  Ad=8e(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=0f(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#=12 Alt= 0 #EPs= 1 Cls=ff(vend.) Sub=ff Prot=70 Driver=(none)
+-E:  Ad=89(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-
+-Signed-off-by: Gilberto Conde <gilbertorconde@gmail.com>
+-Link: https://patch.msgid.link/20260921093426.2870266-1-gilbertorconde@gmail.com
+-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+----
+---- a/drivers/net/usb/qmi_wwan.c
+-+++ b/drivers/net/usb/qmi_wwan.c
+-@@ -1085,6 +1085,7 @@ static const struct usb_device_id produc
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0122)},	/* Quectel RG650V */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0125)},	/* Quectel EC25, EC20 R2.0  Mini PCIe */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0306)},	/* Quectel EP06/EG06/EM06 */
+-+	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x030b)},	/* Quectel EM060K/EG120K-EA */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0512)},	/* Quectel EG12/EM12 */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0620)},	/* Quectel EM160R-GL */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0800)},	/* Quectel RM500Q-GL */
+diff --git a/target/linux/generic/kernel-6.18 b/target/linux/generic/kernel-6.18
+index 443d40e..cd97aa8 100644
+--- a/target/linux/generic/kernel-6.18
++++ b/target/linux/generic/kernel-6.18
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.18 = .55
+-LINUX_KERNEL_HASH-6.18.55 = f410638061a165c12f42ab871d2f3fcd525515359b5faeee80969cff84524df9
++LINUX_VERSION-6.18 = .56
++LINUX_KERNEL_HASH-6.18.56 = 4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89
+diff --git a/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch b/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch
+index 54f11e8..0771fad 100644
+--- a/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch
++++ b/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch
+@@ -32,12 +32,13 @@ Signed-off-by: John Crispin <john@phrozen.org>
+ 
+ --- a/arch/loongarch/vdso/Makefile
+ +++ b/arch/loongarch/vdso/Makefile
+-@@ -13,6 +13,8 @@ ccflags-vdso := \
++@@ -13,7 +13,9 @@ ccflags-vdso := \
+  	$(filter -E%,$(KBUILD_CFLAGS)) \
+  	$(filter -march=%,$(KBUILD_CFLAGS)) \
+  	$(filter -m%-float,$(KBUILD_CFLAGS)) \
+ +	$(filter -ffile-prefix-map=%,$(KBUILD_CFLAGS)) \
+ +	$(filter -fdebug-prefix-map=%,$(KBUILD_CFLAGS)) \
++ 	$(CONFIG_CC_OPT_INLINE_MEMSET) \
+  	$(CLANG_FLAGS) \
+  	-D__VDSO__
+  
+diff --git a/target/linux/ramips/dts/mt7628an_cudy_tr1200-v1.dts b/target/linux/ramips/dts/mt7628an_cudy_tr1200-v1.dts
+index ae2bdd8..0644d17 100644
+--- a/target/linux/ramips/dts/mt7628an_cudy_tr1200-v1.dts
++++ b/target/linux/ramips/dts/mt7628an_cudy_tr1200-v1.dts
+@@ -126,7 +126,7 @@
+ 
+ 			partition@fe0000 {
+ 				label = "backup";
+-				reg = <0xfe000 0x10000>;
++				reg = <0xfe0000 0x10000>;
+ 				read-only;
+ 			};
+ 
+diff --git a/tests/test_build_security.py b/tests/test_build_security.py
+new file mode 100644
+index 0000000..1f8ab99
+--- /dev/null
++++ b/tests/test_build_security.py
+@@ -0,0 +1,362 @@
++import argparse
++import hashlib
++import importlib.util
++import io
++import os
++from pathlib import Path
++import ssl
++import subprocess
++import tarfile
++import tempfile
++import unittest
++from unittest import mock
++
++ROOT = Path(__file__).resolve().parents[1]
++
++def load_module(name, filename):
++    spec = importlib.util.spec_from_file_location(name, ROOT / 'scripts' / filename)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++download = load_module('download', 'dl_github_archive.py')
++
++class ArchiveTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.path = Path(self.temp.name)
++        (self.path / 'out').mkdir()
++
++    def archive(self, entries):
++        path = self.path / 'source.tar.gz'
++        with tarfile.open(path, 'w:gz') as archive:
++            for name, kind, target in [('root', tarfile.DIRTYPE, '')] + entries:
++                member = tarfile.TarInfo(name)
++                member.type = kind
++                member.linkname = target
++                member.mode = 0o755
++                data = b'valid source\n' if kind == tarfile.REGTYPE else b''
++                member.size = len(data)
++                archive.addfile(member, io.BytesIO(data))
++        return str(path)
++
++    def reject(self, entries):
++        with mock.patch.object(download.subprocess, 'check_call') as extract:
++            with self.assertRaises(download.PathException):
++                download.Path.untar(self.archive(entries), into=str(self.path / 'out'))
++            extract.assert_not_called()
++        self.assertEqual(list((self.path / 'out').iterdir()), [])
++
++    def test_regular_files_and_internal_symlinks_extract(self):
++        path = self.archive([
++            ('root/dir', tarfile.DIRTYPE, ''),
++            ('root/file', tarfile.REGTYPE, ''),
++            ('root/dir/link', tarfile.SYMTYPE, '../file'),
++        ])
++        self.assertEqual(download.Path.untar(path, into=str(self.path / 'out')), 'root')
++        self.assertEqual((self.path / 'out/root/dir/link').read_bytes(), b'valid source\n')
++
++    def test_parent_traversal(self):
++        self.reject([('root/../../outside', tarfile.REGTYPE, '')])
++
++    def test_absolute_path(self):
++        self.reject([('/outside', tarfile.REGTYPE, '')])
++
++    def test_symlink_escape(self):
++        self.reject([('root/link', tarfile.SYMTYPE, '../../outside')])
++
++    def test_absolute_symlink(self):
++        self.reject([('root/link', tarfile.SYMTYPE, '/tmp')])
++
++    def test_symlink_parent_before_or_after_file(self):
++        for entries in (
++            [('root/link', tarfile.SYMTYPE, '.'), ('root/link/file', tarfile.REGTYPE, '')],
++            [('root/link/file', tarfile.REGTYPE, ''), ('root/link', tarfile.SYMTYPE, '.')],
++        ):
++            with self.subTest(entries=entries):
++                self.reject(entries)
++
++    def test_symlink_chain_with_parent_traversal(self):
++        self.reject([
++            ('root/link', tarfile.SYMTYPE, '.'),
++            ('root/chain', tarfile.SYMTYPE, 'link/../outside'),
++        ])
++
++    def test_hardlink_escape(self):
++        self.reject([('root/link', tarfile.LNKTYPE, '../outside')])
++
++    def test_hardlink_to_symlink(self):
++        self.reject([('root/link', tarfile.SYMTYPE, '.'),
++                     ('root/hard', tarfile.LNKTYPE, 'root/link')])
++
++    def test_devices_and_fifo(self):
++        for kind in (tarfile.CHRTYPE, tarfile.BLKTYPE, tarfile.FIFOTYPE):
++            with self.subTest(kind=kind):
++                self.reject([('root/special', kind, '')])
++
++    def test_duplicate_members(self):
++        self.reject([('root/file', tarfile.REGTYPE, ''), ('root/file', tarfile.REGTYPE, '')])
++
++    def test_multiple_roots(self):
++        self.reject([('other/file', tarfile.REGTYPE, '')])
++
++class DownloadTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.path = Path(self.temp.name)
++        patch = mock.patch.object(download, 'TMPDIR_DL', str(self.path / 'work'))
++        patch.start()
++        self.addCleanup(patch.stop)
++
++    def args(self, **changes):
++        values = dict(dl_dir=str(self.path), url='https://github.com/example/project.git',
++                      subdir='project-1.0', source='project-1.0.tar.gz',
++                      version='a' * 40, hash=hashlib.sha256(b'repacked').hexdigest(),
++                      submodules=None)
++        values.update(changes)
++        return argparse.Namespace(**values)
++
++    def test_tls_validation_and_timeout(self):
++        method = download.DownloadGitHubTarball(self.args())
++        with mock.patch.object(download.urllib.request, 'urlopen') as open_url:
++            method._make_request('/repos/example/project')
++        context = open_url.call_args.kwargs['context']
++        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
++        self.assertTrue(context.check_hostname)
++        self.assertEqual(open_url.call_args.kwargs['timeout'], 30)
++
++    def test_reject_path_and_option_injection(self):
++        for field in ('source', 'subdir'):
++            for value in ('../outside', '/tmp/outside', '-C', 'name\nline'):
++                with self.subTest(field=field, value=value):
++                    with self.assertRaises(download.DownloadGitHubError):
++                        download.DownloadGitHubTarball(self.args(**{field: value}))
++
++    def test_reject_invalid_url(self):
++        for url in ('https://githubXcom/owner/repo', 'https://github.com/owner/repo/extra',
++                    'https://github.com/owner/repo?x=1'):
++            with self.subTest(url=url):
++                with self.assertRaises(download.DownloadGitHubError):
++                    download.DownloadGitHubTarball(self.args(url=url))
++
++    def test_reject_weak_and_invalid_hashes(self):
++        for checksum in ('a' * 32, 'g' * 64, 'skip', None):
++            with self.subTest(checksum=checksum):
++                with self.assertRaises(download.DownloadGitHubError):
++                    download.DownloadGitHubTarball(self.args(hash=checksum))
++
++    def test_hash_check_is_repeatable_and_rejects_tampering(self):
++        path = self.path / 'repacked'
++        path.write_bytes(b'repacked')
++        method = download.DownloadGitHubTarball(self.args())
++        method._hash_check(path)
++        method._hash_check(path)
++        path.write_bytes(b'tampered')
++        with self.assertRaises(download.DownloadGitHubError):
++            method._hash_check(path)
++
++    def test_private_download_workspace_and_cleanup(self):
++        method = download.DownloadGitHubTarball(self.args())
++        def fetch(path):
++            self.assertEqual(Path(path).parent.stat().st_mode & 0o777, 0o700)
++            raise OSError('network failure')
++        with mock.patch.object(method, '_init_commit_ts'), mock.patch.object(method, '_fetch', side_effect=fetch):
++            with self.assertRaises(OSError):
++                method.download()
++        self.assertEqual(list((self.path / 'work').glob('github-*')), [])
++
++    def test_corrupt_cache_and_recent_entry_retention(self):
++        cache = download.GitHubCommitTsCache()
++        Path(cache.cachef).write_text('broken\nold 123 1\ninvalid value integer\n')
++        self.assertEqual(cache.get('old'), 123)
++        with mock.patch.object(cache, '_GitHubCommitTsCache__cachen', 1):
++            cache.set('new', 456)
++        self.assertIsNone(cache.get('old'))
++        self.assertEqual(cache.get('new'), 456)
++
++    def test_scratch_directory_symlink_is_rejected(self):
++        victim = self.path / 'victim'
++        victim.mkdir()
++        (self.path / 'work').symlink_to(victim, target_is_directory=True)
++        with self.assertRaises(download.DownloadGitHubError):
++            download.DownloadGitHubTarball(self.args())
++        self.assertEqual(list(victim.iterdir()), [])
++
++    def test_writable_by_others_scratch_directory_is_rejected(self):
++        scratch = self.path / 'work'
++        scratch.mkdir()
++        scratch.chmod(0o777)
++        with self.assertRaises(download.DownloadGitHubError):
++            download.DownloadGitHubTarball(self.args())
++        self.assertEqual(list(scratch.iterdir()), [])
++
++    def test_cache_symlink_cannot_truncate_another_file(self):
++        cache = download.GitHubCommitTsCache()
++        victim = self.path / 'victim'
++        victim.write_text('keep this data')
++        Path(cache.cachef).symlink_to(victim)
++        with self.assertRaises(OSError):
++            cache.set('key', 1)
++        self.assertEqual(victim.read_text(), 'keep this data')
++
++    def test_world_writable_cache_is_rejected(self):
++        cache = download.GitHubCommitTsCache()
++        Path(cache.cachef).write_text('key 1 2\n')
++        Path(cache.cachef).chmod(0o666)
++        with self.assertRaises(download.DownloadGitHubError):
++            cache.get('key')
++
++class SigningTests(unittest.TestCase):
++    def test_unsigned_sysupgrade_rejected_by_device_policy(self):
++        path = ROOT / 'package/base-files/files/lib/upgrade/fwtool.sh'
++        script = '. "$1"; REQUIRE_IMAGE_SIGNATURE=1; fwtool() { return 1; }; v() { :; }; fwtool_check_signature image'
++        result = subprocess.run(['sh', '-c', script, 'test', str(path)], capture_output=True)
++        self.assertNotEqual(result.returncode, 0)
++
++    def test_no_output_images_rejected(self):
++        with tempfile.TemporaryDirectory() as temp:
++            work = Path(temp)
++            (work / 'staging_dir/host/bin').mkdir(parents=True)
++            usign = work / 'staging_dir/host/bin/usign'
++            usign.write_text('#!/bin/sh\necho fingerprint\n')
++            usign.chmod(0o755)
++            (work / 'key-build.pub').write_text('public')
++            (work / 'images').mkdir()
++            result = subprocess.run(['bash', str(ROOT / 'scripts/verify-release.sh'), 'images'],
++                                    cwd=temp, capture_output=True)
++            self.assertNotEqual(result.returncode, 0)
++            self.assertIn(b'No sysupgrade images', result.stderr)
++
++    def verify_images(self, images):
++        # Substitute signing tools to test orchestration and fail-closed shell
++        # behavior; cryptographic verification is done by usign/ucert in CI.
++        with tempfile.TemporaryDirectory() as temp:
++            work = Path(temp)
++            tools = work / 'staging_dir/host/bin'
++            tools.mkdir(parents=True)
++            scripts = {
++                'usign': '#!/bin/sh\necho fingerprint\n',
++                'fwtool': '''#!/bin/sh
++case "$2" in
++  -i) echo metadata > "$3" ;;
++  -s) grep -q '^signed$' "$4" || exit 1; echo certificate > "$3" ;;
++  -T) cat "$5"; grep -q '^tampered$' "$5" && exit 1; exit 0 ;;
++  *) exit 1 ;;
++esac
++''',
++                'ucert': '#!/bin/sh\ngrep -q "^signed$"\n',
++            }
++            for name, source in scripts.items():
++                (tools / name).write_text(source)
++                (tools / name).chmod(0o755)
++            (work / 'key-build.pub').write_text('public')
++            (work / 'images').mkdir()
++            for name, data in images.items():
++                (work / 'images' / name).write_text(data)
++            return subprocess.run(['bash', str(ROOT / 'scripts/verify-release.sh'), 'images'],
++                                  cwd=temp, capture_output=True)
++
++    def test_all_bin_and_itb_images_are_checked(self):
++        result = self.verify_images({'first device-sysupgrade.itb': 'signed\n',
++                                     'second-sysupgrade.bin': 'signed\n'})
++        self.assertEqual(result.returncode, 0, result.stderr)
++        self.assertIn(b'Verified 2 signed', result.stdout)
++
++    def test_one_unsigned_image_fails_release(self):
++        result = self.verify_images({'first-sysupgrade.itb': 'signed\n',
++                                     'second-sysupgrade.bin': 'unsigned\n'})
++        self.assertNotEqual(result.returncode, 0)
++
++    def test_pipeline_error_fails_release_even_when_verifier_succeeds(self):
++        result = self.verify_images({'device-sysupgrade.itb': 'signed\ntampered\n'})
++        self.assertNotEqual(result.returncode, 0)
++
++    def test_apk_build_installs_firmware_trust_anchor_and_policy(self):
++        source = (ROOT / 'package/base-files/Makefile').read_text()
++        start = source.index('ifneq ($(filter y,$(CONFIG_SIGN_FIRMWARE)')
++        end = source.index('\nifeq ($(CONFIG_NAND_SUPPORT),)', start)
++        with tempfile.TemporaryDirectory() as temp:
++            work = Path(temp)
++            (work / 'host/bin').mkdir(parents=True)
++            usign = work / 'host/bin/usign'
++            usign.write_text('''#!/bin/sh
++if [ "$1" = -F ]; then echo fingerprint; exit 0; fi
++while [ "$#" -gt 0 ]; do
++  case "$1" in
++    -s) shift; echo private > "$1" ;;
++    -p) shift; echo public > "$1" ;;
++  esac
++  shift
++done
++''')
++            usign.chmod(0o755)
++            ucert = work / 'host/bin/ucert'
++            ucert.write_text('#!/bin/sh\nwhile [ "$#" -gt 0 ]; do if [ "$1" = -c ]; then shift; echo certificate > "$1"; fi; shift; done\n')
++            ucert.chmod(0o755)
++            (work / 'public-key.pem').write_text('apk public key')
++            makefile = '''CONFIG_USE_APK=y
++CONFIG_SIGN_FIRMWARE=y
++CONFIG_REQUIRE_IMAGE_SIGNATURE=y
++STAGING_DIR_HOST=$(CURDIR)/host
++BUILD_KEY=$(CURDIR)/key-build
++BUILD_KEY_APK_PUB=$(CURDIR)/public-key.pem
++CP=cp
++'''
++            makefile += source[start:end]
++            makefile += '''\nall:
++\t$(Build/Configure)
++\t$(call Package/base-files/install-key,$(CURDIR)/root)
++\t$(call Package/base-files/install-firmware-key,$(CURDIR)/root)
++\t$(call Package/base-files/install-signature-policy,$(CURDIR)/root)
++'''
++            (work / 'Makefile').write_text(makefile)
++            result = subprocess.run(['make'], cwd=temp, capture_output=True)
++            self.assertEqual(result.returncode, 0, result.stderr)
++            self.assertTrue((work / 'key-build.ucert').is_file())
++            self.assertEqual((work / 'root/etc/opkg/keys/fingerprint').read_text(), 'public\n')
++            self.assertEqual((work / 'root/etc/apk/keys/public-key.pem').read_text(), 'apk public key')
++            self.assertEqual((work / 'root/lib/upgrade/require-signature.sh').read_text(), 'REQUIRE_IMAGE_SIGNATURE=1\n')
++            self.assertFalse((work / 'root/key-build').exists())
++
++    def run_image_signing_recipe(self, name, with_keys=False):
++        source = (ROOT / 'include/image-commands.mk').read_text()
++        body = source.split('define Build/' + name + '\n')[1].split('\nendef')[0]
++        signing = body[body.index('\t$(if $(CONFIG_SIGN_FIRMWARE),'):]
++        with tempfile.TemporaryDirectory() as temp:
++            work = Path(temp)
++            (work / 'bin').mkdir()
++            for command, text in {
++                'usign': '#!/bin/sh\nexit 1\n',
++                'ucert': '#!/bin/sh\ntouch ucert-was-called\n',
++                'fwtool': '#!/bin/sh\ntouch fwtool-was-called\n',
++            }.items():
++                (work / 'bin' / command).write_text(text)
++                (work / 'bin' / command).chmod(0o755)
++            (work / 'all').write_text('firmware')
++            if with_keys:
++                (work / 'key-build').write_text('private')
++                (work / 'key-build.ucert').write_text('certificate')
++            (work / 'Makefile').write_text('CONFIG_SIGN_FIRMWARE=y\nBUILD_KEY=key-build\n.PHONY: all\nall:\n' + signing + '\n')
++            env = dict(os.environ, PATH=str(work / 'bin') + os.pathsep + os.environ['PATH'])
++            result = subprocess.run(['make'], cwd=temp, env=env, capture_output=True)
++            self.assertFalse((work / 'ucert-was-called').exists())
++            self.assertFalse((work / 'fwtool-was-called').exists())
++            return result
++
++    def test_image_recipes_refuse_missing_keys(self):
++        for name in ('append-metadata', 'append-gl-metadata'):
++            with self.subTest(recipe=name):
++                result = self.run_image_signing_recipe(name)
++                self.assertNotEqual(result.returncode, 0)
++                self.assertIn(b'Firmware signing requires', result.stderr)
++
++    def test_image_recipes_propagate_signer_failure(self):
++        for name in ('append-metadata', 'append-gl-metadata'):
++            with self.subTest(recipe=name):
++                result = self.run_image_signing_recipe(name, with_keys=True)
++                self.assertNotEqual(result.returncode, 0)
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_device_build.py b/tests/test_device_build.py
+new file mode 100644
+index 0000000..4734ee3
+--- /dev/null
++++ b/tests/test_device_build.py
+@@ -0,0 +1,108 @@
++import hashlib
++import importlib.util
++import json
++from pathlib import Path
++import tempfile
++import unittest
++
++ROOT = Path(__file__).resolve().parents[1]
++spec = importlib.util.spec_from_file_location('device_build', ROOT / 'scripts/device-build.py')
++builder = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(builder)
++
++
++class SelectionTests(unittest.TestCase):
++    def test_default_matrix_builds_three_devices_on_correct_targets(self):
++        entries = builder.matrix('all')['include']
++        self.assertEqual([(e['device'], e['target'], e['subtarget']) for e in entries],
++                         [('ax3000t', 'mediatek', 'filogic'),
++                          ('tr3000', 'mediatek', 'filogic'),
++                          ('tr1200', 'ramips', 'mt76x8')])
++
++    def test_optional_layouts_are_explicit_single_device_choices(self):
++        for name in ['ax3000t-ubootmod', 'tr3000-256mb', 'tr3000-ubootmod']:
++            with self.subTest(name=name):
++                self.assertEqual([e['device'] for e in builder.matrix(name)['include']], [name])
++
++    def test_unknown_device_is_rejected(self):
++        for name in ['tr3000-v2', '../ax3000t', 'all; echo unsafe']:
++            with self.subTest(name=name), self.assertRaises(ValueError):
++                builder.matrix(name)
++
++    def test_device_sources_and_presets_exist(self):
++        builder.check_source()
++
++    def resolved_config(self):
++        return '\n'.join([
++            'CONFIG_TARGET_ramips=y', 'CONFIG_TARGET_ramips_mt76x8=y',
++            'CONFIG_TARGET_ramips_mt76x8_DEVICE_cudy_tr1200-v1=y',
++            'CONFIG_TARGET_ROOTFS_SQUASHFS=y', 'CONFIG_SIGN_FIRMWARE=y',
++            'CONFIG_DOWNLOAD_CHECK_CERTIFICATE=y', 'CONFIG_USE_APK=y',
++            'CONFIG_PACKAGE_kmod-mt7603=y', 'CONFIG_PACKAGE_kmod-mt7615e=y',
++            'CONFIG_PACKAGE_kmod-mt7663-firmware-ap=y', 'CONFIG_PACKAGE_kmod-usb2=y',
++            'CONFIG_PACKAGE_luci-ssl=y'])
++
++    def test_resolved_config_requires_correct_device_and_wifi(self):
++        with tempfile.TemporaryDirectory() as temporary:
++            path = Path(temporary) / '.config'
++            good = self.resolved_config()
++            path.write_text(good)
++            builder.check_config('tr1200', path)
++            cases = [good.replace('CONFIG_PACKAGE_kmod-mt7615e=y', ''),
++                     good.replace('cudy_tr1200-v1', 'cudy_wr300-v1'),
++                     good + '\nCONFIG_TARGET_ramips_mt76x8_DEVICE_cudy_wr300-v1=y',
++                     good + '\nCONFIG_TARGET_ALL_PROFILES=y',
++                     good.replace('CONFIG_SIGN_FIRMWARE=y', '')]
++            for text in cases:
++                with self.subTest(text=text):
++                    path.write_text(text)
++                    with self.assertRaises(ValueError): builder.check_config('tr1200', path)
++
++    def test_tr1200_backup_partition_matches_its_address(self):
++        source = (ROOT / 'target/linux/ramips/dts/mt7628an_cudy_tr1200-v1.dts').read_text()
++        partition = source.split('partition@fe0000 {', 1)[1].split('};', 1)[0]
++        self.assertIn('reg = <0xfe0000 0x10000>;', partition)
++
++
++class ImageTests(unittest.TestCase):
++    def setUp(self):
++        self.temporary = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temporary.cleanup)
++        self.output = Path(self.temporary.name)
++        payload = b'firmware test payload'
++        (self.output / 'tr1200-sysupgrade.bin').write_bytes(payload)
++        self.info = {
++            'target': 'ramips/mt76x8', 'linux_kernel': {'version': '6.18.56'},
++            'profiles': {'cudy_tr1200-v1': {'images': [{
++                'type': 'sysupgrade', 'name': 'tr1200-sysupgrade.bin',
++                'size': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}]}}}
++
++    def write_info(self):
++        (self.output / 'profiles.json').write_text(json.dumps(self.info))
++
++    def test_complete_correct_image_is_accepted(self):
++        self.write_info()
++        builder.check_images('tr1200', self.output)
++
++    def test_missing_sysupgrade_is_rejected(self):
++        self.info['profiles']['cudy_tr1200-v1']['images'][0]['type'] = 'initramfs'
++        self.write_info()
++        with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)
++
++    def test_corrupted_image_is_rejected(self):
++        self.write_info()
++        (self.output / 'tr1200-sysupgrade.bin').write_bytes(b'x' * 21)
++        with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)
++
++    def test_wrong_kernel_or_profile_is_rejected(self):
++        self.info['linux_kernel']['version'] = '6.18.52'
++        self.write_info()
++        with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)
++        self.info['linux_kernel']['version'] = '6.18.56'
++        self.info['profiles']['other-device'] = self.info['profiles']['cudy_tr1200-v1']
++        self.write_info()
++        with self.assertRaises(ValueError): builder.check_images('tr1200', self.output)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_signing_integration.py b/tests/test_signing_integration.py
+new file mode 100644
+index 0000000..5f1b920
+--- /dev/null
++++ b/tests/test_signing_integration.py
+@@ -0,0 +1,88 @@
++"""Exercise real host tools built from the repository's pinned packages."""
++import os
++from pathlib import Path
++import subprocess
++import tempfile
++import unittest
++
++ROOT = Path(__file__).resolve().parents[1]
++TOOLS = os.environ.get('OP_SOURCE_SIGNING_TOOLS')
++
++
++@unittest.skipUnless(TOOLS, 'Set OP_SOURCE_SIGNING_TOOLS to the real host tool directory')
++class SigningIntegrationTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.work = Path(self.temp.name)
++        self.tools = Path(TOOLS).resolve()
++        self.env = dict(os.environ, PATH=str(self.tools) + os.pathsep + os.environ['PATH'])
++        self.key = self.work / 'key-build'
++        self.run_tool('usign', '-G', '-s', str(self.key), '-p', str(self.key) + '.pub')
++        self.run_tool('ucert', '-I', '-c', str(self.key) + '.ucert',
++                      '-p', str(self.key) + '.pub', '-s', str(self.key))
++        self.message = self.work / 'message'
++        self.message.write_bytes(b'firmware test payload\n')
++        self.signature = self.work / 'message.sig'
++        self.run_tool('usign', '-S', '-m', str(self.message),
++                      '-s', str(self.key), '-x', str(self.signature))
++
++    def run_tool(self, name, *args, success=True):
++        result = subprocess.run([str(self.tools / name), *args], env=self.env,
++                                cwd=self.work, capture_output=True)
++        if success:
++            self.assertEqual(result.returncode, 0, result.stderr.decode(errors='replace'))
++        else:
++            self.assertNotEqual(result.returncode, 0)
++        return result
++
++    def test_append_success_and_verify(self):
++        self.run_tool('ucert', '-A', '-c', str(self.key) + '.ucert', '-x', str(self.signature))
++        self.run_tool('ucert', '-V', '-c', str(self.key) + '.ucert',
++                      '-p', str(self.key) + '.pub', '-m', str(self.message))
++
++    def test_append_write_failure_is_nonzero(self):
++        self.run_tool('ucert', '-A', '-c', str(self.work / 'missing/cert'),
++                      '-x', str(self.signature), success=False)
++
++    def test_append_flush_failure_is_nonzero(self):
++        if not Path('/dev/full').exists():
++            self.skipTest('Linux /dev/full is required')
++        self.run_tool('ucert', '-A', '-c', '/dev/full', '-x', str(self.signature), success=False)
++
++    def test_short_signature_is_rejected(self):
++        self.signature.write_bytes(b'truncated')
++        self.run_tool('ucert', '-A', '-c', str(self.key) + '.ucert',
++                      '-x', str(self.signature), success=False)
++
++    def test_real_image_recipes_and_release_verification(self):
++        source = (ROOT / 'include/image-commands.mk').read_text()
++        images = self.work / 'images'
++        images.mkdir()
++        recipes = ('append-metadata', 'append-gl-metadata')
++        targets = ('images/test-sysupgrade.bin', 'images/test-sysupgrade.itb')
++        makefile = 'CONFIG_SIGN_FIRMWARE=y\nBUILD_KEY=key-build\nSUPPORTED_DEVICES=test\n'
++        makefile += "metadata_json='{\"metadata_version\":\"1.1\"}'\nmetadata_gl_json='{\"metadata_version\":\"1.1\"}'\n"
++        for name in recipes:
++            body = source.split('define Build/' + name + '\n', 1)[1].split('\nendef', 1)[0]
++            makefile += 'define Build/' + name + '\n' + body + '\nendef\n'
++        makefile += '.PHONY: all\nall: ' + ' '.join(targets) + '\n'
++        for target, recipe in zip(targets, recipes):
++            makefile += target + ':\n\tprintf "firmware test payload\\n" > "$@"\n\t$(Build/' + recipe + ')\n'
++        (self.work / 'Makefile').write_text(makefile)
++        result = subprocess.run(['make'], cwd=self.work, env=self.env, capture_output=True)
++        self.assertEqual(result.returncode, 0, result.stderr.decode(errors='replace'))
++        (self.work / 'staging_dir/host').mkdir(parents=True)
++        (self.work / 'staging_dir/host/bin').symlink_to(self.tools, target_is_directory=True)
++        command = ['bash', str(ROOT / 'scripts/verify-release.sh'), 'images']
++        verified = subprocess.run(command, cwd=self.work, env=self.env, capture_output=True)
++        self.assertEqual(verified.returncode, 0, verified.stderr.decode(errors='replace'))
++        self.assertIn(b'Verified 2 signed', verified.stdout)
++        with (self.work / targets[1]).open('r+b') as stream:
++            stream.write(b'TAMPERED')
++        tampered = subprocess.run(command, cwd=self.work, env=self.env, capture_output=True)
++        self.assertNotEqual(tampered.returncode, 0)
++
++
++if __name__ == '__main__':
++    unittest.main()

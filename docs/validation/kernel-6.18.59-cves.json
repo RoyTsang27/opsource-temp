@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-28",
+  "source": "https://kernel.googlesource.com/pub/scm/linux/security/vulns/+archive/refs/heads/master/cve/published.tar.gz",
+  "scanned_records": 18048,
+  "matches": [
+    {
+      "cve": "CVE-2025-71312",
+      "introduced": "6.18.59",
+      "introduced_commit": "129b0a64fe9ac5b4138cc123cccbcce7c65afdf4",
+      "fixed": "6.18.59",
+      "fixed_commit": "d977b979081ef2585a15453f309a6311c95ede02",
+      "fix_in_changelog": true,
+      "title": "fs/ntfs3: fix ntfs_mount_options leak in ntfs_fill_super()",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2025-71312",
+      "stable_fix": "https://git.kernel.org/stable/c/d977b979081ef2585a15453f309a6311c95ede02"
+    },
+    {
+      "cve": "CVE-2026-23353",
+      "introduced": "6.18.59",
+      "introduced_commit": "f4a25618c36835d073caef2745e6bf02ad2723ca",
+      "fixed": "6.18.59",
+      "fixed_commit": "a4c584ea79d958ea1cadc9ce056f6df58a363342",
+      "fix_in_changelog": true,
+      "title": "ice: fix crash in ethtool offline loopback test",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2026-23353",
+      "stable_fix": "https://git.kernel.org/stable/c/a4c584ea79d958ea1cadc9ce056f6df58a363342"
+    },
+    {
+      "cve": "CVE-2026-31775",
+      "introduced": "6.18.57",
+      "introduced_commit": "88cc09bb70651917ef8b7095a05a21a9ca014c94",
+      "fixed": "6.18.59",
+      "fixed_commit": "7fca3600e79e9f8bac1ebc10af9ff20a35d6cccb",
+      "fix_in_changelog": true,
+      "title": "ALSA: ctxfi: Don't enumerate SPDIF1 at DAIO initialization",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2026-31775",
+      "stable_fix": "https://git.kernel.org/stable/c/7fca3600e79e9f8bac1ebc10af9ff20a35d6cccb"
+    },
+    {
+      "cve": "CVE-2026-72453",
+      "introduced": "6.18.59",
+      "introduced_commit": "b498b70a8174bcb4e801d4d794a49f2d143c5c9f",
+      "fixed": "6.18.59",
+      "fixed_commit": "bae057687f61580dd897411cd749da22a7740647",
+      "fix_in_changelog": true,
+      "title": "regcache: Do not overwrite error code when finalizing cache after error",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2026-72453",
+      "stable_fix": "https://git.kernel.org/stable/c/bae057687f61580dd897411cd749da22a7740647"
+    },
+    {
+      "cve": "CVE-2026-98166",
+      "introduced": "6.18.57",
+      "introduced_commit": "060f8f3020516d71bc4d6159d4d0beef85606a74",
+      "fixed": "6.18.59",
+      "fixed_commit": "b48ebe399b4e72baa323462580fdd83ebda561e1",
+      "fix_in_changelog": true,
+      "title": "drm/ttm: fix swapped-out resources never leaving their bulk_move range",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2026-98166",
+      "stable_fix": "https://git.kernel.org/stable/c/b48ebe399b4e72baa323462580fdd83ebda561e1"
+    },
+    {
+      "cve": "CVE-2026-99077",
+      "introduced": "3.6",
+      "introduced_commit": "4895c771c7f006b4b90f9d6b1d2210939ba57b38",
+      "fixed": "6.18.59",
+      "fixed_commit": "ecd7ead4bf05e221e90f18a29aec570a50fd1592",
+      "fix_in_changelog": true,
+      "title": "ipv4: udp: Create exceptions before socket matching",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2026-99077",
+      "stable_fix": "https://git.kernel.org/stable/c/ecd7ead4bf05e221e90f18a29aec570a50fd1592"
+    },
+    {
+      "cve": "CVE-2026-99100",
+      "introduced": "0",
+      "introduced_commit": "0",
+      "fixed": "6.18.59",
+      "fixed_commit": "f641066b0ddcd1b0cf007c0d04f9c966f6e888ae",
+      "fix_in_changelog": true,
+      "title": "wifi: p54: validate firmware record lengths",
+      "cve_record": "https://www.cve.org/CVERecord?id=CVE-2026-99100",
+      "stable_fix": "https://git.kernel.org/stable/c/f641066b0ddcd1b0cf007c0d04f9c966f6e888ae"
+    }
+  ],
+  "source_archive_sha256": "8cd82f04ef2a184a4bd5dee96d0fa34f8cf32d0bf99bd1f0d20ca578dc362d2f"
+}

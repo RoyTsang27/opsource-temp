@@ -1,0 +1,64 @@
+#
+# Copyright (c) 2015 The Linux Foundation. All rights reserved.
+# Copyright (c) 2011-2015 OpenWrt.org
+#
+
+. /lib/functions.sh
+. /lib/functions/uci-defaults.sh
+. /lib/functions/system.sh
+
+an7581_setup_interfaces()
+{
+	local board="$1"
+
+	case "$board" in
+	airoha,an7581-evb)
+		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "eth1"
+		;;
+	gemtek,w1700k-ubi)
+		ucidef_set_interfaces_lan_wan "lan2 lan3 lan4" "wan"
+		;;
+	nokia,valyrian)
+		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 10g" "wan"
+		;;
+	nokia,xg-040g-md |\
+	nokia,xg-040g-md-tcboot |\
+	nokia,xg-040g-md-ubi)
+		ucidef_set_interface_lan "lan1 lan2 lan3 lan4"
+		;;
+	nokia,xg-140g-tf-tcboot)
+		ucidef_set_interfaces_lan_wan "lan2 lan3 lan4" "lan1"
+		;;
+	quantum,q1000k-ubi)
+		# Both copper ports are LAN; the upstream connection is PON.
+		ucidef_set_interface_lan "lan1 lan2"
+		;;
+	*)
+		echo "Unsupported hardware. Network interfaces not initialized"
+		;;
+	esac
+}
+
+an7581_setup_macs()
+{
+	local mac
+
+	case "$1" in
+	nokia,xg-040g-md-tcboot|\
+	nokia,xg-140g-tf-tcboot)
+		mac="$(mtd_get_mac_ascii env ethaddr)"
+		[ -n "$mac" ] || return 0
+		ucidef_set_network_device_mac "lan1" "$mac"
+		ucidef_set_network_device_mac "br-lan" "$(macaddr_add "$mac" 1)"
+		ucidef_set_label_macaddr "$mac"
+		;;
+	esac
+}
+
+board_config_update
+board=$(board_name)
+an7581_setup_interfaces "$board"
+an7581_setup_macs "$board"
+board_config_flush
+
+exit 0

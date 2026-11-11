@@ -1,0 +1,313 @@
+{
+  "kernel": "6.18.60",
+  "kernel_sha256": "3c2f44ef6acc021a7ad444d9a2e6ec1ef488ff09368793d0004a6080f69d621e",
+  "targets": {
+    "generic": {
+      "result": "passed",
+      "patches": 452,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "airoha": {
+      "result": "passed",
+      "patches": 595,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "apm821xx": {
+      "result": "passed",
+      "patches": 458,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "armsr": {
+      "result": "passed",
+      "patches": 455,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "ath79": {
+      "result": "passed",
+      "patches": 489,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "bcm27xx": {
+      "result": "passed",
+      "patches": 1358,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "bcm47xx": {
+      "result": "passed",
+      "patches": 467,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "bcm53xx": {
+      "result": "passed",
+      "patches": 490,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "bmips": {
+      "result": "passed",
+      "patches": 466,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "d1": {
+      "result": "passed",
+      "patches": 454,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "econet": {
+      "result": "passed",
+      "patches": 513,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "gemini": {
+      "result": "passed",
+      "patches": 470,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "ipq40xx": {
+      "result": "passed",
+      "patches": 475,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "ixp4xx": {
+      "result": "passed",
+      "patches": 455,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "kirkwood": {
+      "result": "passed",
+      "patches": 475,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "lantiq": {
+      "result": "passed",
+      "patches": 473,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "layerscape": {
+      "result": "passed",
+      "patches": 461,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "loongarch64": {
+      "result": "passed",
+      "patches": 452,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "malta": {
+      "result": "passed",
+      "patches": 452,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "mediatek": {
+      "result": "passed",
+      "patches": 592,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "microchipsw": {
+      "result": "passed",
+      "patches": 479,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "mpc85xx": {
+      "result": "passed",
+      "patches": 470,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "mvebu": {
+      "result": "passed",
+      "patches": 496,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "mxs": {
+      "result": "passed",
+      "patches": 452,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "octeon": {
+      "result": "passed",
+      "patches": 464,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "omap": {
+      "result": "passed",
+      "patches": 453,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "pistachio": {
+      "result": "passed",
+      "patches": 465,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "qoriq": {
+      "result": "passed",
+      "patches": 452,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "qualcommax": {
+      "result": "passed",
+      "patches": 546,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "qualcommbe": {
+      "result": "passed",
+      "patches": 519,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "ramips": {
+      "result": "passed",
+      "patches": 498,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "realtek": {
+      "result": "passed",
+      "patches": 562,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "rockchip": {
+      "result": "passed",
+      "patches": 594,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "sifiveu": {
+      "result": "passed",
+      "patches": 453,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "siflower": {
+      "result": "passed",
+      "patches": 468,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "starfive": {
+      "result": "passed",
+      "patches": 508,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "stm32": {
+      "result": "passed",
+      "patches": 455,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "sunxi": {
+      "result": "passed",
+      "patches": 475,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "tegra": {
+      "result": "passed",
+      "patches": 453,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "uml": {
+      "result": "passed",
+      "patches": 453,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "x86": {
+      "result": "passed",
+      "patches": 454,
+      "fuzz": 0,
+      "rejects": 0
+    },
+    "zynq": {
+      "result": "passed",
+      "patches": 454,
+      "fuzz": 0,
+      "rejects": 0
+    }
+  },
+  "scope": "GNU patch 2.8.1, zero fuzz, original patch-referenced files and target overlays. No kernel compilation.",
+  "retained_kernel": {
+    "version": "6.12.115",
+    "sha256": "0ec90fe4b20422b1b664b77e6d2dde22b40bd41e7eb2cad8ac8739a4749cb1bb",
+    "targets": {
+      "generic": {
+        "result": "passed",
+        "patches": 652,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "at91": {
+        "result": "passed",
+        "patches": 652,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "bcm47xx": {
+        "result": "passed",
+        "patches": 667,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "bcm4908": {
+        "result": "passed",
+        "patches": 656,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "imx": {
+        "result": "passed",
+        "patches": 679,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "ipq806x": {
+        "result": "passed",
+        "patches": 677,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "loongarch64": {
+        "result": "passed",
+        "patches": 659,
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "tegra": {
+        "result": "passed",
+        "patches": 653,
+        "fuzz": 0,
+        "rejects": 0
+      }
+    }
+  }
+}

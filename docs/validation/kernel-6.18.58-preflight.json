@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-22",
+  "kernel": "6.18.58",
+  "archive_bytes": 154851680,
+  "kernel_patch_checks": {
+    "kernel": "6.18.58",
+    "kernel_sha256": "069b19f9032c4dac8149ae4b6520c35debca0f42a9f6d52ee55ba6ca9b818013",
+    "targets": {
+      "mediatek": {
+        "patches": 592,
+        "result": "passed",
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "ramips": {
+        "patches": 498,
+        "result": "passed",
+        "fuzz": 0,
+        "rejects": 0
+      }
+    },
+    "scope": "Original contents of patch-referenced files plus target overlays; no full kernel compilation"
+  },
+  "mac80211_checks": {
+    "kernel": "6.18.58",
+    "backports": "7.2",
+    "patches": 191,
+    "fuzz": 0,
+    "original_conflict_reproduced": true,
+    "patched_aarch64_header_probe": "passed",
+    "archive_sha256": "6ec76a4cb0988b5382b2fc5053610a56ada90b8ef6a5a4f2807cd433badb9454",
+    "scope": "Actual backports wrappers and native structure from Linux 6.18.58 with minimal include stubs; not a complete module build"
+  },
+  "regression_tests": {
+    "passed": 65,
+    "skipped": 7,
+    "new_migration_tests_passed": 12,
+    "skip_reason": "Two Ninja integration checks and five native signing checks lack their local tools"
+  },
+  "delivery_cli": {
+    "original_6_18_55_upgrade": "passed",
+    "verified_download_cache": "passed",
+    "repeat_check_noop": "passed",
+    "config_and_build_cache_preserved": true
+  },
+  "bundle": {
+    "file": "op-source-kernel-6.18.58-update.tar.gz",
+    "sha256": "c77e9a0e25a14c991006a2bdbb002df84600ecbaf5d1b070d7d2c050e3ff5164",
+    "bytes": 16638
+  },
+  "full_firmware_build_verified": false
+}

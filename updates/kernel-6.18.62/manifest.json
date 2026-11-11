@@ -1,0 +1,687 @@
+{
+  "kernel": "6.18.62",
+  "kernel_sha256": "490a7aedf1b355c565d3a6c05333ccccb5da82064eca46b590448a7099d7d651",
+  "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.62.tar.xz",
+  "baseline_repository": "https://github.com/openwrt/openwrt",
+  "baseline_commit": "0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d",
+  "supported_kernels": {
+    "6.18.55": "f410638061a165c12f42ab871d2f3fcd525515359b5faeee80969cff84524df9",
+    "6.18.56": "4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89",
+    "6.18.57": "5bd9acdc82ec5efc3790ae840e5aaa40dfde7efff261cf6dde902dc570acf98c",
+    "6.18.58": "069b19f9032c4dac8149ae4b6520c35debca0f42a9f6d52ee55ba6ca9b818013",
+    "6.18.59": "53a55ac9863a5547e292b8e381d4e4c2240dd1127d5428a7c44dbc550be23963",
+    "6.18.60": "3c2f44ef6acc021a7ad444d9a2e6ec1ef488ff09368793d0004a6080f69d621e",
+    "6.18.62": "490a7aedf1b355c565d3a6c05333ccccb5da82064eca46b590448a7099d7d651"
+  },
+  "patch": "patches/openwrt-6.18.55-to-6.18.62.patch",
+  "patch_sha256": "5a186f6d36839d9e915134d6466615e68d6f2d7f7da8f56af6076ea2c3951a6b",
+  "files": [
+    {
+      "path": "package/kernel/mac80211/Makefile",
+      "before": [
+        "2214d8a0e7d01c618cb8afae2c77236bcbbd86ecec425933f4e8f4285b4b07ef",
+        "ab70ba14cbb492f17648f1a58b895f001acba331e44c8fadcb5622ebb61fd77f",
+        "d9058b11a4d43e6f2e3df8ce9c71564ca27477b6ea27e97ac764e26c57d9b93e"
+      ],
+      "after": "d8d7157890574dad0bb7dcb332c81bc5eafe6b5b7a2faf6f727557b01d022efe",
+      "payload": "files/package/kernel/mac80211/Makefile"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch",
+      "before": [
+        null,
+        "e7c56278ac962b59429b72634630f37c592e4fca7a960ddcf21e185eb6f6e216"
+      ],
+      "after": "df45fcbda459a34546e29f6472dbc09cafec8ec8afa8bad4e97b08769955d93e",
+      "payload": "files/package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/380-p54-validate-firmware-record-lengths.patch",
+      "before": [
+        null,
+        "025846e1ed4914f95313d7d20568f2c5b6c17d3555f8a19ba8724d55ed44a2c0"
+      ],
+      "after": "025846e1ed4914f95313d7d20568f2c5b6c17d3555f8a19ba8724d55ed44a2c0",
+      "payload": "files/package/kernel/mac80211/patches/subsys/380-p54-validate-firmware-record-lengths.patch"
+    },
+    {
+      "path": "target/linux/ath79/patches-6.18/900-unaligned_access_hacks.patch",
+      "before": [
+        "624bfeb2e8ceb9cca33c46f02b23ff6bac9c39789f3865d235320171b70a2fd6",
+        "1e8a8badc16e1c340f5c55078498a170185053d08693dd7628948ce48c70144a"
+      ],
+      "after": "1e8a8badc16e1c340f5c55078498a170185053d08693dd7628948ce48c70144a",
+      "payload": "files/target/linux/ath79/patches-6.18/900-unaligned_access_hacks.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0008-of-overlay-Correct-symbol-path-fixups.patch",
+      "before": [
+        "4fb90ccf3a3146347a6c3e5857d40229daadd51b2f9411d69264ea54e1280c3a",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0051-Add-dwc_otg-driver.patch",
+      "before": [
+        "ef0c30515146806c53e1ccb3fcf744aa14a6f369bdff0fbef1fc3143d68db1f4",
+        "9bec27a3cd88f61aa83e1efae7b597366698810187b03b7797307f776379679f"
+      ],
+      "after": "9bec27a3cd88f61aa83e1efae7b597366698810187b03b7797307f776379679f",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0051-Add-dwc_otg-driver.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0052-bcm2708_fb-Add-framebuffer-driver.patch",
+      "before": [
+        "57fc9347163f5dbb97956435e1f140f0e4706bd8e35c278ae8e5cdb23fbb7777",
+        "860e17992a22c0ecd3c0dbd67a6773ab15dc30ec06280d1fa4807b9b70768bf1"
+      ],
+      "after": "860e17992a22c0ecd3c0dbd67a6773ab15dc30ec06280d1fa4807b9b70768bf1",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0052-bcm2708_fb-Add-framebuffer-driver.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0069-ASoC-Add-support-for-all-the-downstream-rpi-sound-ca.patch",
+      "before": [
+        "6886f7688791338b1d8f664aefd96da82076c148c22bbea91c2a3b544635434c",
+        "2fba62fa53fe791fae044d534d190159e5bdcade9bd3071ed070c69a31b43b63"
+      ],
+      "after": "2fba62fa53fe791fae044d534d190159e5bdcade9bd3071ed070c69a31b43b63",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0069-ASoC-Add-support-for-all-the-downstream-rpi-sound-ca.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0110-bcmgenet-Better-coalescing-parameter-defaults.patch",
+      "before": [
+        "9960a0d644281747d72b2d21d42d5c8e76391c6f7791580e04ba07832e19fed6",
+        "47e90428a087bd3c51993d5d2553238f8150399191286d032e00cc892e7b6352"
+      ],
+      "after": "47e90428a087bd3c51993d5d2553238f8150399191286d032e00cc892e7b6352",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0110-bcmgenet-Better-coalescing-parameter-defaults.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch",
+      "before": [
+        "85aa4f0425703611307c39d0c71b803c272e048f3659fa254ee7fd6626697575"
+      ],
+      "after": "6df7248b4b1626f32534ee83b0ee2079049028ff8e45bc4f0eacc0164e0634e6",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0121-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fail.patch",
+      "before": [
+        "aa6c5ff3af9c06023117673d765c0fe5ac9249381efa4f994d1954e328d8e26e",
+        "b0efb859156c6a4b21e3349856c986bc0139a3012d48d7478fa5ac79b5aaf9dd"
+      ],
+      "after": "b0efb859156c6a4b21e3349856c986bc0139a3012d48d7478fa5ac79b5aaf9dd",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0121-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fail.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0159-bcmgenet-Disable-skip_umac_reset-by-default.patch",
+      "before": [
+        "7d290c34f7004a963774ec0a72918c50e9a037ce88b936d1d630ee2301903a79",
+        "efaf8e41fc5e5cb0cff819ef9c56f70db0754507320eb0bd43750bd8fdd6134d"
+      ],
+      "after": "efaf8e41fc5e5cb0cff819ef9c56f70db0754507320eb0bd43750bd8fdd6134d",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0159-bcmgenet-Disable-skip_umac_reset-by-default.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0168-gpiolib-Don-t-prevent-IRQ-usage-of-output-GPIOs.patch",
+      "before": [
+        "d8e6b95482680db86dd00ed11e33a33bb0d898aefa927994da8c26eeac51bd51",
+        "a113ad5650c95382f6831caee7ebd1521676f07368ce41d6910f784e2001bec6"
+      ],
+      "after": "a113ad5650c95382f6831caee7ebd1521676f07368ce41d6910f784e2001bec6",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0168-gpiolib-Don-t-prevent-IRQ-usage-of-output-GPIOs.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0256-net-bcmgenet-Add-eee-module-parameter.patch",
+      "before": [
+        "3053de8a11701bf378a535e33600dbe97ab12ccb5f080017349b5e71cb62f44d",
+        "95bb1167ea032cb92a00ee8fae896175e1e57512915422a6b11b325d1d3cb183"
+      ],
+      "after": "95bb1167ea032cb92a00ee8fae896175e1e57512915422a6b11b325d1d3cb183",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0256-net-bcmgenet-Add-eee-module-parameter.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0266-gpio-pca953x-Add-ti-tca9554-compatible-string.patch",
+      "before": [
+        "e5004879844fcf1b67809d531abe2b08c4f7c4167dde63e993d54b311ae3a870",
+        "14b7b629be2c32ea4440eb88ff371e06eeb720123a228fae2fa19ce10034bc9c"
+      ],
+      "after": "14b7b629be2c32ea4440eb88ff371e06eeb720123a228fae2fa19ce10034bc9c",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0266-gpio-pca953x-Add-ti-tca9554-compatible-string.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0275-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch",
+      "before": [
+        "07039d1ca5fd07929d39a950218eb5a20ff95f03c7c717f62f8b4000cb047e47",
+        "5ba4365bf097ab139cf7301dbda0cb2042336bf12081258b571588330f1cbbd4"
+      ],
+      "after": "5ba4365bf097ab139cf7301dbda0cb2042336bf12081258b571588330f1cbbd4",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0275-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0281-serial-sc16is7xx-Read-modem-line-state-at-startup.patch",
+      "before": [
+        "1aec2100b69609c8c17316c57fc96fe538447018d0bd690b014bc229bd4922c8",
+        "cd3309c4517f74868ce3a85937bb83f5c4b134fe1a2dd76569a37e61bcc85055"
+      ],
+      "after": "cd3309c4517f74868ce3a85937bb83f5c4b134fe1a2dd76569a37e61bcc85055",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0281-serial-sc16is7xx-Read-modem-line-state-at-startup.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0294-usb-dwc3-Set-DMA-and-coherent-masks-early.patch",
+      "before": [
+        "1e7486bd6e3ba3cf5046b263b68995fd68f2fad2564462892ab6cf5a7a43d57e",
+        "198e9b90ffe71cd61dc068cb87521a61097d098472ec59805a96a403acc3a3af"
+      ],
+      "after": "198e9b90ffe71cd61dc068cb87521a61097d098472ec59805a96a403acc3a3af",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0294-usb-dwc3-Set-DMA-and-coherent-masks-early.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0319-drivers-iommu-Add-BCM2712-IOMMU.patch",
+      "before": [
+        "0e0c972869ed3b076cb5cdd0f628ad2b36dea21bba5ed6331231bdfc5961aef0",
+        "dc8cb466254588596f1a037b947a21d861fca40bf72206ddfb25806ba2e0d580"
+      ],
+      "after": "dc8cb466254588596f1a037b947a21d861fca40bf72206ddfb25806ba2e0d580",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0319-drivers-iommu-Add-BCM2712-IOMMU.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0325-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch",
+      "before": [
+        "807762cb6fee088c1d739665fcd03bfef007f487c60a4bb2beb9838c20f849df",
+        "10897d936b05e8bc8ddebbb8e7bffafc56dc6eb5c1501737a224a940d8e713e6"
+      ],
+      "after": "10897d936b05e8bc8ddebbb8e7bffafc56dc6eb5c1501737a224a940d8e713e6",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0325-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0343-drivers-usb-dwc3-add-FS-LS-bus-instance-parkmode-dis.patch",
+      "before": [
+        "2abeb900bf3e92a76d1bdccf5622ce34b998d3f71d925eb4fb04b1e5ed3f8f37",
+        "14e8633ef55d4b42054793b249ce5dec76b9a680ed07b32839ccc995f8fb063f"
+      ],
+      "after": "14e8633ef55d4b42054793b249ce5dec76b9a680ed07b32839ccc995f8fb063f",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0343-drivers-usb-dwc3-add-FS-LS-bus-instance-parkmode-dis.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0346-serial-sc16is7xx-Don-t-spin-if-no-data-received.patch",
+      "before": [
+        "610e74d6bc0bbab169e8f71ff0b0a28221cb268f42b5354c0a6826a57b1758c8",
+        "1d74345dc95d0d5e8c0e82e58296df96254fdc5597a7c9309261a29a994ebd80"
+      ],
+      "after": "1d74345dc95d0d5e8c0e82e58296df96254fdc5597a7c9309261a29a994ebd80",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0346-serial-sc16is7xx-Don-t-spin-if-no-data-received.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0351-brcmfmac-Fix-interoperating-DPP-and-other-encryption.patch",
+      "before": [
+        "8eba5a7052ddc90386db0c58c3b39394911fcb249fdae8cd76ccce7c8538835a",
+        "3a6ce658058e436f3d43ac23ed9eb4a8c610a691f492bbe126d2f1f99583077b"
+      ],
+      "after": "3a6ce658058e436f3d43ac23ed9eb4a8c610a691f492bbe126d2f1f99583077b",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0351-brcmfmac-Fix-interoperating-DPP-and-other-encryption.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0399-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch",
+      "before": [
+        "c014d0f586a6a25e106d0e6e144f6969cb0010595a6c52a6793eb8d8dfa98428",
+        "6c5477fefef402d23baed1da34bd4939314934c9c804ba4e63bbce2f8311a53e"
+      ],
+      "after": "6c5477fefef402d23baed1da34bd4939314934c9c804ba4e63bbce2f8311a53e",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0399-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0414-usb-dwc3-core-add-support-for-setting-NAK-enhancemen.patch",
+      "before": [
+        "fb608197e0b2f885ddcca7110fc740ca1aedf0aa212327b9e1db43e595a88497",
+        "69362abb654bf4640544360e5a53b2b6a2c775da2064a155f6f7bee15a145c69"
+      ],
+      "after": "69362abb654bf4640544360e5a53b2b6a2c775da2064a155f6f7bee15a145c69",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0414-usb-dwc3-core-add-support-for-setting-NAK-enhancemen.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0447-drm-vc4-hdmi-Add-a-clear_infoframe-hook.patch",
+      "before": [
+        "b166b9b232a619311d5de38b835c068d14878550ce18ef55dfb9cd903ab76c62",
+        "9829e236995eb43b4951ccd0aa5681c33e2d527d76a8ddcdce07bbe5a1c17b29"
+      ],
+      "after": "9829e236995eb43b4951ccd0aa5681c33e2d527d76a8ddcdce07bbe5a1c17b29",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0447-drm-vc4-hdmi-Add-a-clear_infoframe-hook.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0449-vc4-hdmi-Ignore-hotplug-interrupt-with-force_hotplug.patch",
+      "before": [
+        "44b86a17bb48c0438b2b29fb7bcfeeb1888eb581a9b1401daab9a45625ba50e9",
+        "f601bd63b8ce944220f94517a72d6bf1cc76d31d9c9fc5743f9712b12b16b7d3"
+      ],
+      "after": "f601bd63b8ce944220f94517a72d6bf1cc76d31d9c9fc5743f9712b12b16b7d3",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0449-vc4-hdmi-Ignore-hotplug-interrupt-with-force_hotplug.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0463-drm-vc4-Remove-request-for-min-clocks-when-hdmi-outp.patch",
+      "before": [
+        "f26a479f35fe821d8b43194b0905b800513c37b10186777e400f7177005fd7cf",
+        "b1923e5c3a2d45072ea14ef2f213c97f0bafa8e298a60a6c22a064ee8336bd7e"
+      ],
+      "after": "b1923e5c3a2d45072ea14ef2f213c97f0bafa8e298a60a6c22a064ee8336bd7e",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0463-drm-vc4-Remove-request-for-min-clocks-when-hdmi-outp.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0464-drm-vc4-Disable-the-2pixel-clock-odd-timings-workaro.patch",
+      "before": [
+        "1d915b1298821a8ba87c28aa9e6b58602c7d5d7aca26c7bb5a5cfbf12371daeb",
+        "2cf934205a5f9628ccde7a4db2249751dde8d1abc7a11b9b85f6bc251da4c643"
+      ],
+      "after": "2cf934205a5f9628ccde7a4db2249751dde8d1abc7a11b9b85f6bc251da4c643",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0464-drm-vc4-Disable-the-2pixel-clock-odd-timings-workaro.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0465-drm-vc4-fkms-Add-firmware-kms-mode.patch",
+      "before": [
+        "32ba222550d1161bf0f5f291d4fd3d8fc3f9222d90eeee40c9fa4d6e0ae69023",
+        "410e868aa7c3dfd4031f7964f86a17445afc5eee19a6fd479505f0376ada14fa"
+      ],
+      "after": "410e868aa7c3dfd4031f7964f86a17445afc5eee19a6fd479505f0376ada14fa",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0465-drm-vc4-fkms-Add-firmware-kms-mode.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0480-vc4-Add-jack-detection-to-HDMI-audio-driver.patch",
+      "before": [
+        "1d39349991082a911b82bf4a97a0150429163ecd91a05fdb004c1f0bf94aca13",
+        "97241cce0c63dd81850e5e3cae6d0ed8c7ba7957402b0d5e5296ad639ff8244a"
+      ],
+      "after": "97241cce0c63dd81850e5e3cae6d0ed8c7ba7957402b0d5e5296ad639ff8244a",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0480-vc4-Add-jack-detection-to-HDMI-audio-driver.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0481-drm-vc4-Use-phys-addresses-for-slave-DMA-config.patch",
+      "before": [
+        "03c7485d530000fd44b18e90fda196dc94dd01f6a05e0908fd7ed208ba3de954",
+        "10745936aa4a7199abeab4c8b4eaf2973e9a4c6f55db3b3b375e86a82d43360d"
+      ],
+      "after": "10745936aa4a7199abeab4c8b4eaf2973e9a4c6f55db3b3b375e86a82d43360d",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0481-drm-vc4-Use-phys-addresses-for-slave-DMA-config.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0484-drm-vc4-Correct-one-logging-message-that-got-promote.patch",
+      "before": [
+        "e48315514507732983933de9d69a0227b9e37f3ef1140f7005d21ed03ca6d371",
+        "3e044a773179236f773b6a06bc16975361e597d8fdd3cce9e514669a57228e18"
+      ],
+      "after": "3e044a773179236f773b6a06bc16975361e597d8fdd3cce9e514669a57228e18",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0484-drm-vc4-Correct-one-logging-message-that-got-promote.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch",
+      "before": [
+        "08ca57f6635bea2ddd2bc3810bec579aef0c4eb53e92cb89c517edaa303a9ea1"
+      ],
+      "after": "601ff2892b592ecf4d9784af7fb36b883a70ca2fee38ca1824efb1046bd6e95a",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0689-Revert-net-bcmgenet-Add-eee-module-parameter.patch",
+      "before": [
+        "05f6d4eb42ba02ba18b3fad85a695ad485e06e9288ae361273e3eaabc65d128e",
+        "8e6599704dcc9fa84c383c4c0a1812b67c272f6ea19197c12e3f18e7ab2074a2"
+      ],
+      "after": "8e6599704dcc9fa84c383c4c0a1812b67c272f6ea19197c12e3f18e7ab2074a2",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0689-Revert-net-bcmgenet-Add-eee-module-parameter.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0690-Revert-bcmgenet-Disable-skip_umac_reset-by-default.patch",
+      "before": [
+        "dbb6fcd03723432e683d9a71feb20de0f2b02128485ee4cbb065e03494773880",
+        "0ac3ca518b04117409b1bbf41a9b6ebc5fa8207fc301f1e925d4f1c6c20c759c"
+      ],
+      "after": "0ac3ca518b04117409b1bbf41a9b6ebc5fa8207fc301f1e925d4f1c6c20c759c",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0690-Revert-bcmgenet-Disable-skip_umac_reset-by-default.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0691-Revert-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fa.patch",
+      "before": [
+        "c12da3a4e977844fe631ba5837b17da6e8fc5577c63c77c564f7bfe5e2b0aaaa",
+        "5b2e97addcf4d5185cd0214f8525bbb032ce99e3f1e043e2cbe815c3cb06b7f8"
+      ],
+      "after": "5b2e97addcf4d5185cd0214f8525bbb032ce99e3f1e043e2cbe815c3cb06b7f8",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0691-Revert-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fa.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0699-nvme-pci-manually-allocate-Host-Memory-Buffer-segmen.patch",
+      "before": [
+        "7480ab692b1fc6193a5d388a66bcf673a8763245a86fd0696f321fb12e798ac1",
+        "b31f3d49f44a0c2ae5147c5bf140570855e64dad9ab54292d1a669bca8db74a6"
+      ],
+      "after": "b31f3d49f44a0c2ae5147c5bf140570855e64dad9ab54292d1a669bca8db74a6",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0699-nvme-pci-manually-allocate-Host-Memory-Buffer-segmen.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0754-nvme-pci-use-LE-accessors-for-HMB-segment-table-entr.patch",
+      "before": [
+        "bb9cf107dbb2f46fdc1c34fed52e2674f38ff52e12ecad135fd6e7adbc515cf5",
+        "e2923c9ad4a76fc8ff9f27b2789414fcbd1175e427bd3a889a7aa21de5d3991f"
+      ],
+      "after": "e2923c9ad4a76fc8ff9f27b2789414fcbd1175e427bd3a889a7aa21de5d3991f",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0754-nvme-pci-use-LE-accessors-for-HMB-segment-table-entr.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0780-arm64-errata-Mitigate-TLBI-errata-on-various-Arm-CPU.patch",
+      "before": [
+        "4238f5ec6aa0251428384a332561b90d2cbfbc96453180d2881144c1b695603a",
+        "f3ee3c30a7d86569874957e8526ae3df1cf6df93ceb7c87d9559f31763d6b68d"
+      ],
+      "after": "f3ee3c30a7d86569874957e8526ae3df1cf6df93ceb7c87d9559f31763d6b68d",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0780-arm64-errata-Mitigate-TLBI-errata-on-various-Arm-CPU.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0782-drm-vc4-hdmi-Remove-unused-packet_ram_enabled-flag.patch",
+      "before": [
+        "f12a732ab912ca2dbfef9b36e448853426186f2e7528a530e0e6c091d53561a2",
+        "affed35d7eef45616d95ebb2910f852bfa04658c3d3e4648500f766f1251c8b3"
+      ],
+      "after": "affed35d7eef45616d95ebb2910f852bfa04658c3d3e4648500f766f1251c8b3",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0782-drm-vc4-hdmi-Remove-unused-packet_ram_enabled-flag.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0783-drm-vc4-hdmi-Move-packet-RAM-enable-to-pm_runtime.patch",
+      "before": [
+        "0dcd9f9a6191d226bc023137b84d9fab49d882c21f5d9bb96692fc935067f6c4",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0798-Revert-arm64-errata-Mitigate-TLBI-errata-on-various-.patch",
+      "before": [
+        "54fb1718b5ee48acb6563b5d50b31d09520eb5daaceda74fa228bdb3c7991caa",
+        "80c5ad9cfdb1d1577d166201f3abba3dd350277ee06de3a6cc65d5a12d4c5466"
+      ],
+      "after": "80c5ad9cfdb1d1577d166201f3abba3dd350277ee06de3a6cc65d5a12d4c5466",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0798-Revert-arm64-errata-Mitigate-TLBI-errata-on-various-.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0869-drm-vc4-hdmi-switch-to-generic-CEC-helpers.patch",
+      "before": [
+        "4ccedabba5a017e04e197beef3615484f8a27118a21ccd8290fa3b32f4cb70f2",
+        "acf5d46ba55b86b019e32a3cfd301fce2d8b0e3a471a62022eee22ffa93eff46"
+      ],
+      "after": "acf5d46ba55b86b019e32a3cfd301fce2d8b0e3a471a62022eee22ffa93eff46",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0869-drm-vc4-hdmi-switch-to-generic-CEC-helpers.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0884-nvme-host-pci-Revert-to-upstream.patch",
+      "before": [
+        "502246d227980149550b72a2e3e408b03a8cc45dcbd26a97af962000e1451d3e",
+        "a0c230c03785d5c1d24093c63935fbdc32872d91ed1f230b14d02b6b56fba986"
+      ],
+      "after": "a0c230c03785d5c1d24093c63935fbdc32872d91ed1f230b14d02b6b56fba986",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0884-nvme-host-pci-Revert-to-upstream.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0886-Revert-nvme-host-pci-Revert-to-upstream.patch",
+      "before": [
+        "1f0cae5b4d04a84d45afe9ca10ac91186cce31ca40463553ca57c9fad5d65458",
+        "e7954c26a52fe6d3d576956b5695f4b332dba3995a44cd41fd9aa3c955d0a2b4"
+      ],
+      "after": "e7954c26a52fe6d3d576956b5695f4b332dba3995a44cd41fd9aa3c955d0a2b4",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0886-Revert-nvme-host-pci-Revert-to-upstream.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch",
+      "before": [
+        "f8de817901c813f83a9eec461dc278430fd99f554b5cdc956437d6618ed1a4c0"
+      ],
+      "after": "90ea0a190daa790878065d7d1ec2fb9dcd546ff6aa41e2bada14b77d7cc2a6d1",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch",
+      "before": [
+        "cd65445cfb0e93e2405a391ba7acfd30209178ce21fec125cb881a705900c4d7",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/441-v7.4-spi-spi-qpic-snand-publish-the-ECC-context-to-snandc.patch",
+      "before": [
+        "f5bd6e94af5529ded69a30e72d83bb018abcd02a7c640a686d61f09c8f12dabc"
+      ],
+      "after": "ba914993fe350303c23d1c3a3d5416509939ec894958742084e1c05d4371ad2f",
+      "payload": "files/target/linux/generic/backport-6.18/441-v7.4-spi-spi-qpic-snand-publish-the-ECC-context-to-snandc.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/503-01-v7.3-ksmbd-enable-tcp-keepalive-for-accepted-connections.patch",
+      "before": [
+        "58271114f20ed07b0b768dd1530537121723ed08ca6e9ff0b0cbcd59b4294cc6"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/650-v7.2-net-pppoe-implement-GRO-GSO-support.patch",
+      "before": [
+        "94c25b481c1fe857a4482beaad84ae6544f2909d04b5000608850c97e35f1dff",
+        "97b2872de1b6812a5840a17617f535193e9808c1f72f9caf94120644e79438ea"
+      ],
+      "after": "97b2872de1b6812a5840a17617f535193e9808c1f72f9caf94120644e79438ea",
+      "payload": "files/target/linux/generic/backport-6.18/650-v7.2-net-pppoe-implement-GRO-GSO-support.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/734-v7.3-net-ethernet-mtk_wed-increase-WED-v2-WDMA-RESV_BUFF-.patch",
+      "before": [
+        "23c1ac1c4d6580b666659840076732589d1157270e2d2e6279e3ec8a52f548d5"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/755-v7.3-net-sfp-add-quirk-for-HORACO-copper-SFP-module.patch",
+      "before": [
+        "411bf0ad3ca82b74a1e71f7736b6ace06902a581312a472d06843326a9afffab"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch",
+      "before": [
+        "4958a0a2e296338cbc28176fdc2b9f1bf22e1afa86de0ec78717e0c9673862c8",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch",
+      "before": [
+        "729db8f82fcd9f6370c3648826b54da06e542ebb23780218c256e624424eed12",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/950-v7.3-cgroup-fix-spurious-SIGKILL-of-CLONE_INTO_CGROUP-children.patch",
+      "before": [
+        "70b7fd4ede1204aea25cfaf23c725ba92f6d7a53277313184964e2ba491c7be0",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/hack-6.18/660-fq_codel_defaults.patch",
+      "before": [
+        "7164a43d7e51ea5d5c261eed657fcccaf704a143b04c55ecd2f4d6b43401e00c",
+        "0853e5df84fd0982dab3165aebe7baf5a5fd8f0aa45a55cfbb466ca78cfd2d61"
+      ],
+      "after": "0853e5df84fd0982dab3165aebe7baf5a5fd8f0aa45a55cfbb466ca78cfd2d61",
+      "payload": "files/target/linux/generic/hack-6.18/660-fq_codel_defaults.patch"
+    },
+    {
+      "path": "target/linux/generic/kernel-6.18",
+      "before": [
+        "9c5a716f64517054bbd3f017c07abe1d7abba162587883ac122db79d6948fbe7",
+        "746dd6fb5ef2603f89bbbbabce2d004356fdc5f57f6075d91d0dd668589905db",
+        "3eb96fcf639ea5d6b270fe63255ace10c77aa0d032244535164d950c8f5c0750",
+        "31e0f6986086d0178b36cfad82a29627d41907c223eca9dee37e29b60e19f6ab",
+        "6ddea3ca9a3ae5679026e10b07cdbc9a1cf8014dfa95991f12f775c0ad9065b6",
+        "d81b55c60f2ffd9cf3b6ed2b5f3d78e4ed307d8a79f31835e1db8f73e5fa898d"
+      ],
+      "after": "a052756756daedca20ec12e38c537cd3e82423b3ce7db0be6a43eb1c8c4c724c",
+      "payload": "files/target/linux/generic/kernel-6.18"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch",
+      "before": [
+        "e3ab730ac03b5b52db45d18c731e858c76327ba997168c9eb8570ddc62f5b626",
+        "126f9af18e0127d2c040bd561dc42b3048a9cc2714d505500605f6746bf3bd78"
+      ],
+      "after": "126f9af18e0127d2c040bd561dc42b3048a9cc2714d505500605f6746bf3bd78",
+      "payload": "files/target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch",
+      "before": [
+        "aaa837465e21a8c529daeeb4909c70a70d8213c0ba62665fed918e6381769f23",
+        "7aceb780ecdbbc17592641cf469ecd95b1cab1a3985929d3f8d8450485b343be"
+      ],
+      "after": "7aceb780ecdbbc17592641cf469ecd95b1cab1a3985929d3f8d8450485b343be",
+      "payload": "files/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/456-nvmem-implement-block-NVMEM-provider.patch",
+      "before": [
+        "54e2e9ebfa62c73ed20c4d8c18cfd3b90cce4bf0ca80aab96c4a87e19cb06f87",
+        "660394d0a64471f7fe8f2530cf98b6edf5ec542364827f22ff8ad7a74f927bcf"
+      ],
+      "after": "660394d0a64471f7fe8f2530cf98b6edf5ec542364827f22ff8ad7a74f927bcf",
+      "payload": "files/target/linux/generic/pending-6.18/456-nvmem-implement-block-NVMEM-provider.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/635-net-bridge-vlan-fix-switchdev-deletion-errors.patch",
+      "before": [
+        null,
+        "b238243f36f3a3f62a11bfad88a509680499708c279408650328c8b676e9ad36"
+      ],
+      "after": "b238243f36f3a3f62a11bfad88a509680499708c279408650328c8b676e9ad36",
+      "payload": "files/target/linux/generic/pending-6.18/635-net-bridge-vlan-fix-switchdev-deletion-errors.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch",
+      "before": [
+        "7898d34e14e4d2a0735ce5c5b68a274da597fe83632ce13ed529b7d9e402f5c3"
+      ],
+      "after": "a895eb9b95d9f1f905b58c92607e28185752f8da3bc759b55f16d5aed4d4643e",
+      "payload": "files/target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch"
+    },
+    {
+      "path": "target/linux/microchipsw/patches-6.18/127-net-sparx5-add-MTU-change-framework.patch",
+      "before": [
+        "1e65997ea3ae5fdd09866747fb5852cb6741c1833a22f75f464b0d1d903f3efe",
+        "8123b5a94105f44db7ba9b72d76262ea07091f663412afbdb8bfff96fe233664"
+      ],
+      "after": "8123b5a94105f44db7ba9b72d76262ea07091f663412afbdb8bfff96fe233664",
+      "payload": "files/target/linux/microchipsw/patches-6.18/127-net-sparx5-add-MTU-change-framework.patch"
+    },
+    {
+      "path": "target/linux/microchipsw/patches-6.18/128-net-sparx5-add-MTU-change.patch",
+      "before": [
+        "8db0a02b56329a6e5ce4995d4a1905f42dca8609381c5c8ab3041bc6ebf6ef35",
+        "bacae224bd641ddbc9957db458c66d3256400498f312448b719fc4c80987fdd9"
+      ],
+      "after": "bacae224bd641ddbc9957db458c66d3256400498f312448b719fc4c80987fdd9",
+      "payload": "files/target/linux/microchipsw/patches-6.18/128-net-sparx5-add-MTU-change.patch"
+    },
+    {
+      "path": "target/linux/qualcommax/patches-6.18/0089-v7.2-net-phy-at803x-add-RX-and-TX-clock-management-for-IPQ5018-PHY.patch",
+      "before": [
+        "60b5e999e95d6f229e6747a495747e8f0eb09bce72b642cb4aad0b19506ffc85",
+        "f3c13e05fb6860cc6579b2d267824015a4f53f5df0c7b9b9c55754ceaf28dde3"
+      ],
+      "after": "f3c13e05fb6860cc6579b2d267824015a4f53f5df0c7b9b9c55754ceaf28dde3",
+      "payload": "files/target/linux/qualcommax/patches-6.18/0089-v7.2-net-phy-at803x-add-RX-and-TX-clock-management-for-IPQ5018-PHY.patch"
+    },
+    {
+      "path": "target/linux/qualcommax/patches-6.18/0092-v7.3-pinctrl-qcom-ipq5018-add-missing-pwm3-function-on-gpio13.patch",
+      "before": [
+        "44a8856564cf02522a586bed9f085a615360861e81ff615217dcb3bfbc79a057",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/qualcommax/patches-6.18/0140-usb-dwc3-core-Allow-glue-layer-to-pass-reference-clo.patch",
+      "before": [
+        "c5462e71fdc3f8096b30bf243327de0c8c3d76c34b8b87a1e39d2e65c3c533a5",
+        "8d844c0ca7456018a86ee00d3e598dc2fa3aa000ef19761aa0070d4101183bba"
+      ],
+      "after": "8d844c0ca7456018a86ee00d3e598dc2fa3aa000ef19761aa0070d4101183bba",
+      "payload": "files/target/linux/qualcommax/patches-6.18/0140-usb-dwc3-core-Allow-glue-layer-to-pass-reference-clo.patch"
+    },
+    {
+      "path": "target/linux/qualcommax/patches-6.18/0412-mtd-spinand-qpic-only-support-max-4-bytes-ID.patch",
+      "before": [
+        "7304be870d21b264d6a843b08a37343acc7bf4cb70d718c72b8d96bac512fe4a",
+        "ee7593d119ce1385fd00afe07190c20f29ab42929c468ec5784a800c6762bd7d"
+      ],
+      "after": "ee7593d119ce1385fd00afe07190c20f29ab42929c468ec5784a800c6762bd7d",
+      "payload": "files/target/linux/qualcommax/patches-6.18/0412-mtd-spinand-qpic-only-support-max-4-bytes-ID.patch"
+    },
+    {
+      "path": "target/linux/rockchip/patches-6.18/045-01-v6.19-media-v4l2-mem2mem-Document-that-v4l2_m2m_get_vq-never-retur.patch",
+      "before": [
+        "9356d4699ba6e4fd0ea917620056f0b711bc3684526614cb91e15cd7c36899ba",
+        "1e56f1df7fe800a4ee82a9b13a1be6ec635893b6463e9309bd7ac532183a810f"
+      ],
+      "after": "1e56f1df7fe800a4ee82a9b13a1be6ec635893b6463e9309bd7ac532183a810f",
+      "payload": "files/target/linux/rockchip/patches-6.18/045-01-v6.19-media-v4l2-mem2mem-Document-that-v4l2_m2m_get_vq-never-retur.patch"
+    },
+    {
+      "path": "target/linux/rockchip/patches-6.18/045-02-v6.19-media-v4l2-mem2mem-Don-t-copy-frame-flags-in-v4l2_m2m_buf_co.patch",
+      "before": [
+        "45f5cde90d1a0e12e21b719661b6c0a749993628c9575f4267fc1d6909282363",
+        "33faae618d394e79b217214b21fd2ff4265f6cbd5e806bc9fdedc9e9c56cb469"
+      ],
+      "after": "33faae618d394e79b217214b21fd2ff4265f6cbd5e806bc9fdedc9e9c56cb469",
+      "payload": "files/target/linux/rockchip/patches-6.18/045-02-v6.19-media-v4l2-mem2mem-Don-t-copy-frame-flags-in-v4l2_m2m_buf_co.patch"
+    },
+    {
+      "path": "target/linux/rockchip/patches-6.18/045-15-v7.0-media-v4l2-mem2mem-Add-a-kref-to-the-v4l2_m2m_dev-structure.patch",
+      "before": [
+        "39a014a29c9c4c17a07016ea46bd1b33ce02004f1327f70c2fa68340bf2c7cae",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/rockchip/patches-6.18/045-16-v7.0-media-verisilicon-Avoid-G2-bus-error-while-decoding-H.264-an.patch",
+      "before": [
+        "fed1fc220069c1219d1a9c4b055b4741f09ffa0b86ee0713af7c88afb67d8330",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/rockchip/patches-6.18/045-43-v7.0-media-verisilicon-Fix-kernel-panic-due-to-__initconst-misuse.patch",
+      "before": [
+        "caff54bb1134c3c5ea8e12836177de7f3688559b98ab805ba86cd25ab5c9551c",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/rockchip/patches-6.18/142-iommu-rockchip-translate-DMA-for-IOMMU-masters.patch",
+      "before": [
+        "929c80bda6a4dcc0681919a403d1c62413623d078f96cc9f8108c403fa0948d8",
+        "fff5feded0da2b34e9f6fa20a499e3bd2f06cebe228eaa533521101d7452e61c"
+      ],
+      "after": "fff5feded0da2b34e9f6fa20a499e3bd2f06cebe228eaa533521101d7452e61c",
+      "payload": "files/target/linux/rockchip/patches-6.18/142-iommu-rockchip-translate-DMA-for-IOMMU-masters.patch"
+    },
+    {
+      "path": "target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch",
+      "before": [
+        "696cc17647c314ae9569aa84c211f919973a0f876549e417a9549ce968e98d6a"
+      ],
+      "after": "143e5e7a5d7e4b894b66e9594450a309762855de855847693c582c77d3192b4e",
+      "payload": "files/target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch"
+    }
+  ]
+}

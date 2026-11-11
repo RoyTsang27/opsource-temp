@@ -1,0 +1,267 @@
+{
+  "date": "2026-11-06",
+  "openwrt_main": "031659df7f07c53d29743009c2c8fbc8eb2a05f8",
+  "openwrt_25_12": "69af20612b6405a35042c4bca17765c4f7c07137",
+  "op_source_before": "0e7203190452cf6713932d51afe65e3daa605e10",
+  "kernel_patch_stacks": 50,
+  "kernel_patch_applications": 26420,
+  "wireless": {
+    "patches": 192,
+    "fuzz": 0,
+    "rejects": 0,
+    "p54_matches_native": true,
+    "aarch64_socket_probe": "passed"
+  },
+  "published_cve_archive_sha256": "0eb3e8f1e467e1736a2256aee4c2762c25961cda468f990e6c96a8acfec5ea43",
+  "published_cve_matches_6_18_60": [
+    {
+      "cve": "CVE-2026-23377",
+      "introduced": "6.3",
+      "commit": "2a2927e95cf1b8efb15bcb741bbd06c9bb0537b7",
+      "title": "ice: change XDP RxQ frag_size from DMA write length to xdp.frame_sz"
+    },
+    {
+      "cve": "CVE-2026-98853",
+      "introduced": "3.13",
+      "commit": "388604279da3d0698a151efa4fb6d852efa0de4a",
+      "title": "net: gso: limit recursive IP-in-IP segmentation"
+    },
+    {
+      "cve": "CVE-2026-99218",
+      "introduced": "2.6.27",
+      "commit": "16e94ed90b1b02398e044d41fd1db34828daa08e",
+      "title": "coredump: hold RCU while releasing parked threads"
+    },
+    {
+      "cve": "CVE-2026-99219",
+      "introduced": "5.19",
+      "commit": "8932e5a4df110a25578728526bb5a3dbc849d8a2",
+      "title": "ftrace: Initialize modname and offset in print_rec()"
+    },
+    {
+      "cve": "CVE-2026-99220",
+      "introduced": "4.20",
+      "commit": "1aa0c7aa4c2554a5b6d74ae1924508ca4718234b",
+      "title": "asymmetric_keys: reject trust keys without IDs"
+    },
+    {
+      "cve": "CVE-2026-99221",
+      "introduced": "5.13",
+      "commit": "e55d48f21f591a9fe80d26b5fbd1912ea725d9e6",
+      "title": "keys/trusted_keys: return immediately after TPM unseal failure"
+    },
+    {
+      "cve": "CVE-2026-99222",
+      "introduced": "5.7",
+      "commit": "3edc064069d07e7d37359fcb4d03d3bab15ee3ab",
+      "title": "keys: Protect the read method check against type removal"
+    },
+    {
+      "cve": "CVE-2026-99223",
+      "introduced": "3.13",
+      "commit": "61ac0585d9f4344d3dfb84b5edff1fee7d532897",
+      "title": "keys: make keyring indexes independent of kernel addresses"
+    },
+    {
+      "cve": "CVE-2026-99224",
+      "introduced": "3.18",
+      "commit": "6b613747f7ea309ada5b8d05b55398c338f7a968",
+      "title": "keys: Protect the type name while describing a key"
+    },
+    {
+      "cve": "CVE-2026-99225",
+      "introduced": "5.3",
+      "commit": "b86db7993051d05810601654e886a1e78e1fa495",
+      "title": "keys: Check the authorization payload in process keyring searches"
+    },
+    {
+      "cve": "CVE-2026-99226",
+      "introduced": "2.6.30",
+      "commit": "b0830a26e2c3008a6e21863126b4a0e68b2761cd",
+      "title": "keys: Avoid the owner account dereference in named keyring lookup"
+    },
+    {
+      "cve": "CVE-2026-99227",
+      "introduced": "6.7",
+      "commit": "5bfeee1774791602a0d53eb717f00f172127a017",
+      "title": "io_uring/waitid: prevent cancel reference wrap"
+    },
+    {
+      "cve": "CVE-2026-99228",
+      "introduced": "5.12",
+      "commit": "7309fea05a3d66af9746843c43fef14c10b8141e",
+      "title": "io_uring/io-wq: don't lose the signal that ends work"
+    },
+    {
+      "cve": "CVE-2026-99229",
+      "introduced": "6.3",
+      "commit": "4a89352edd8b3e20d1e1fb33f0fc297dd137149f",
+      "title": "io_uring/wait: don't spin on a stuck overflow list"
+    },
+    {
+      "cve": "CVE-2026-99230",
+      "introduced": "6.7",
+      "commit": "2d5af21422060c088f6e4fb0f1e7dcf5bcdd6707",
+      "title": "io_uring/cmd: don't leave list poison in ->hash_node"
+    },
+    {
+      "cve": "CVE-2026-99231",
+      "introduced": "6.18.52",
+      "commit": "8381a912c65b8de16e8a848225c7c5a56b6ea834",
+      "title": "io_uring/waitid: own the request before clearing ->head"
+    },
+    {
+      "cve": "CVE-2026-99233",
+      "introduced": "4.17",
+      "commit": "06e816bed499fe47f39f12044382cc5d064485fb",
+      "title": "tracing/histograms: Verify event_call identity when updating synth_event refcount"
+    },
+    {
+      "cve": "CVE-2026-99234",
+      "introduced": "4.17",
+      "commit": "431959fc76456cbba539279fe8967aa9391e6f23",
+      "title": "tracing: Unregister field variable histograms when the command fails"
+    },
+    {
+      "cve": "CVE-2026-99235",
+      "introduced": "4.17",
+      "commit": "3609ada3c12cecfb0ae5ee82ef4f86c5f18a2dea",
+      "title": "tracing: Save the event file instead of the compatible histogram"
+    },
+    {
+      "cve": "CVE-2026-99236",
+      "introduced": "4.17",
+      "commit": "1008e9e0b8280d47f1ab5e9c113f666a023a9697",
+      "title": "tracing: Reject incomplete event filter expressions"
+    },
+    {
+      "cve": "CVE-2026-99237",
+      "introduced": "6.16",
+      "commit": "92b69f6db640dadc0851762ee2e12db99f083cad",
+      "title": "tracing: Hold trace_types_lock when resetting last boot data from readers"
+    },
+    {
+      "cve": "CVE-2026-99238",
+      "introduced": "6.15",
+      "commit": "57408eac99b0d8a005796346d317d31f0ca4e07a",
+      "title": "tracing: Hold trace_types_lock when updating modules in persistent instances"
+    },
+    {
+      "cve": "CVE-2026-99239",
+      "introduced": "6.18.39",
+      "commit": "10c705dd706aa93164ba41f2566f15206d6c178e",
+      "title": "Bluetooth: L2CAP: refuse __l2cap_chan_add if chan already has conn"
+    },
+    {
+      "cve": "CVE-2026-99240",
+      "introduced": "6.17",
+      "commit": "d5482be6243b816730689099c017109eb8730dd5",
+      "title": "mm/damon/core: error damos_commit_quota_goal() for zero target_value"
+    },
+    {
+      "cve": "CVE-2026-99244",
+      "introduced": "6.10",
+      "commit": "70178691c467c8f9f722765299fd8524c3121a35",
+      "title": "pid_namespace: prevent TIF_NOTIFY_SIGNAL from interrupting the reaper"
+    },
+    {
+      "cve": "CVE-2026-99245",
+      "introduced": "4.7",
+      "commit": "01835d3a3709be508ae5209f806640336c48e395",
+      "title": "KEYS: Fix key_reject_and_link() race with keyring restriction"
+    },
+    {
+      "cve": "CVE-2026-99254",
+      "introduced": "5.12",
+      "commit": "14f56e9c0b8fdc2e178acdbec9781e90ef46f7e9",
+      "title": "io_uring: don't flood a cancelling task with task_work"
+    },
+    {
+      "cve": "CVE-2026-99255",
+      "introduced": "5.5",
+      "commit": "3e02b8df0e9fa1423ac2a4e03409a9329c30ac49",
+      "title": "io_uring/io-wq: don't hide a link from cancellations"
+    }
+  ],
+  "published_unique_cve_matches_6_12_113_through_115": 917,
+  "separate_bridge_backport": {
+    "cve": "CVE-2026-98285",
+    "upstream": "2842ce397dd09882530b42f7fdb0c855767eb24e"
+  },
+  "source_archive_checks": {
+    "dnsmasq": {
+      "sha256": "0c00d4e5c97c8306e5fb932b348b34269c9c29a0e7df0e8e82958b407092bc19",
+      "patches": 13
+    },
+    "json-c": {
+      "sha256": "704927172443309a8efeb162060bb215548e1286e5568514007dd2cc35a0a164",
+      "patches": 4
+    },
+    "musl": {
+      "sha256": "d585fd3b613c66151fc3249e8ed44f77020cb5e6c1e635a616d3f9f82460512a",
+      "patches": 14
+    },
+    "ca-certificates": {
+      "sha256": "d939bcdd0cb058712cf4175bac76997676eb8b68fe9473765e1b40fb3d5b186a",
+      "patches": 2
+    },
+    "libubox": {
+      "sha256": "398874b0063c7cfce2dd53953dd1dc076675539e05d1d5f6e3da541c8081b8f8",
+      "patches": 0
+    },
+    "ubus": {
+      "sha256": "6c877039f5e57429c964848332636439ed1b34b2e9445e51c5ec8e290dab8d0a",
+      "patches": 0
+    },
+    "rpcd": {
+      "sha256": "dec618e00ee5550b360498997fc5c4725526243e22e866aab3d584e919e0603d",
+      "patches": 0
+    },
+    "uhttpd": {
+      "sha256": "6a2fbcc0dbd3f6c9d076037f23b8544356487aea6b00d2a82a3591b09ba4a8e4",
+      "patches": 0
+    },
+    "odhcpd": {
+      "sha256": "f30d47dbec4429b4bd80d97e3176bfc1660c21842b017920d54a72d9862df68d",
+      "patches": 0
+    },
+    "patch": {
+      "sha256": "0f7b43c7ea450c5d3e9eaf8301177628bc0171d580b2bd6a72822409767144ff",
+      "patches": 0
+    },
+    "usign": {
+      "sha256": "889e58b295505bdde749ec260414fd24411ce2437e5049a7d5cf4e410e8cbe9d",
+      "patches": 0
+    },
+    "ucert": {
+      "sha256": "a926fefa957f42c40caa9f8592f4c63a0a56af9094a9995eb0dfc5d82c9591cf",
+      "patches": 1
+    },
+    "fwtool": {
+      "sha256": "d0c72a6326aa5a5ee8360b0727075643aec63febc4849ab8f13aed315115d7ab",
+      "patches": 0
+    }
+  },
+  "native_tests": {
+    "json_c": {
+      "passed": 28,
+      "harness_adjustment": "printf instead of echo -n in macOS test fixture"
+    },
+    "gnu_patch": {
+      "passed": 45,
+      "skipped": 2,
+      "expected_failures": 2
+    },
+    "dnsmasq": "Built and passed configuration check without ubus",
+    "osafeloader": "Built with native byte-order compatibility headers",
+    "musl_regcomp": "AArch64 Linux object compiled",
+    "repository": {
+      "passed": 70,
+      "skipped": 4,
+      "real_signing_tests_passed": 4
+    }
+  },
+  "source_profiles_checked": 6,
+  "firmware_build": "unverified",
+  "hardware_boot": "unverified"
+}

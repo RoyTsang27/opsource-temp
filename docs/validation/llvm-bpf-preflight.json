@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-17",
+  "source_base": "229cf383822ab5c6ce0987c452a0ce7e60ddf18c",
+  "llvm_version": "22.1.3",
+  "ninja_version_tested": "1.13.2",
+  "actual_recipe_concurrency": {
+    "unusable_parent_jobserver": true,
+    "default_peak_workers": 1,
+    "override_two_peak_workers": 2
+  },
+  "actual_openwrt_kconfig": {
+    "devel_disabled_prebuilt_selected": true,
+    "devel_enabled_prebuilt_selected": true,
+    "llvm_source_build_disabled": true
+  },
+  "prebuilt_archive": {
+    "url": "https://downloads.openwrt.org/snapshots/targets/mediatek/filogic/llvm-bpf-22.1.3.Linux-x86_64.tar.zst",
+    "observed_sha256": "ccbfa9ea15768cadcf6d080bca9912cbd74ffb223d94da90c833272ca9b9c8c1",
+    "size_bytes": 53056544,
+    "checksum_verified": true,
+    "safe_extraction_verified": true,
+    "version_marker_verified": true,
+    "required_linux_x86_64_elf_tools_verified": true
+  },
+  "regression_tests": {
+    "passed": 55,
+    "skipped": 5,
+    "new_llvm_tests_passed": 14,
+    "skip_reason": "Native signing tool directory unavailable"
+  },
+  "source_checks": {"kernel": "6.18.57", "profiles_passed": 6},
+  "original_failure_cause_confirmed": false,
+  "linux_bpf_pipeline_executed_on_macos": false,
+  "linux_setup_requires_successful_bpf_pipeline_before_selection": true,
+  "full_firmware_build_verified": false
+}

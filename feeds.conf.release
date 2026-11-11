@@ -1,0 +1,6 @@
+# Official OpenWrt feeds pinned on 2026-10-13; update deliberately.
+src-git packages https://git.openwrt.org/feed/packages.git^a855effe82552e22cefc973cdd5af175c9364414
+src-git luci https://git.openwrt.org/project/luci.git^d12d55376188343d790fa40377c084245a4d2b86
+src-git routing https://git.openwrt.org/feed/routing.git^4b9891b9136259f93294a424507ed24c5e8c1cbd
+src-git telephony https://git.openwrt.org/feed/telephony.git^5d68d53c160a325ea9d03fce393e051573bcc736
+src-git video https://github.com/openwrt/video.git^6917907d4d6c670cf85be525d23216595655061d

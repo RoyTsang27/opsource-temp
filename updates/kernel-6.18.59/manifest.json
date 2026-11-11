@@ -1,0 +1,106 @@
+{
+  "kernel": "6.18.59",
+  "kernel_sha256": "53a55ac9863a5547e292b8e381d4e4c2240dd1127d5428a7c44dbc550be23963",
+  "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.59.tar.xz",
+  "baseline_repository": "https://github.com/openwrt/openwrt",
+  "baseline_commit": "0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d",
+  "supported_kernels": {
+    "6.18.55": "f410638061a165c12f42ab871d2f3fcd525515359b5faeee80969cff84524df9",
+    "6.18.56": "4633bbda2ab95eaf2a7af4041236451d6759c72e6946265531af4b3aacefbf89",
+    "6.18.57": "5bd9acdc82ec5efc3790ae840e5aaa40dfde7efff261cf6dde902dc570acf98c",
+    "6.18.58": "069b19f9032c4dac8149ae4b6520c35debca0f42a9f6d52ee55ba6ca9b818013",
+    "6.18.59": "53a55ac9863a5547e292b8e381d4e4c2240dd1127d5428a7c44dbc550be23963"
+  },
+  "patch": "patches/openwrt-6.18.55-to-6.18.59.patch",
+  "patch_sha256": "cd44350247f781a607b0f9330c6a66ae89ea11ea90eb5bbe71263a09e5bd2238",
+  "files": [
+    {
+      "path": "package/kernel/mac80211/Makefile",
+      "before": [
+        "2214d8a0e7d01c618cb8afae2c77236bcbbd86ecec425933f4e8f4285b4b07ef",
+        "ab70ba14cbb492f17648f1a58b895f001acba331e44c8fadcb5622ebb61fd77f"
+      ],
+      "after": "d9058b11a4d43e6f2e3df8ce9c71564ca27477b6ea27e97ac764e26c57d9b93e",
+      "payload": "files/package/kernel/mac80211/Makefile"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch",
+      "before": [
+        null
+      ],
+      "after": "e7c56278ac962b59429b72634630f37c592e4fca7a960ddcf21e185eb6f6e216",
+      "payload": "files/package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/380-p54-validate-firmware-record-lengths.patch",
+      "before": [
+        null
+      ],
+      "after": "025846e1ed4914f95313d7d20568f2c5b6c17d3555f8a19ba8724d55ed44a2c0",
+      "payload": "files/package/kernel/mac80211/patches/subsys/380-p54-validate-firmware-record-lengths.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch",
+      "before": [
+        "cd65445cfb0e93e2405a391ba7acfd30209178ce21fec125cb881a705900c4d7"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch",
+      "before": [
+        "4958a0a2e296338cbc28176fdc2b9f1bf22e1afa86de0ec78717e0c9673862c8"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch",
+      "before": [
+        "729db8f82fcd9f6370c3648826b54da06e542ebb23780218c256e624424eed12"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/950-v7.3-cgroup-fix-spurious-SIGKILL-of-CLONE_INTO_CGROUP-children.patch",
+      "before": [
+        "70b7fd4ede1204aea25cfaf23c725ba92f6d7a53277313184964e2ba491c7be0"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/hack-6.18/660-fq_codel_defaults.patch",
+      "before": [
+        "7164a43d7e51ea5d5c261eed657fcccaf704a143b04c55ecd2f4d6b43401e00c"
+      ],
+      "after": "0853e5df84fd0982dab3165aebe7baf5a5fd8f0aa45a55cfbb466ca78cfd2d61",
+      "payload": "files/target/linux/generic/hack-6.18/660-fq_codel_defaults.patch"
+    },
+    {
+      "path": "target/linux/generic/kernel-6.18",
+      "before": [
+        "9c5a716f64517054bbd3f017c07abe1d7abba162587883ac122db79d6948fbe7",
+        "746dd6fb5ef2603f89bbbbabce2d004356fdc5f57f6075d91d0dd668589905db",
+        "3eb96fcf639ea5d6b270fe63255ace10c77aa0d032244535164d950c8f5c0750",
+        "31e0f6986086d0178b36cfad82a29627d41907c223eca9dee37e29b60e19f6ab"
+      ],
+      "after": "6ddea3ca9a3ae5679026e10b07cdbc9a1cf8014dfa95991f12f775c0ad9065b6",
+      "payload": "files/target/linux/generic/kernel-6.18"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch",
+      "before": [
+        "e3ab730ac03b5b52db45d18c731e858c76327ba997168c9eb8570ddc62f5b626"
+      ],
+      "after": "126f9af18e0127d2c040bd561dc42b3048a9cc2714d505500605f6746bf3bd78",
+      "payload": "files/target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch",
+      "before": [
+        "aaa837465e21a8c529daeeb4909c70a70d8213c0ba62665fed918e6381769f23"
+      ],
+      "after": "7aceb780ecdbbc17592641cf469ecd95b1cab1a3985929d3f8d8450485b343be",
+      "payload": "files/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+From: op-source maintainers
+Subject: [PATCH] backports: handle the temporary sockaddr_unsized stable backport
+
+Linux 6.18.57 through 6.18.60 provided struct sockaddr_unsized in the
+kernel headers. Stable commit 9d275d40b6ec reverted that socket API
+backport in 6.18.61, removing the structure from the 6.18.y kernel.
+
+Keep the compatibility definition for 6.18.61 and later 6.18.y releases
+and suppress it only where the kernel already provides the structure.
+
+--- a/backport-include/linux/socket.h
++++ b/backport-include/linux/socket.h
+@@ -11,7 +11,8 @@
+ #define SOL_NFC		280
+ #endif
+ 
+-#if LINUX_VERSION_IS_LESS(6,19,0)
++#if LINUX_VERSION_IS_LESS(6,19,0) && \
++    (LINUX_VERSION_IS_LESS(6,18,57) || !LINUX_VERSION_IS_LESS(6,18,61))
+ /**
+  * struct sockaddr_unsized - Unspecified size sockaddr for callbacks
+  * @sa_family: Address family (AF_UNIX, AF_INET, AF_INET6, etc.)
+@@ -28,7 +29,7 @@ struct sockaddr_unsized {
+ 	__kernel_sa_family_t	sa_family;	/* address family, AF_xxx */
+ 	char			sa_data[];	/* flexible address data */
+ };
+-#endif /* < 6.19 */
++#endif /* < 6.19, except 6.18.57 through 6.18.60 */
+ 
+ #ifndef __sockaddr_check_size
+ #define __sockaddr_check_size(size)	\

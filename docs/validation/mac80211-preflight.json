@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-16",
+  "kernel": "6.18.57",
+  "backports": "7.2",
+  "archive_sha256": "6ec76a4cb0988b5382b2fc5053610a56ada90b8ef6a5a4f2807cd433badb9454",
+  "unpatched_duplicate_definition_reproduced": true,
+  "mac80211_patches_applied": 191,
+  "patch_rejects": 0,
+  "compiler_target": "aarch64-linux-gnu",
+  "probe_scope": "Real patched backports socket/version/net wrappers; native socket type extracted from Linux 6.18.57 and kernel_connect declarations from the listed kernel headers, with minimal include stubs. Version cases simulate version codes; these are not complete mac80211 module builds.",
+  "compatibility_probes": [
+    {
+      "version_case": "6.6.0",
+      "native_sockaddr_unsized": false,
+      "result": "passed"
+    },
+    {
+      "version_case": "6.12.0",
+      "native_sockaddr_unsized": false,
+      "result": "passed"
+    },
+    {
+      "version_case": "6.18.0",
+      "native_sockaddr_unsized": false,
+      "result": "passed"
+    },
+    {
+      "version_case": "6.18.56",
+      "native_sockaddr_unsized": false,
+      "result": "passed"
+    },
+    {
+      "version_case": "6.18.57",
+      "native_sockaddr_unsized": true,
+      "result": "passed"
+    },
+    {
+      "version_case": "6.18.58",
+      "native_sockaddr_unsized": true,
+      "result": "passed"
+    },
+    {
+      "version_case": "6.19.0",
+      "native_sockaddr_unsized": true,
+      "result": "passed"
+    },
+    {
+      "version_case": "7.0.0",
+      "native_sockaddr_unsized": true,
+      "result": "passed"
+    }
+  ],
+  "full_firmware_build_verified": false,
+  "kernel_connect_probes": [
+    {
+      "version_case": "6.18.56",
+      "native_prototype_source": "Linux v6.18.56 include/linux/net.h",
+      "result": "passed"
+    },
+    {
+      "version_case": "6.18.57",
+      "native_prototype_source": "Linux v6.18.57 include/linux/net.h",
+      "result": "passed"
+    },
+    {
+      "version_case": "6.19.0",
+      "native_prototype_source": "Linux v6.19 include/linux/net.h",
+      "result": "passed"
+    }
+  ]
+}

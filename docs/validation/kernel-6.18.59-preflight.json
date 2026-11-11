@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-28",
+  "kernel": "6.18.59",
+  "archive_bytes": 154844772,
+  "kernel_patch_checks": {
+    "kernel": "6.18.59",
+    "kernel_sha256": "53a55ac9863a5547e292b8e381d4e4c2240dd1127d5428a7c44dbc550be23963",
+    "targets": {
+      "mediatek": {
+        "patches": 591,
+        "result": "passed",
+        "fuzz": 0,
+        "rejects": 0
+      },
+      "ramips": {
+        "patches": 497,
+        "result": "passed",
+        "fuzz": 0,
+        "rejects": 0
+      }
+    },
+    "scope": "Original contents of patch-referenced files plus target overlays; no full kernel compilation"
+  },
+  "wireless": {
+    "patches": 192,
+    "result": "passed",
+    "fuzz": 0,
+    "rejects": 0,
+    "backports_sha256": "6ec76a4cb0988b5382b2fc5053610a56ada90b8ef6a5a4f2807cd433badb9454",
+    "socket_probe": {
+      "kernel": "6.18.59",
+      "original_conflict_reproduced": true,
+      "patched_aarch64_compile": "passed",
+      "scope": "Actual backports wrapper and native kernel socket structure, with minimal include stubs; no full module build"
+    },
+    "p54_parser": {
+      "matches_native_linux_6_18_59": true,
+      "cve": "CVE-2026-99100"
+    }
+  },
+  "regression_tests": {
+    "discovered": 74,
+    "passed": 67,
+    "skipped": 7,
+    "skips": "Two native Ninja and five native signing integration tests; tools unavailable"
+  },
+  "migration_tests": 14,
+  "source_checks": {
+    "kernel": "6.18.59",
+    "profiles": 6,
+    "result": "passed"
+  },
+  "delivery_archive": {
+    "name": "op-source-kernel-6.18.59-update.tar.gz",
+    "bytes": 18898,
+    "sha256": "9e81b133953064a1a87e65a374717c8a4dbcdecf74c74d819bc89bd6a14b32a0",
+    "standalone_cli_upgrade_from_55": "passed",
+    "verified_download_cache_reuse": "passed",
+    "configuration_and_caches_preserved": true,
+    "rerun_noop": "passed",
+    "backups": 1
+  },
+  "firmware_compilation": "Not performed: local Apple Silicon macOS host; no Linux build environment available",
+  "hardware_boot": "Not performed",
+  "cloud_builds_started": false,
+  "scope": "Published MediaTek/Ralink profiles; separate unpublished PON draft excluded"
+}

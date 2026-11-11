@@ -1,0 +1,215 @@
+{
+  "version": "6.18.63",
+  "sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "targets": {
+    "generic": {
+      "patches": 451,
+      "failure": null
+    },
+    "airoha": {
+      "patches": 593,
+      "failure": null
+    },
+    "apm821xx": {
+      "patches": 457,
+      "failure": null
+    },
+    "armsr": {
+      "patches": 454,
+      "failure": null
+    },
+    "ath79": {
+      "patches": 488,
+      "failure": null
+    },
+    "bcm27xx": {
+      "patches": 1357,
+      "failure": null
+    },
+    "bcm47xx": {
+      "patches": 466,
+      "failure": null
+    },
+    "bcm53xx": {
+      "patches": 489,
+      "failure": null
+    },
+    "bmips": {
+      "patches": 465,
+      "failure": null
+    },
+    "d1": {
+      "patches": 453,
+      "failure": null
+    },
+    "econet": {
+      "patches": 512,
+      "failure": null
+    },
+    "gemini": {
+      "patches": 469,
+      "failure": null
+    },
+    "ipq40xx": {
+      "patches": 474,
+      "failure": null
+    },
+    "ixp4xx": {
+      "patches": 454,
+      "failure": null
+    },
+    "kirkwood": {
+      "patches": 474,
+      "failure": null
+    },
+    "lantiq": {
+      "patches": 472,
+      "failure": null
+    },
+    "layerscape": {
+      "patches": 460,
+      "failure": null
+    },
+    "loongarch64": {
+      "patches": 451,
+      "failure": null
+    },
+    "malta": {
+      "patches": 451,
+      "failure": null
+    },
+    "mediatek": {
+      "patches": 590,
+      "failure": null
+    },
+    "microchipsw": {
+      "patches": 478,
+      "failure": null
+    },
+    "mpc85xx": {
+      "patches": 469,
+      "failure": null
+    },
+    "mvebu": {
+      "patches": 495,
+      "failure": null
+    },
+    "mxs": {
+      "patches": 451,
+      "failure": null
+    },
+    "octeon": {
+      "patches": 463,
+      "failure": null
+    },
+    "omap": {
+      "patches": 452,
+      "failure": null
+    },
+    "pistachio": {
+      "patches": 464,
+      "failure": null
+    },
+    "qoriq": {
+      "patches": 451,
+      "failure": null
+    },
+    "qualcommax": {
+      "patches": 544,
+      "failure": null
+    },
+    "qualcommbe": {
+      "patches": 518,
+      "failure": null
+    },
+    "ramips": {
+      "patches": 497,
+      "failure": null
+    },
+    "realtek": {
+      "patches": 561,
+      "failure": null
+    },
+    "rockchip": {
+      "patches": 593,
+      "failure": null
+    },
+    "sifiveu": {
+      "patches": 452,
+      "failure": null
+    },
+    "siflower": {
+      "patches": 467,
+      "failure": null
+    },
+    "starfive": {
+      "patches": 507,
+      "failure": null
+    },
+    "stm32": {
+      "patches": 454,
+      "failure": null
+    },
+    "sunxi": {
+      "patches": 474,
+      "failure": null
+    },
+    "tegra": {
+      "patches": 452,
+      "failure": null
+    },
+    "uml": {
+      "patches": 452,
+      "failure": null
+    },
+    "x86": {
+      "patches": 453,
+      "failure": null
+    },
+    "zynq": {
+      "patches": 453,
+      "failure": null
+    }
+  },
+  "checked_on": "2026-11-11",
+  "host": "macOS arm64",
+  "patch_fuzz": 0,
+  "patch_rejects": 0,
+  "mac80211": {
+    "patches": 247,
+    "result": "passed"
+  },
+  "mt76": {
+    "revision": "0936617dc529ff9da0385221d3fa6de732231177",
+    "patches": 2,
+    "result": "passed",
+    "archive_sha256": "3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f",
+    "compared_to_github_commit_files": 324
+  },
+  "compiler_probes": {
+    "shared_flow_layout": "Kernel and backports declarations with 34 upstream assertions each; AArch64 object compilation and MIPS syntax checks passed",
+    "socket_wrapper": "AArch64 compilation passed for 6.18.60/61/62/63 and 6.19.0 header layouts"
+  },
+  "unit_tests": {
+    "run": 79,
+    "passed": 78,
+    "skipped": 1
+  },
+  "migration": {
+    "baseline_commit": "a8854f0e7dcacd2b21ccbccaf0dd9d2fd93f4ae1",
+    "also_checked": "485f44395cd19c83bc86f1c1f848db8ce9b649c0",
+    "checks": [
+      "unified patch applies and matches source",
+      "no-write compatibility check",
+      "backup journal and original content",
+      "existing build files and device settings preserved",
+      "local mt76 edits abort before writes",
+      "repeated update is a no-op",
+      "write failure rollback"
+    ]
+  },
+  "limitations": [
+    "No complete firmware build",
+    "No hardware boot test"
+  ]
+}

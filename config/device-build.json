@@ -1,0 +1,91 @@
+{
+  "name": "op-source",
+  "repository": "RoyTsang27/opsource-temp",
+  "kernel": "6.18.63",
+  "kernel_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "source": {
+    "url": "https://github.com/openwrt/openwrt",
+    "branch": "main",
+    "commit": "0ad1348fb2a7f49c9c5941d4d8c98f88b6974e8d"
+  },
+  "default_devices": [
+    "ax3000t",
+    "tr3000",
+    "tr1200"
+  ],
+  "devices": {
+    "ax3000t": {
+      "name": "Xiaomi Mi Router AX3000T (stock layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "xiaomi_mi-router-ax3000t",
+      "dts": "mt7981b-xiaomi-mi-router-ax3000t",
+      "compatible": "xiaomi,mi-router-ax3000t"
+    },
+    "ax3000t-ubootmod": {
+      "name": "Xiaomi Mi Router AX3000T (OpenWrt U-Boot layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "xiaomi_mi-router-ax3000t-ubootmod",
+      "dts": "mt7981b-xiaomi-mi-router-ax3000t-ubootmod",
+      "compatible": "xiaomi,mi-router-ax3000t-ubootmod"
+    },
+    "tr3000": {
+      "name": "Cudy TR3000 v1 (stock layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "cudy_tr3000-v1",
+      "dts": "mt7981b-cudy-tr3000-v1",
+      "compatible": "cudy,tr3000-v1"
+    },
+    "tr3000-256mb": {
+      "name": "Cudy TR3000 256MB v1 (stock layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "cudy_tr3000-256mb-v1",
+      "dts": "mt7981b-cudy-tr3000-256mb-v1",
+      "compatible": "cudy,tr3000-256mb-v1"
+    },
+    "tr3000-ubootmod": {
+      "name": "Cudy TR3000 v1 (OpenWrt U-Boot layout)",
+      "target": "mediatek",
+      "subtarget": "filogic",
+      "profile": "cudy_tr3000-v1-ubootmod",
+      "dts": "mt7981b-cudy-tr3000-v1-ubootmod",
+      "compatible": "cudy,tr3000-v1-ubootmod"
+    },
+    "tr1200": {
+      "name": "Cudy TR1200 v1",
+      "target": "ramips",
+      "subtarget": "mt76x8",
+      "profile": "cudy_tr1200-v1",
+      "dts": "mt7628an_cudy_tr1200-v1",
+      "compatible": "cudy,tr1200-v1"
+    },
+    "xg-040g-md-tcboot": {
+      "name": "Nokia XG-040G-MD (tcboot)",
+      "target": "airoha",
+      "subtarget": "an7581",
+      "profile": "nokia_xg-040g-md-tcboot",
+      "dts": "an7581-nokia_xg-040g-md-tcboot",
+      "compatible": "nokia,xg-040g-md-tcboot",
+      "factory_image": true
+    },
+    "xg-140g-tf-tcboot": {
+      "name": "Nokia XG-140G-TF (tcboot)",
+      "target": "airoha",
+      "subtarget": "an7581",
+      "profile": "nokia_xg-140g-tf-tcboot",
+      "dts": "an7581-nokia_xg-140g-tf-tcboot",
+      "compatible": "nokia,xg-140g-tf-tcboot",
+      "factory_image": true
+    }
+  },
+  "visibility": "public",
+  "distribution": "OpenWrt",
+  "derived_from": {
+    "url": "https://github.com/tdsafgen1888asd/Device-Build",
+    "branch": "main",
+    "commit": "db96277fbc98282751cb1d70b83bc1cd8156eb4d"
+  }
+}

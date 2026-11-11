@@ -1,0 +1,794 @@
+{
+  "kernel": "6.18.63",
+  "kernel_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.63.tar.xz",
+  "baseline_repository": "https://github.com/tdsafgen1888asd/op-source",
+  "baseline_commit": "a8854f0e7dcacd2b21ccbccaf0dd9d2fd93f4ae1",
+  "supported_kernels": {
+    "6.18.60": "3c2f44ef6acc021a7ad444d9a2e6ec1ef488ff09368793d0004a6080f69d621e",
+    "6.18.62": "490a7aedf1b355c565d3a6c05333ccccb5da82064eca46b590448a7099d7d651",
+    "6.18.63": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71"
+  },
+  "mt76": {
+    "source_date": "2026-10-28",
+    "source_commit": "0936617dc529ff9da0385221d3fa6de732231177",
+    "mirror_sha256": "3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f"
+  },
+  "patch": "patches/op-source-6.18.60-to-6.18.63.patch",
+  "patch_sha256": "019313057c8dcc895ce2d9f27bcba6f09d7a40f7878576b632864fafd49a97e0",
+  "files": [
+    {
+      "path": "package/kernel/mac80211/Makefile",
+      "before": [
+        "d9058b11a4d43e6f2e3df8ce9c71564ca27477b6ea27e97ac764e26c57d9b93e",
+        "d8d7157890574dad0bb7dcb332c81bc5eafe6b5b7a2faf6f727557b01d022efe"
+      ],
+      "after": "ac8492a1a76e3b1ce5c9b5eebeccddaed5dae196edf839ce9d0c14b2051b2b89",
+      "payload": "files/package/kernel/mac80211/Makefile"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch",
+      "before": [
+        "e7c56278ac962b59429b72634630f37c592e4fca7a960ddcf21e185eb6f6e216",
+        "df45fcbda459a34546e29f6472dbc09cafec8ec8afa8bad4e97b08769955d93e"
+      ],
+      "after": "df45fcbda459a34546e29f6472dbc09cafec8ec8afa8bad4e97b08769955d93e",
+      "payload": "files/package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/007-netfilter-flowtable-restore-ieee80211-forward-path.patch",
+      "before": [
+        null
+      ],
+      "after": "9700615fff91fa75d2b1b4dc2b61677a793361cd1d173f716020d1d4070f9a7d",
+      "payload": "files/package/kernel/mac80211/patches/subsys/007-netfilter-flowtable-restore-ieee80211-forward-path.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/008-wifi-mac80211-fix-unauthorised-port-check-for-encap-.patch",
+      "before": [
+        null
+      ],
+      "after": "a52b57a1ea2641b2a1063139f6180552a65a1c26a6efc67caa3d14f932d9682e",
+      "payload": "files/package/kernel/mac80211/patches/subsys/008-wifi-mac80211-fix-unauthorised-port-check-for-encap-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/009-wifi-mac80211-fix-key-selection-for-encap-offload-fr.patch",
+      "before": [
+        null
+      ],
+      "after": "0a1aeda20f921632a3acb815cd3f20c02757a2c04ecbf803c2320a875a82e3c9",
+      "payload": "files/package/kernel/mac80211/patches/subsys/009-wifi-mac80211-fix-key-selection-for-encap-offload-fr.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/010-wifi-mac80211-don-t-send-encap-offload-frames-unencr.patch",
+      "before": [
+        null
+      ],
+      "after": "48546af3cb7c9bf43020c5e4bf284ad07bbc38c8c272def84e5693b28c9fb789",
+      "payload": "files/package/kernel/mac80211/patches/subsys/010-wifi-mac80211-don-t-send-encap-offload-frames-unencr.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/011-wifi-mac80211-drop-encap-offload-frames-with-a-taint.patch",
+      "before": [
+        null
+      ],
+      "after": "068ba2238f713b6e19f7c5148462d34861eb105b534d193abb9b657cb8142a4d",
+      "payload": "files/package/kernel/mac80211/patches/subsys/011-wifi-mac80211-drop-encap-offload-frames-with-a-taint.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/012-mac80211-tx-Use-info-flags-in-ieee80211_tx_h_select_.patch",
+      "before": [
+        null
+      ],
+      "after": "7deba031c31488ab22026fdd2027ec6d725edadcbc72d0064874425ad63768c7",
+      "payload": "files/package/kernel/mac80211/patches/subsys/012-mac80211-tx-Use-info-flags-in-ieee80211_tx_h_select_.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/013-wifi-add-the-nl80211-and-hwsim-UAPI-numbers-of-wirel.patch",
+      "before": [
+        null
+      ],
+      "after": "d7a19a978e6dea27903b67ffab38a8ed19a64d78e790f1dd60cdd2a4d9bea669",
+      "payload": "files/package/kernel/mac80211/patches/subsys/013-wifi-add-the-nl80211-and-hwsim-UAPI-numbers-of-wirel.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/014-wifi-cfg80211-mac80211-apply-HE-OBSS-PD-settings-on-.patch",
+      "before": [
+        null
+      ],
+      "after": "1dec40c873b8a1fa0e3a50c4b41367e290bb5a8cc3c78b4f9d222bb23f6476ad",
+      "payload": "files/package/kernel/mac80211/patches/subsys/014-wifi-cfg80211-mac80211-apply-HE-OBSS-PD-settings-on-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/014-wifi-mac80211-fix-swapped-fq_overlimit-fq_overmemory.patch",
+      "before": [
+        null
+      ],
+      "after": "65bbdca468c8be6a7b40d41e3e7a9c6aa07dd7686b25c75194fa5b10e04ada68",
+      "payload": "files/package/kernel/mac80211/patches/subsys/014-wifi-mac80211-fix-swapped-fq_overlimit-fq_overmemory.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/015-wifi-mac80211-don-t-reset-the-TXQ-scheduling-round-n.patch",
+      "before": [
+        null
+      ],
+      "after": "1e8cec559ffd40877e45bc9d80da1b2d9625c0a4a60d972914019d2dc1e1e313",
+      "payload": "files/package/kernel/mac80211/patches/subsys/015-wifi-mac80211-don-t-reset-the-TXQ-scheduling-round-n.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/110-mac80211_keep_keys_on_stop_ap.patch",
+      "before": [
+        "80ce8e597c89b9aefbad1cac5b57ff9d55ec48f8eb501dd19a981e081e22aef7"
+      ],
+      "after": "f60c7d9a30f3941224905faa940a674218480e89976217a44c9c4799f11dfebd",
+      "payload": "files/package/kernel/mac80211/patches/subsys/110-mac80211_keep_keys_on_stop_ap.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/210-ap_scan.patch",
+      "before": [
+        "5f91404b24865aea7b947d97d11cc78e82d639df0bf2fc66be564888fb894354"
+      ],
+      "after": "a91c5f866523bb0006e03b3a20edd907ecc6fa4a6c507b50122ce6f44aa062a5",
+      "payload": "files/package/kernel/mac80211/patches/subsys/210-ap_scan.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/305-mac80211-increase-quantum-for-airtime-scheduler.patch",
+      "before": [
+        "ca1f8ff335f81f90498addc3dc8fdadc678126222ff96db4ca203c9b9d1947d0"
+      ],
+      "after": "fa1b449eb05dabe201900ffbdfdc8f23863d9d599b3d3e696b68e0fb47588ce4",
+      "payload": "files/package/kernel/mac80211/patches/subsys/305-mac80211-increase-quantum-for-airtime-scheduler.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/310-cfg80211-allow-grace-period-for-DFS-available-after-.patch",
+      "before": [
+        "d3d9f65eafb1975bb8bb667f98640daf328b9ae368f8c4472c03a48134dd2716"
+      ],
+      "after": "7afd9da9ed6dd029875b7948451abd379603b8daee0896d4700fcd1cf328383b",
+      "payload": "files/package/kernel/mac80211/patches/subsys/310-cfg80211-allow-grace-period-for-DFS-available-after-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/320-mac80211-add-AQL-support-for-broadcast-packets.patch",
+      "before": [
+        "a9c45ca4a69eff7f79f1cca82615ab1714a2afb29ee0d86be8c948627aba443d"
+      ],
+      "after": "ba22845614c15256bb1d6955e6e2eb57c3748e781b6e90c0c9aa7ff6a8ce6296",
+      "payload": "files/package/kernel/mac80211/patches/subsys/320-mac80211-add-AQL-support-for-broadcast-packets.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/321-wifi-mac80211-add-ieee80211_txq_aql_pending.patch",
+      "before": [
+        "d812f0fabe0b05b34003eebbd781899fd69264a53dce1c4c9013fb2d315ee915"
+      ],
+      "after": "c6ceb7eabb4fb9654271ce24f648b98af1133ebaba481f8c5ca1b7ac404b55f7",
+      "payload": "files/package/kernel/mac80211/patches/subsys/321-wifi-mac80211-add-ieee80211_txq_aql_pending.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/360-mac80211-factor-out-part-of-ieee80211_calc_expected_.patch",
+      "before": [
+        "a6340329a91a253d31d6c5c572404411c48461f38415874c061cf36e3abfcbd7"
+      ],
+      "after": "a555ef408db0c4ebd1e8c77886863f6ab82bc448c71644fc2490dfccad267cf2",
+      "payload": "files/package/kernel/mac80211/patches/subsys/360-mac80211-factor-out-part-of-ieee80211_calc_expected_.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/361-mac80211-estimate-expected-throughput-if-not-provide.patch",
+      "before": [
+        "fa1d06d4655eea740cb9b3711f326874dfa145ff109faf4e6ad3e09570f7fc7a"
+      ],
+      "after": "4d049775adfd9dfcb310c32d62fd93bf1f7fcd838f41e2c7a7229df639f5e536",
+      "payload": "files/package/kernel/mac80211/patches/subsys/361-mac80211-estimate-expected-throughput-if-not-provide.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/390-wifi-mac80211-notify-driver-on-airtime-weight-change.patch",
+      "before": [
+        "c2bde0b65e2bcc6270a9dc986527fc9a74217fc7e1b46435e511ea61c2e6233f"
+      ],
+      "after": "b2d53aef9be187b0f0e8ded108996492f7a7293711065075ce3f291bb039a39d",
+      "payload": "files/package/kernel/mac80211/patches/subsys/390-wifi-mac80211-notify-driver-on-airtime-weight-change.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/392-wifi-mac80211-fix-station-lookup-for-management-fram.patch",
+      "before": [
+        "8d3b0b241ab8f16d2b2c1d15fee61a82f96b552168e5f46b4c2c466a1419aa59"
+      ],
+      "after": "4023cb66ffe6d51972477facf61c1d37ce5181f03324620d5a29b2a7c2198a6b",
+      "payload": "files/package/kernel/mac80211/patches/subsys/392-wifi-mac80211-fix-station-lookup-for-management-fram.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/393-wifi-mac80211-reset-the-LED-state-when-ifup-fails.patch",
+      "before": [
+        "a285ed23bca59b5824bb67441688f75ab4250443d88f8ef26f5a3b0d22027ed0"
+      ],
+      "after": "96f2c783e8c05df78d98cd12a7163aed4b61e0c334230f447fb7ca324990e39a",
+      "payload": "files/package/kernel/mac80211/patches/subsys/393-wifi-mac80211-reset-the-LED-state-when-ifup-fails.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/396-wifi-mac80211-use-link-address-as-TA-for-non-MLO-4-a.patch",
+      "before": [
+        "8dd9321eaca1eebad7d086494d73e39f3e77f44145132c401aafd208177271dd"
+      ],
+      "after": "b6556e5694114baefc1b07650a4766cfa8607ee30641b51bf364bae31e7eaa1e",
+      "payload": "files/package/kernel/mac80211/patches/subsys/396-wifi-mac80211-use-link-address-as-TA-for-non-MLO-4-a.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/397-wifi-mac80211-use-the-AP-address-as-RA-for-a-4-addr-.patch",
+      "before": [
+        "1b39ba38642e744ba62eaf17fe2d10a9ff7addcb5bf49949d8f4884762b7e172"
+      ],
+      "after": "057a4b38635e4e44dca2c1c17cadae90a57acf0de43ba8f7c7be502b634614fb",
+      "payload": "files/package/kernel/mac80211/patches/subsys/397-wifi-mac80211-use-the-AP-address-as-RA-for-a-4-addr-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/399-wifi-mac80211-look-up-the-AP-station-by-the-AP-MLD-add.patch",
+      "before": [
+        "a702223a4772e7128673d1780e5d4b2c5a73dd86dc477c80651e01d53543aa45"
+      ],
+      "after": "456fd8bff06f9991452620ecec0dcac05a23c00485e8d69d4b6e3eedeb884c37",
+      "payload": "files/package/kernel/mac80211/patches/subsys/399-wifi-mac80211-look-up-the-AP-station-by-the-AP-MLD-add.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/411-wifi-mac80211-keep-the-carrier-while-another-AP-link-beacons.patch",
+      "before": [
+        "ff2921dad7b72b16df27874afc8c87ab1528ad028448dcd368a09dbde903e8c5"
+      ],
+      "after": "744202d0f34aae6f449db8be28a4cc7f3456ff40bd1a815bd335989254c8c170",
+      "payload": "files/package/kernel/mac80211/patches/subsys/411-wifi-mac80211-keep-the-carrier-while-another-AP-link-beacons.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/412-wifi-mac80211-stop-only-the-MBSSID-set-of-the-stopped-AP-link.patch",
+      "before": [
+        "c5acfd6a32a3f3208801620cb18dd424283ca463b9214814f204350e463cd8ab"
+      ],
+      "after": "5bea21d9d9d76ddd48eb9c5c34a69b00256ad575549e0e9f0fc6ecf613211433",
+      "payload": "files/package/kernel/mac80211/patches/subsys/412-wifi-mac80211-stop-only-the-MBSSID-set-of-the-stopped-AP-link.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/414-wifi-cfg80211-take-the-MLO-station-rates-from-the-links-that-report-them.patch",
+      "before": [
+        "520fe3ab5f58c5337e34bd46e4e421e4ae9b4fbda8ac173913f55361e4cda2ca"
+      ],
+      "after": "d23cb293669b8818cb980de1c4339274e3838cdc8a6a8754c087be8034c4dc0b",
+      "payload": "files/package/kernel/mac80211/patches/subsys/414-wifi-cfg80211-take-the-MLO-station-rates-from-the-links-that-report-them.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/415-wifi-cfg80211-report-the-MLD-address-and-link-of-a-dumped-station.patch",
+      "before": [
+        "618f3c70ae7948be13da0dccc64819293055eb9556b13a30c803857af818ccc5"
+      ],
+      "after": "419772ad9b91ca04ae803d47417e72d169558d1f9cd68a8a3f8122a3aae27e1e",
+      "payload": "files/package/kernel/mac80211/patches/subsys/415-wifi-cfg80211-report-the-MLD-address-and-link-of-a-dumped-station.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/421-wifi-mac80211-report-the-totals-of-an-MLO-station-when-it-is-removed.patch",
+      "before": [
+        "0457877187dca63523467b4e6853ad9b9aa99ddb0f520f455375e5df80880fd8"
+      ],
+      "after": "de567a823638d981c16c7efb43733fe7b476aa6885753d4a9dfde04f5e5622e3",
+      "payload": "files/package/kernel/mac80211/patches/subsys/421-wifi-mac80211-report-the-totals-of-an-MLO-station-when-it-is-removed.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/423-wifi-mac80211-count-the-DTIM-of-each-AP-link.patch",
+      "before": [
+        null
+      ],
+      "after": "8e9e0fa76c61be8db2c04bc8a51b1fd009ed8250dc3279be02cf9bb97a4bdd56",
+      "payload": "files/package/kernel/mac80211/patches/subsys/423-wifi-mac80211-count-the-DTIM-of-each-AP-link.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/424-wifi-nl80211-report-the-end-of-a-critical-update-on-.patch",
+      "before": [
+        null
+      ],
+      "after": "84ff5c503765046d2add14887ad85650254aa219431e5e18a5b08bd854784e13",
+      "payload": "files/package/kernel/mac80211/patches/subsys/424-wifi-nl80211-report-the-end-of-a-critical-update-on-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/425-wifi-mac80211-clear-the-Critical-Update-flag-after-t.patch",
+      "before": [
+        null
+      ],
+      "after": "a77366a598f874ed20ad715c11146d9f94867cfaf3397b5989efdb8ae5ea1b89",
+      "payload": "files/package/kernel/mac80211/patches/subsys/425-wifi-mac80211-clear-the-Critical-Update-flag-after-t.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/426-wifi-nl80211-add-the-advertised-TID-to-link-mapping-.patch",
+      "before": [
+        null
+      ],
+      "after": "5dead6c393a4176a1e556952b7d6b2c6eb70d35da3cb8722956bd6d163e6dcea",
+      "payload": "files/package/kernel/mac80211/patches/subsys/426-wifi-nl80211-add-the-advertised-TID-to-link-mapping-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/427-wifi-mac80211-pass-the-advertised-TID-to-link-mappin.patch",
+      "before": [
+        null
+      ],
+      "after": "1cd295ad7c9461b271e49fa1f54f25d55239733ec8123721bfb645d010457953",
+      "payload": "files/package/kernel/mac80211/patches/subsys/427-wifi-mac80211-pass-the-advertised-TID-to-link-mappin.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/431-wifi-cfg80211-add-the-TCLAS-element-parsers.patch",
+      "before": [
+        null
+      ],
+      "after": "98b6cb2c228a4096da5dafdad63c26d585ada054090162a3aa8000d14fb02482",
+      "payload": "files/package/kernel/mac80211/patches/subsys/431-wifi-cfg80211-add-the-TCLAS-element-parsers.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/432-wifi-cfg80211-add-the-flow-parser-and-the-MSCS-key.patch",
+      "before": [
+        null
+      ],
+      "after": "8d199e3fd6a73d8fde205f1199d64580eafd69c545078e1924e37b03a20a71ae",
+      "payload": "files/package/kernel/mac80211/patches/subsys/432-wifi-cfg80211-add-the-flow-parser-and-the-MSCS-key.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/433-wifi-cfg80211-add-the-SCS-evaluator.patch",
+      "before": [
+        null
+      ],
+      "after": "3acb2382ec3163acada7923c225048447211cdffd3d583cc6f34a05a670037b4",
+      "payload": "files/package/kernel/mac80211/patches/subsys/433-wifi-cfg80211-add-the-SCS-evaluator.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/434-wifi-ieee80211-add-the-QoS-Characteristics-element.patch",
+      "before": [
+        null
+      ],
+      "after": "c744ce6b70f3fb339b76c2429b2938659e5f1036dee19c46f7b1266248e906d4",
+      "payload": "files/package/kernel/mac80211/patches/subsys/434-wifi-ieee80211-add-the-QoS-Characteristics-element.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/435-wifi-cfg80211-add-SCS-and-MSCS-request-validation.patch",
+      "before": [
+        null
+      ],
+      "after": "fc79eb32fe920b831f5ef48f406bc27d4b5f8a8b8c8f2811902ff747f3c7c000",
+      "payload": "files/package/kernel/mac80211/patches/subsys/435-wifi-cfg80211-add-SCS-and-MSCS-request-validation.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/436-wifi-cfg80211-add-set_scs-and-set_mscs-driver-ops.patch",
+      "before": [
+        null
+      ],
+      "after": "1a2ab167ea4a92150d73f83b4ae0996f025a760d6055d88417cf8e8d0ed77c29",
+      "payload": "files/package/kernel/mac80211/patches/subsys/436-wifi-cfg80211-add-set_scs-and-set_mscs-driver-ops.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/437-wifi-cfg80211-add-SCS-and-MSCS-configuration-command.patch",
+      "before": [
+        null
+      ],
+      "after": "5fc3a44a8c42c8a3fcebd930cd4d7411726fcd99467aa7bb51600ef1e96ea01e",
+      "payload": "files/package/kernel/mac80211/patches/subsys/437-wifi-cfg80211-add-SCS-and-MSCS-configuration-command.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/439-wifi-mac80211-add-SCS-and-MSCS-rule-storage.patch",
+      "before": [
+        null
+      ],
+      "after": "e9b20845644c0f0b40950ced5d5487aac45adb75ac49931e75a46ff53d94c19d",
+      "payload": "files/package/kernel/mac80211/patches/subsys/439-wifi-mac80211-add-SCS-and-MSCS-rule-storage.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/440-wifi-mac80211-classify-transmitted-MSDUs-with-SCS.patch",
+      "before": [
+        null
+      ],
+      "after": "e062e9bcd32019dc1deae3598ee1293feb443f46363670c186a48e9e45320d94",
+      "payload": "files/package/kernel/mac80211/patches/subsys/440-wifi-mac80211-classify-transmitted-MSDUs-with-SCS.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/441-wifi-mac80211-learn-MSCS-flows-on-receive.patch",
+      "before": [
+        null
+      ],
+      "after": "6538e779d60b190618de26bb2bfbcc9fc563bf00fb4b0fdd75938122c14a5aa1",
+      "payload": "files/package/kernel/mac80211/patches/subsys/441-wifi-mac80211-learn-MSCS-flows-on-receive.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/442-wifi-mac80211-apply-MSCS-on-transmit.patch",
+      "before": [
+        null
+      ],
+      "after": "9977583d074537992b213127cdb4e4a718beed4f54d96d1d69aa1ddc267aaec8",
+      "payload": "files/package/kernel/mac80211/patches/subsys/442-wifi-mac80211-apply-MSCS-on-transmit.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/443-wifi-mac80211-add-the-sta_set_scs-driver-op.patch",
+      "before": [
+        null
+      ],
+      "after": "af0bbe7830343efe5836ddaadc75d998ad3fc3000d45030c4d00ee3ee06c6401",
+      "payload": "files/package/kernel/mac80211/patches/subsys/443-wifi-mac80211-add-the-sta_set_scs-driver-op.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/444-wifi-mac80211-add-SCS-and-MSCS-debugfs-files.patch",
+      "before": [
+        null
+      ],
+      "after": "dd0df93a7610d0252145ebdfcd386f9d379836b08c1450c20a175f81aae2941a",
+      "payload": "files/package/kernel/mac80211/patches/subsys/444-wifi-mac80211-add-SCS-and-MSCS-debugfs-files.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/445-wifi-mac80211_hwsim-support-SCS-and-MSCS.patch",
+      "before": [
+        null
+      ],
+      "after": "04a97c7cf36bfb2a803c21c835bd00536c9779df5cf94f1e8041fd4da5e07881",
+      "payload": "files/package/kernel/mac80211/patches/subsys/445-wifi-mac80211_hwsim-support-SCS-and-MSCS.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/446-wifi-cfg80211-report-an-undecided-SCS-evaluation.patch",
+      "before": [
+        null
+      ],
+      "after": "3f1697814feba7123c0fa2fa025a10437f06819e11b0062125066052db0e5c21",
+      "payload": "files/package/kernel/mac80211/patches/subsys/446-wifi-cfg80211-report-an-undecided-SCS-evaluation.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/447-wifi-cfg80211-split-the-DSCP-mapping-out-of-cfg80211.patch",
+      "before": [
+        null
+      ],
+      "after": "c5c9b3b1b180f96d65e55bdaa87599c94264778a8bbdcd874d435ff270640af6",
+      "payload": "files/package/kernel/mac80211/patches/subsys/447-wifi-cfg80211-split-the-DSCP-mapping-out-of-cfg80211.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/448-wifi-mac80211-add-a-flow-priority-query.patch",
+      "before": [
+        null
+      ],
+      "after": "e64e1285147b58acef9f9491a3c23af29889208da1c82869a24781b16d607795",
+      "payload": "files/package/kernel/mac80211/patches/subsys/448-wifi-mac80211-add-a-flow-priority-query.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/449-wifi-mac80211-add-the-flow-offload-flush-op.patch",
+      "before": [
+        null
+      ],
+      "after": "e29be9217ac8656bc93e59ba0e9a54f13fe88416dc928d26ad4beb54851bdc00",
+      "payload": "files/package/kernel/mac80211/patches/subsys/449-wifi-mac80211-add-the-flow-offload-flush-op.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/450-wifi-mac80211-keep-learned-MSCS-entries-of-offloaded.patch",
+      "before": [
+        null
+      ],
+      "after": "ab9f9b17dd1195c5fac31941a504ccc622559c16fdf35454d5ccb45581a9a509",
+      "payload": "files/package/kernel/mac80211/patches/subsys/450-wifi-mac80211-keep-learned-MSCS-entries-of-offloaded.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/451-wifi-mac80211-do-not-check-the-Beacon-of-another-BSS.patch",
+      "before": [
+        null
+      ],
+      "after": "132855664c687724275b61b37eaee67ffc2c229ac565e6814c523fa5a3a7d244",
+      "payload": "files/package/kernel/mac80211/patches/subsys/451-wifi-mac80211-do-not-check-the-Beacon-of-another-BSS.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/454-wifi-mac80211-remove-AP-VLAN-frames-from-station-TXQ.patch",
+      "before": [
+        null
+      ],
+      "after": "f998fef0ab828973fd54042bdbef345cf6387725db5fdb09b248e3834c8f0d18",
+      "payload": "files/package/kernel/mac80211/patches/subsys/454-wifi-mac80211-remove-AP-VLAN-frames-from-station-TXQ.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/455-wifi-nl80211-report-the-expiry-of-an-offloaded-AP-Re.patch",
+      "before": [
+        null
+      ],
+      "after": "bad9a76d16fd1a995b9030a31e4982abb1e6b36f05ff730d4b321c51bc8463c0",
+      "payload": "files/package/kernel/mac80211/patches/subsys/455-wifi-nl80211-report-the-expiry-of-an-offloaded-AP-Re.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/456-wifi-mac80211-let-a-driver-report-the-expiry-of-an-A.patch",
+      "before": [
+        null
+      ],
+      "after": "e70f22027cb2b2e95856b25fd871a1c3be29223a52e87eea7fdeb93e16056bf6",
+      "payload": "files/package/kernel/mac80211/patches/subsys/456-wifi-mac80211-let-a-driver-report-the-expiry-of-an-A.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/457-wifi-mac80211-use-the-AP-interface-for-link-changes-.patch",
+      "before": [
+        null
+      ],
+      "after": "01fb5afb2f75475f76e8c3e9559b5a722f90e6eda67ce5d61c2dbb3f579d6d52",
+      "payload": "files/package/kernel/mac80211/patches/subsys/457-wifi-mac80211-use-the-AP-interface-for-link-changes-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/458-wifi-mac80211-send-MLO-group-frames-only-on-links-wi.patch",
+      "before": [
+        null
+      ],
+      "after": "e5cdb3db9091a26735db954c89f341fea9a594be0570e0d99109379121195417",
+      "payload": "files/package/kernel/mac80211/patches/subsys/458-wifi-mac80211-send-MLO-group-frames-only-on-links-wi.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/459-wifi-mac80211-free-the-link-data-of-a-refused-link-r.patch",
+      "before": [
+        null
+      ],
+      "after": "0d59610b7af16832c6fe2313a1843275e43201b2e3ed473d62fbe8a5a95ca2ac",
+      "payload": "files/package/kernel/mac80211/patches/subsys/459-wifi-mac80211-free-the-link-data-of-a-refused-link-r.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/460-wifi-mac80211-compute-the-links-of-each-AP-VLAN-on-i.patch",
+      "before": [
+        null
+      ],
+      "after": "86dd34db7a0165ec78fa88258016a004dcfe8586605221005123472d2be67161",
+      "payload": "files/package/kernel/mac80211/patches/subsys/460-wifi-mac80211-compute-the-links-of-each-AP-VLAN-on-i.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/461-wifi-mac80211-follow-the-station-links-on-its-4-addr.patch",
+      "before": [
+        null
+      ],
+      "after": "9d6ae255da05521d00e876144b5bd702c7dc26af884b734b3992a3ae3e0edc6a",
+      "payload": "files/package/kernel/mac80211/patches/subsys/461-wifi-mac80211-follow-the-station-links-on-its-4-addr.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/462-wifi-mac80211-remove-the-stations-of-an-AP-VLAN-befo.patch",
+      "before": [
+        null
+      ],
+      "after": "d8c084ad72edecfea0712905fec135ae51170ebe88016e2c0c259518a9c59a4d",
+      "payload": "files/package/kernel/mac80211/patches/subsys/462-wifi-mac80211-remove-the-stations-of-an-AP-VLAN-befo.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/465-wifi-nl80211-add-a-client-to-SCS-and-MSCS-descriptor.patch",
+      "before": [
+        null
+      ],
+      "after": "6079e82f0e4e15b44786a7e0d40b2d9135a24f7e5c09358a4076054abba36d60",
+      "payload": "files/package/kernel/mac80211/patches/subsys/465-wifi-nl80211-add-a-client-to-SCS-and-MSCS-descriptor.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/466-wifi-cfg80211-match-SCS-descriptors-on-their-client-.patch",
+      "before": [
+        null
+      ],
+      "after": "9935080cdfec1cf2494f6efa0af43d5ea1356b65bb5ddc37acbd2730a71335b9",
+      "payload": "files/package/kernel/mac80211/patches/subsys/466-wifi-cfg80211-match-SCS-descriptors-on-their-client-.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/467-wifi-mac80211-keep-an-MSCS-per-client-and-configured.patch",
+      "before": [
+        null
+      ],
+      "after": "23ad57eb9fcec5320c4bb7b307e247381ae43fd884bd5c47345627511dd223e5",
+      "payload": "files/package/kernel/mac80211/patches/subsys/467-wifi-mac80211-keep-an-MSCS-per-client-and-configured.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/475-wifi-mac80211-mark-frames-whose-priority-does-not-fo.patch",
+      "before": [
+        null
+      ],
+      "after": "f34d59ed990f92cb285ed81e2d493114fe3fe6eea6cfed2379ba5bae062f1047",
+      "payload": "files/package/kernel/mac80211/patches/subsys/475-wifi-mac80211-mark-frames-whose-priority-does-not-fo.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/476-wifi-nl80211-set-the-TID-to-link-mapping-of-a-statio.patch",
+      "before": [
+        null
+      ],
+      "after": "471308984481470fe5066304530e2399585aac4335e5580017ba3e632d118cb5",
+      "payload": "files/package/kernel/mac80211/patches/subsys/476-wifi-nl80211-set-the-TID-to-link-mapping-of-a-statio.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/477-wifi-mac80211-pass-the-TID-to-link-mapping-of-a-stat.patch",
+      "before": [
+        null
+      ],
+      "after": "2874e71f18222ea5c82eed6e831b96792fc92315f8c4041e5b7db218982d1b2b",
+      "payload": "files/package/kernel/mac80211/patches/subsys/477-wifi-mac80211-pass-the-TID-to-link-mapping-of-a-stat.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/479-wifi-mac80211-wait-for-RCU-only-when-a-vif-link-is-r.patch",
+      "before": [
+        null
+      ],
+      "after": "8929e5f0ebf9f902f792461ffaf35f3ce579a041ac96ccc791e0b1270a9496a0",
+      "payload": "files/package/kernel/mac80211/patches/subsys/479-wifi-mac80211-wait-for-RCU-only-when-a-vif-link-is-r.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/480-wifi-mac80211-keep-the-priority-of-an-802.3-frame-fo.patch",
+      "before": [
+        null
+      ],
+      "after": "0598b041aceb4c1b24e7fb9482f8df94721de0ad7860a3f22a39e555a53d101c",
+      "payload": "files/package/kernel/mac80211/patches/subsys/480-wifi-mac80211-keep-the-priority-of-an-802.3-frame-fo.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/481-wifi-mac80211-do-not-send-an-off-channel-frame-after.patch",
+      "before": [
+        null
+      ],
+      "after": "2ede65de517c66a0e362e33035014b9b3cfa0946db4fbf3d98fba042b4f95947",
+      "payload": "files/package/kernel/mac80211/patches/subsys/481-wifi-mac80211-do-not-send-an-off-channel-frame-after.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/483-wifi-cfg80211-check-the-layout-of-the-flow-types.patch",
+      "before": [
+        null
+      ],
+      "after": "8958ec0b46082c18adfb6075f443722ec06c899a5db278b0cc6a51d91405b6e9",
+      "payload": "files/package/kernel/mac80211/patches/subsys/483-wifi-cfg80211-check-the-layout-of-the-flow-types.patch"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/subsys/484-wifi-mac80211-don-t-estimate-airtime-for-unsupported-rate-widths.patch",
+      "before": [
+        null
+      ],
+      "after": "28bf0de4e761d26563cfc2de9ef43ee7fd85567d921f1995f141c3732db69393",
+      "payload": "files/package/kernel/mac80211/patches/subsys/484-wifi-mac80211-don-t-estimate-airtime-for-unsupported-rate-widths.patch"
+    },
+    {
+      "path": "package/kernel/mt76/Makefile",
+      "before": [
+        "c2d06b584484c71f60ad641d2ebd7abd6f2ed4492f994e78bb169c4c59eb9286"
+      ],
+      "after": "d2922f9d20bcd701cb4361ac482985f23c1009e2ccda601dd57024c9ab24be2e",
+      "payload": "files/package/kernel/mt76/Makefile"
+    },
+    {
+      "path": "package/kernel/mt76/patches/100-wifi-mt76-mt76x02-restart-mac_work-after-a-channel-change.patch",
+      "before": [
+        null
+      ],
+      "after": "b3bf23c98c163501848a9908f1ef09545eec73ff7c5e1db22bf2f00dd3605a4e",
+      "payload": "files/package/kernel/mt76/patches/100-wifi-mt76-mt76x02-restart-mac_work-after-a-channel-change.patch"
+    },
+    {
+      "path": "package/kernel/mt76/patches/101-wifi-mt76-mt76x2u-limit-TX-A-MSDUs-to-3-kB-at-SuperSpeed.patch",
+      "before": [
+        null
+      ],
+      "after": "7dbaad684fa1f3179bd7d42787d777f353f0937869b5a2eb6d1f255784758abb",
+      "payload": "files/package/kernel/mt76/patches/101-wifi-mt76-mt76x2u-limit-TX-A-MSDUs-to-3-kB-at-SuperSpeed.patch"
+    },
+    {
+      "path": "target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch",
+      "before": [
+        "3deda06d15126042e16fdad39b38c1cc098b5eff3005eb68fb121374060555c4"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch",
+      "before": [
+        "85aa4f0425703611307c39d0c71b803c272e048f3659fa254ee7fd6626697575",
+        "6df7248b4b1626f32534ee83b0ee2079049028ff8e45bc4f0eacc0164e0634e6"
+      ],
+      "after": "6df7248b4b1626f32534ee83b0ee2079049028ff8e45bc4f0eacc0164e0634e6",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch",
+      "before": [
+        "08ca57f6635bea2ddd2bc3810bec579aef0c4eb53e92cb89c517edaa303a9ea1",
+        "601ff2892b592ecf4d9784af7fb36b883a70ca2fee38ca1824efb1046bd6e95a"
+      ],
+      "after": "601ff2892b592ecf4d9784af7fb36b883a70ca2fee38ca1824efb1046bd6e95a",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch"
+    },
+    {
+      "path": "target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch",
+      "before": [
+        "f8de817901c813f83a9eec461dc278430fd99f554b5cdc956437d6618ed1a4c0",
+        "90ea0a190daa790878065d7d1ec2fb9dcd546ff6aa41e2bada14b77d7cc2a6d1"
+      ],
+      "after": "90ea0a190daa790878065d7d1ec2fb9dcd546ff6aa41e2bada14b77d7cc2a6d1",
+      "payload": "files/target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/441-v7.4-spi-spi-qpic-snand-publish-the-ECC-context-to-snandc.patch",
+      "before": [
+        "f5bd6e94af5529ded69a30e72d83bb018abcd02a7c640a686d61f09c8f12dabc",
+        "ba914993fe350303c23d1c3a3d5416509939ec894958742084e1c05d4371ad2f"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/503-01-v7.3-ksmbd-enable-tcp-keepalive-for-accepted-connections.patch",
+      "before": [
+        "58271114f20ed07b0b768dd1530537121723ed08ca6e9ff0b0cbcd59b4294cc6",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/734-v7.3-net-ethernet-mtk_wed-increase-WED-v2-WDMA-RESV_BUFF-.patch",
+      "before": [
+        "23c1ac1c4d6580b666659840076732589d1157270e2d2e6279e3ec8a52f548d5",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/755-v7.3-net-sfp-add-quirk-for-HORACO-copper-SFP-module.patch",
+      "before": [
+        "411bf0ad3ca82b74a1e71f7736b6ace06902a581312a472d06843326a9afffab",
+        null
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/generic/kernel-6.18",
+      "before": [
+        "d81b55c60f2ffd9cf3b6ed2b5f3d78e4ed307d8a79f31835e1db8f73e5fa898d",
+        "a052756756daedca20ec12e38c537cd3e82423b3ce7db0be6a43eb1c8c4c724c"
+      ],
+      "after": "358c81eed73458938f83cfd369fa799b2a630ba8afc355953c70e2c911600950",
+      "payload": "files/target/linux/generic/kernel-6.18"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch",
+      "before": [
+        "7898d34e14e4d2a0735ce5c5b68a274da597fe83632ce13ed529b7d9e402f5c3",
+        "a895eb9b95d9f1f905b58c92607e28185752f8da3bc759b55f16d5aed4d4643e"
+      ],
+      "after": "a895eb9b95d9f1f905b58c92607e28185752f8da3bc759b55f16d5aed4d4643e",
+      "payload": "files/target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/797-00-wifi-cfg80211-add-the-flow-key-and-flow-description-.patch",
+      "before": [
+        null
+      ],
+      "after": "8aec162e1c1f294d4a2946d02da77a9ac93e0e9d9529f7b09ee29f7cfbf21476",
+      "payload": "files/target/linux/generic/pending-6.18/797-00-wifi-cfg80211-add-the-flow-key-and-flow-description-.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/797-01-net-ethernet-mtk_eth_soc-query-the-wireless-driver-f.patch",
+      "before": [
+        null
+      ],
+      "after": "4e22cfd56957174e82d82fd0bf3a329790f2655ff6bbae48a9b13bdebd1c5177",
+      "payload": "files/target/linux/generic/pending-6.18/797-01-net-ethernet-mtk_eth_soc-query-the-wireless-driver-f.patch"
+    },
+    {
+      "path": "target/linux/generic/pending-6.18/797-02-net-ethernet-mtk_eth_soc-report-the-idle-time-of-off.patch",
+      "before": [
+        null
+      ],
+      "after": "7082bae64197e6be1a3438b6b0df6a21d5fa59ac1597d1e26c71a52b93c482a3",
+      "payload": "files/target/linux/generic/pending-6.18/797-02-net-ethernet-mtk_eth_soc-report-the-idle-time-of-off.patch"
+    },
+    {
+      "path": "target/linux/mediatek/patches-6.18/197-arm64-dts-mediatek-mt7986-correct-timer-frequency.patch",
+      "before": [
+        "146211213106a16812019a1df09f3937fd5734c3318d6eae132dc345c5acc8bb"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/mediatek/patches-6.18/944-net-ethernet-mtk_wed-move-dlm-a-dedicated-dts-node.patch",
+      "before": [
+        "abc714224b4f96f585366427dd96008870258a4e8d7084d64fa06ceee88071c5"
+      ],
+      "after": "1e08fce17bb0abdf351689f9c1b97eeb69a22bab30b60ed871562e157e5e8502",
+      "payload": "files/target/linux/mediatek/patches-6.18/944-net-ethernet-mtk_wed-move-dlm-a-dedicated-dts-node.patch"
+    },
+    {
+      "path": "target/linux/qualcommax/patches-6.18/0090-v7.4-clk-qcom-gcc-ipq5018-mark-gpll0_main-clock-as-critical.patch",
+      "before": [
+        "420ef40f45bb3578a6c96bf890be4dc0d9a615e9b76899c7387ef5b15d4137f1"
+      ],
+      "after": null
+    },
+    {
+      "path": "target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch",
+      "before": [
+        "696cc17647c314ae9569aa84c211f919973a0f876549e417a9549ce968e98d6a",
+        "143e5e7a5d7e4b894b66e9594450a309762855de855847693c582c77d3192b4e"
+      ],
+      "after": "143e5e7a5d7e4b894b66e9594450a309762855de855847693c582c77d3192b4e",
+      "payload": "files/target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+From: Roy Tsang <318981795+RoyTsang27@users.noreply.github.com>
+Subject: [PATCH] ucert: report append success with exit status zero
+
+write_file() returns a boolean, but cert_append() passes it straight to
+main(). Successful appends therefore exit with status 1, and failed writes
+can exit with status 0. Invert the boolean for the command's exit status.
+Also check fclose(): a buffered write can fail only when flushed on close.
+
+--- a/ucert.c
++++ b/ucert.c
+@@ -126,8 +126,7 @@
+ 		return false;
+ 
+ 	outlen = fwrite(buf, 1, len, f);
+-	fclose(f);
+-	return (outlen == len);
++	return fclose(f) == 0 && outlen == len;
+ }
+ 
+ /* reads a whole file to a buffer - returns -1 on errors and sets errno */
+@@ -228,7 +227,7 @@
+ 
+ 	blob_buf_init(&sigbuf, 0);
+ 	blob_put(&sigbuf, CERT_ATTR_SIGNATURE, filebuf, len);
+-	ret = write_file(certfile, sigbuf.head, blob_raw_len(sigbuf.head), true);
++	ret = !write_file(certfile, sigbuf.head, blob_raw_len(sigbuf.head), true);
+ 	blob_buf_free(&sigbuf);
+ 	return ret;
+ }

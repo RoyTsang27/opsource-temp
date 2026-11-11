@@ -1,0 +1,326 @@
+diff --git a/package/kernel/mac80211/Makefile b/package/kernel/mac80211/Makefile
+--- a/package/kernel/mac80211/Makefile
++++ b/package/kernel/mac80211/Makefile
+@@ -12,7 +12,7 @@
+ 
+ PKG_SOURCE_VERSION:=7.2
+ PKG_VERSION:=$(subst -,_,$(PKG_SOURCE_VERSION))
+-PKG_RELEASE:=5
++PKG_RELEASE:=6
+ PKG_LICENSE:=GPL-2.0-only
+ PKG_LICENSE_FILES:=COPYING
+ 
+diff --git a/target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch b/target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch
+deleted file mode 100644
+--- a/target/linux/generic/backport-6.18/438-v7.3-mtd-spinand-Do-not-update-the-QE-bit-on-devices-without-one.patch
++++ /dev/null
+@@ -1,71 +0,0 @@
+-From 1c1a342aceec79528b3ba51f376eca2be5928fe7 Mon Sep 17 00:00:00 2001
+-From: Sagnik Sasmal <sagnik@sagnik.me>
+-Date: Thu, 10 Sep 2026 22:44:05 +0000
+-Subject: mtd: spinand: Do not update the QE bit on devices without one
+-
+-Commit be0b86c648bf ("mtd: spinand: Gather all the bus interface
+-steps in one single function") moved quad-enable setup into
+-spinand_configure_chip(). The new code only determines whether quad
+-mode is needed when SPINAND_HAS_QE_BIT is set, but calls
+-spinand_init_quad_enable() unconditionally. This clears configuration
+-register bit 0 on devices without a QE bit.
+-
+-That bit is not universally a QE bit. On the Winbond W25N02KV it is
+-H-DIS, which disables the active-low HOLD function. Clearing H-DIS
+-enables HOLD during single and dual I/O operations. If IO3 is not kept
+-high, the flash can pause a command and ignore clock and data.
+-
+-H-DIS is not restored by the FFh reset command, allowing the incorrect
+-state to survive an SoC warm reboot while the flash remains powered.
+-
+-Before the refactoring, spinand_init_quad_enable() returned without
+-touching the configuration register on devices without
+-SPINAND_HAS_QE_BIT. Restore that behavior by only calling the helper
+-when the flag is set.
+-
+-Return zero explicitly once SSDR configuration completes, as all errors
+-are returned immediately. This avoids returning an uninitialized value
+-when neither optional configuration step runs.
+-
+-The regression was reproduced on a JioRouter JIDU6401 with an MT7986
+-SoC and a W25N02KV. With Linux 6.18.44, sysupgrade failed and the
+-following warm reboot hung in BL2. With this change applied, both
+-sysupgrade and warm reboot completed successfully.
+-
+-Fixes: be0b86c648bf ("mtd: spinand: Gather all the bus interface steps in one single function")
+-Cc: stable@vger.kernel.org
+-Suggested-by: Miquel Raynal <miquel.raynal@bootlin.com>
+-Assisted-by: LLM
+-Signed-off-by: Sagnik Sasmal <sagnik@sagnik.me>
+-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+----
+- drivers/mtd/nand/spi/core.c | 10 +++++-----
+- 1 file changed, 5 insertions(+), 5 deletions(-)
+-
+---- a/drivers/mtd/nand/spi/core.c
+-+++ b/drivers/mtd/nand/spi/core.c
+-@@ -1494,11 +1494,11 @@ static int spinand_configure_chip(struct
+- 		    spinand->ssdr_op_templates.write_cache->data.buswidth == 4 ||
+- 		    spinand->ssdr_op_templates.update_cache->data.buswidth == 4)
+- 			quad_enable = true;
+--	}
+- 
+--	ret = spinand_init_quad_enable(spinand, quad_enable);
+--	if (ret)
+--		return ret;
+-+		ret = spinand_init_quad_enable(spinand, quad_enable);
+-+		if (ret)
+-+			return ret;
+-+	}
+- 
+- 	if (spinand->configure_chip) {
+- 		ret = spinand->configure_chip(spinand, SSDR);
+-@@ -1506,7 +1506,7 @@ static int spinand_configure_chip(struct
+- 			return ret;
+- 	}
+- 
+--	return ret;
+-+	return 0;
+- }
+- 
+- static int spinand_init_flash(struct spinand_device *spinand)
+diff --git a/target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch b/target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch
+deleted file mode 100644
+--- a/target/linux/generic/backport-6.18/782-v7.3-USB-serial-option-add-Quectel-EG060W.patch
++++ /dev/null
+@@ -1,58 +0,0 @@
+-From cd243401994880b8b6810c53177bce56eebaece5 Mon Sep 17 00:00:00 2001
+-From: Carlo Szelinsky <github@szelinsky.de>
+-Date: Wed, 12 Aug 2026 13:42:28 +0300
+-Subject: [PATCH] USB: serial: option: add Quectel EG060W
+-
+-Add Quectel EG060W with product ID 0x6004.
+-The three vendor-specific interfaces are DIAG, NMEA and AT; the CDC-NCM
+-data interfaces are handled by the cdc_ncm driver.
+-
+-T:  Bus=01 Lev=01 Prnt=01 Port=01 Cnt=01 Dev#=  2 Spd=480  MxCh= 0
+-D:  Ver= 2.10 Cls=ef(misc ) Sub=02 Prot=01 MxPS=64 #Cfgs=  1
+-P:  Vendor=2c7c ProdID=6004 Rev= 3.18
+-S:  Manufacturer=Quectel
+-S:  Product=EG060W-EAAA
+-S:  SerialNumber=123456789ABCD
+-C:* #Ifs= 5 Cfg#= 1 Atr=e0 MxPwr=  2mA
+-A:  FirstIf#= 0 IfCount= 2 Cls=02(comm.) Sub=0d Prot=00
+-I:* If#= 0 Alt= 0 #EPs= 1 Cls=02(comm.) Sub=0d Prot=00 Driver=cdc_ncm
+-E:  Ad=82(I) Atr=03(Int.) MxPS=  16 Ivl=32ms
+-I:  If#= 1 Alt= 0 #EPs= 0 Cls=0a(data ) Sub=00 Prot=01 Driver=cdc_ncm
+-I:* If#= 1 Alt= 1 #EPs= 2 Cls=0a(data ) Sub=00 Prot=01 Driver=cdc_ncm
+-E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-I:* If#= 2 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=00 Prot=00 Driver=option
+-E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-I:* If#= 3 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=00 Prot=00 Driver=option
+-E:  Ad=84(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-I:* If#= 4 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=00 Prot=00 Driver=option
+-E:  Ad=85(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+-
+-Cc: stable@vger.kernel.org
+-Signed-off-by: Carlo Szelinsky <github@szelinsky.de>
+-Signed-off-by: Johan Hovold <johan@kernel.org>
+----
+- drivers/usb/serial/option.c | 2 ++
+- 1 file changed, 2 insertions(+)
+-
+---- a/drivers/usb/serial/option.c
+-+++ b/drivers/usb/serial/option.c
+-@@ -281,6 +281,7 @@ static void option_instat_callback(struc
+- #define QUECTEL_PRODUCT_EC200U			0x0901
+- #define QUECTEL_PRODUCT_EG912Y			0x6001
+- #define QUECTEL_PRODUCT_EC200S_CN		0x6002
+-+#define QUECTEL_PRODUCT_EG060W			0x6004
+- #define QUECTEL_PRODUCT_EC200A			0x6005
+- #define QUECTEL_PRODUCT_EG916Q			0x6007
+- #define QUECTEL_PRODUCT_EM061K_LWW		0x6008
+-@@ -1269,6 +1270,7 @@ static const struct usb_device_id option
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200A, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200U, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200S_CN, 0xff, 0, 0) },
+-+	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG060W, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200T, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG912Y, 0xff, 0, 0) },
+- 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG916Q, 0xff, 0x00, 0x00) },
+diff --git a/target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch b/target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch
+deleted file mode 100644
+--- a/target/linux/generic/backport-6.18/787-v7.3-net-usb-qmi_wwan-add-Quectel-EG120K-EA.patch
++++ /dev/null
+@@ -1,60 +0,0 @@
+-From 0f2fd31f63c65c409bd336af3a42d478a9207c1f Mon Sep 17 00:00:00 2001
+-From: Gilberto Conde <gilbertorconde@gmail.com>
+-Date: Mon, 21 Sep 2026 10:34:26 +0100
+-Subject: [PATCH] net: usb: qmi_wwan: add Quectel EG120K-EA
+-
+-Add support for the Quectel EG120K-EA LTE Cat.12 module (USB ID
+-2c7c:030b). Its QMI interface (interface 4) uses class/subclass/protocol
+-ff/ff/ff like the other recent Quectel modules, so match it the same way.
+-
+-The product ID is shared with the EM060K, which the option driver
+-already knows and uses to claim the serial interfaces. Without a
+-qmi_wwan entry the data interface is left unbound.
+-
+-Tested on a GL.iNet GL-X2000, where the module is soldered down and
+-enumerates at SuperSpeed: cdc-wdm0 and wwan0 appear and ModemManager
+-brings up a data session.
+-
+-T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#=  2 Spd=5000 MxCh= 0
+-D:  Ver= 3.10 Cls=00(>ifc ) Sub=00 Prot=00 MxPS= 9 #Cfgs=  1
+-P:  Vendor=2c7c ProdID=030b Rev= 5.04
+-S:  Manufacturer=Quectel
+-S:  Product=EG120K-EA
+-S:  SerialNumber=45546267
+-C:* #Ifs= 6 Cfg#= 1 Atr=a0 MxPwr=896mA
+-I:* If#= 0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=30 Driver=option
+-E:  Ad=01(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=81(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 1 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=00 Prot=40 Driver=option
+-E:  Ad=83(I) Atr=03(Int.) MxPS=  10 Ivl=32ms
+-E:  Ad=82(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=02(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 2 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=40 Driver=option
+-E:  Ad=85(I) Atr=03(Int.) MxPS=  10 Ivl=32ms
+-E:  Ad=84(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=03(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 3 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=40 Driver=option
+-E:  Ad=87(I) Atr=03(Int.) MxPS=  10 Ivl=32ms
+-E:  Ad=86(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=04(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#= 4 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=ff Driver=qmi_wwan
+-E:  Ad=88(I) Atr=03(Int.) MxPS=   8 Ivl=32ms
+-E:  Ad=8e(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-E:  Ad=0f(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-I:* If#=12 Alt= 0 #EPs= 1 Cls=ff(vend.) Sub=ff Prot=70 Driver=(none)
+-E:  Ad=89(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+-
+-Signed-off-by: Gilberto Conde <gilbertorconde@gmail.com>
+-Link: https://patch.msgid.link/20260921093426.2870266-1-gilbertorconde@gmail.com
+-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+----
+---- a/drivers/net/usb/qmi_wwan.c
+-+++ b/drivers/net/usb/qmi_wwan.c
+-@@ -1085,6 +1085,7 @@ static const struct usb_device_id produc
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0122)},	/* Quectel RG650V */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0125)},	/* Quectel EC25, EC20 R2.0  Mini PCIe */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0306)},	/* Quectel EP06/EG06/EM06 */
+-+	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x030b)},	/* Quectel EM060K/EG120K-EA */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0512)},	/* Quectel EG12/EM12 */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0620)},	/* Quectel EM160R-GL */
+- 	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0800)},	/* Quectel RM500Q-GL */
+diff --git a/target/linux/generic/hack-6.18/660-fq_codel_defaults.patch b/target/linux/generic/hack-6.18/660-fq_codel_defaults.patch
+--- a/target/linux/generic/hack-6.18/660-fq_codel_defaults.patch
++++ b/target/linux/generic/hack-6.18/660-fq_codel_defaults.patch
+@@ -23,5 +23,5 @@
+ +	q->memory_limit = 4 << 20; /* 4 MBytes */
+ +#endif
+  	q->drop_batch_size = 64;
+- 	mtu = clamp_t(u32, psched_mtu(qdisc_dev(sch)), 256, FQ_CODEL_QUANTUM_MAX);
+- 	q->quantum = mtu;
++ 	mtu = min_t(u32, psched_mtu(qdisc_dev(sch)), FQ_CODEL_QUANTUM_MAX);
++ 	q->quantum = clamp_t(u32, mtu, 256, FQ_CODEL_QUANTUM_MAX);
+diff --git a/target/linux/generic/kernel-6.18 b/target/linux/generic/kernel-6.18
+--- a/target/linux/generic/kernel-6.18
++++ b/target/linux/generic/kernel-6.18
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.18 = .55
+-LINUX_KERNEL_HASH-6.18.55 = f410638061a165c12f42ab871d2f3fcd525515359b5faeee80969cff84524df9
++LINUX_VERSION-6.18 = .58
++LINUX_KERNEL_HASH-6.18.58 = 069b19f9032c4dac8149ae4b6520c35debca0f42a9f6d52ee55ba6ca9b818013
+diff --git a/target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch b/target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch
+--- a/target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch
++++ b/target/linux/generic/pending-6.18/151-net-bridge-do-not-send-arp-replies-if-src-and-target.patch
+@@ -9,26 +9,29 @@
+ When proxyarp is enabled, they would go into a loop of requesting an address
+ and then NAKing it again.
+ 
++Refresh for Linux 6.18.58, which snapshots the neighbour hardware address
++into ha before the FDB lookup. Use that snapshot for the comparison too.
++
+ Link: https://github.com/openwrt/openwrt/issues/14309
+ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ ---
+ 
+ --- a/net/bridge/br_arp_nd_proxy.c
+ +++ b/net/bridge/br_arp_nd_proxy.c
+-@@ -208,7 +208,10 @@ void br_do_proxy_suppress_arp(struct sk_
++@@ -210,7 +210,10 @@ void br_do_proxy_suppress_arp(struct sk_
+  			if ((p && (p->flags & BR_PROXYARP)) ||
+  			    (dst && (dst->flags & BR_PROXYARP_WIFI)) ||
+  			    br_is_neigh_suppress_enabled(dst, vid)) {
+ -				if (!vid)
+ +				replied = true;
+-+				if (!memcmp(n->ha, sha, dev->addr_len))
+++				if (!memcmp(ha, sha, dev->addr_len))
+ +					replied = false;
+ +				else if (!vid)
+  					br_arp_send(br, p, skb->dev, sip, tip,
+- 						    sha, n->ha, sha, 0, 0);
++ 						    sha, ha, sha, 0, 0);
+  				else
+-@@ -216,7 +219,6 @@ void br_do_proxy_suppress_arp(struct sk_
+- 						    sha, n->ha, sha,
++@@ -218,7 +221,6 @@ void br_do_proxy_suppress_arp(struct sk_
++ 						    sha, ha, sha,
+  						    skb->vlan_proto,
+  						    skb_vlan_tag_get(skb));
+ -				replied = true;
+diff --git a/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch b/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch
+--- a/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch
++++ b/target/linux/generic/pending-6.18/304-LoongArch-vdso-keep-the-prefix-map-flags.patch
+@@ -32,12 +32,13 @@
+ 
+ --- a/arch/loongarch/vdso/Makefile
+ +++ b/arch/loongarch/vdso/Makefile
+-@@ -13,6 +13,8 @@ ccflags-vdso := \
++@@ -13,7 +13,9 @@ ccflags-vdso := \
+  	$(filter -E%,$(KBUILD_CFLAGS)) \
+  	$(filter -march=%,$(KBUILD_CFLAGS)) \
+  	$(filter -m%-float,$(KBUILD_CFLAGS)) \
+ +	$(filter -ffile-prefix-map=%,$(KBUILD_CFLAGS)) \
+ +	$(filter -fdebug-prefix-map=%,$(KBUILD_CFLAGS)) \
++ 	$(CONFIG_CC_OPT_INLINE_MEMSET) \
+  	$(CLANG_FLAGS) \
+  	-D__VDSO__
+  
+diff --git a/package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch b/package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch
+new file mode 100644
+--- /dev/null
++++ b/package/kernel/mac80211/patches/build/230-backports-handle-sockaddr-unsized-stable-backport.patch
+@@ -0,0 +1,30 @@
++From: op-source maintainers
++Subject: [PATCH] backports: handle sockaddr_unsized in Linux 6.18.57
++
++Linux 6.18.57 backported struct sockaddr_unsized from Linux 6.19.
++The original version guard defines it again when building backports 7.2
++against that stable kernel, causing net/wireless/core.c to fail to compile.
++
++Use the first stable version providing the structure as the cutoff, while
++retaining the compatibility definition for older kernels.
++
++--- a/backport-include/linux/socket.h
+++++ b/backport-include/linux/socket.h
++@@ -11,7 +11,7 @@
++ #define SOL_NFC		280
++ #endif
++ 
++-#if LINUX_VERSION_IS_LESS(6,19,0)
+++#if LINUX_VERSION_IS_LESS(6,18,57)
++ /**
++  * struct sockaddr_unsized - Unspecified size sockaddr for callbacks
++  * @sa_family: Address family (AF_UNIX, AF_INET, AF_INET6, etc.)
++@@ -28,7 +28,7 @@ struct sockaddr_unsized {
++ 	__kernel_sa_family_t	sa_family;	/* address family, AF_xxx */
++ 	char			sa_data[];	/* flexible address data */
++ };
++-#endif /* < 6.19 */
+++#endif /* < 6.18.57 */
++ 
++ #ifndef __sockaddr_check_size
++ #define __sockaddr_check_size(size)	\
