@@ -28,7 +28,7 @@ Signed-off-by: Jon Lin <jon.lin@rock-chips.com>
  };
  
 -static const struct spinand_info dosilicon_spinand_table[] = {
-+static const struct spinand_info static int ds35xxga_ooblayout_ecc(struct mtd_info *mtd, int section,
++static int ds35xxga_ooblayout_ecc(struct mtd_info *mtd, int section,
 +				  struct mtd_oob_region *region)
 +{
 +	if (section > 3)
@@ -113,7 +113,7 @@ Signed-off-by: Jon Lin <jon.lin@rock-chips.com>
 +	return -EINVAL;
 +}
 +
-+dosilicon_spinand_table[] = {
++static const struct spinand_info dosilicon_spinand_table[] = {
 +	SPINAND_INFO("DS35Q2GA",
 +		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0x72),
 +		     NAND_MEMORG(1, 2048, 64, 64, 2048, 40, 2, 1, 1),
