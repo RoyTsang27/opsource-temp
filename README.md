@@ -1,7 +1,7 @@
 # Device Build
 
 ImmortalWrt source for compiling Xiaomi AX3000T, Cudy TR3000, and Cudy TR1200
-firmware with **Linux 7.3.4** on the experimental `codex/kernel-7.3` branch.
+firmware with **Linux 7.3.4** on the experimental `test-flight` branch.
 The GitHub repository name is `Device-Build` and the project display name is
 **Device Build**.
 
@@ -41,7 +41,7 @@ requires a produced sysupgrade image before uploading firmware.
 Use Ubuntu 24.04 or an equivalent Linux host with a case-sensitive filesystem,
 GNU make 4.1+, and at least 40GB of free space for one build. The dependency list
 is in the [Device Build workflow](.github/workflows/device-build.yml). Run these
-commands from a checkout of `codex/kernel-7.3`.
+commands from a checkout of `test-flight`.
 
 ```sh
 cp feeds.conf.release feeds.conf
@@ -70,7 +70,7 @@ the documented procedure and CI use `feeds.conf.release` to pin them.
 ## GitHub Actions
 
 The **Device Build** workflow compiles all three default devices on pushes to
-`main` and `codex/kernel-*` branches and on relevant pull requests. In
+`main`, `test-flight`, and `codex/kernel-*` branches and on relevant pull requests. In
 **Actions → Device Build → Run workflow**, choose `all` or one of the six
 selectors. Each device has a fresh runner,
 independent configuration/toolchain/build directories, source-download caching,

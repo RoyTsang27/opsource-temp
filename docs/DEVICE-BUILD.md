@@ -2,7 +2,7 @@
 
 ## Linux 7.3 branch
 
-The experimental `codex/kernel-7.3` branch pins `mediatek/filogic` and
+The experimental `test-flight` branch pins `mediatek/filogic` and
 `ramips/mt76x8` to Linux 7.3.4. The generic 7.3 configuration and patch stack
 come from [the OpenWrt development
 branch](https://github.com/graysky2/openwrt/tree/30c0d891b6103695e614de575814a67016973cf7).

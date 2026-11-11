@@ -2,7 +2,7 @@ name: Device Build
 
 on:
   push:
-    branches: [main, 'codex/kernel-*']
+    branches: [main, test-flight, 'codex/kernel-*']
     paths:
       - 'target/**'
       - 'package/**'
