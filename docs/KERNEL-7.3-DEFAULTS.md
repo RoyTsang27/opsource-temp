@@ -68,6 +68,34 @@ separate user-controlled buckets, fortified copies and hardened usercopy stay
 enabled. The newer partitioning can create 16 cache copies, and its typed mode
 requires Clang allocation tokens. See [the allocator choices](https://github.com/torvalds/linux/blob/v7.3/mm/Kconfig).
 
+## Explicit 7.3.4 hardware choices
+
+The source now supplies explicit answers for 36 additional kernel options
+that otherwise appeared during configuration. The applicable Cortex-A53
+errata workarounds remain enabled. The SI L1 CMO workaround
+`ARM64_ERRATUM_4311569` retains the upstream enabled default; HiSilicon,
+NVIDIA Olympus and Renesas-specific workarounds are disabled for this target.
+Linux applies applicable CPU workarounds through runtime detection, as
+described in the [ARM64 errata documentation](https://docs.kernel.org/arch/arm64/silicon-errata.html).
+
+| Setting group | Default | Reason |
+| --- | --- | --- |
+| ARM64 MPAM, ARMv9.6 LSUI, cache maintenance for memory hotplug | Disabled | These are not required by the supported Cortex-A53 router profiles. |
+| MT6858, MT6878 and MT6893 pin controllers | Disabled | These are smartphone SoCs. Keep the MT7981/MT7986/MT7987/MT7988 controllers and remove the unused Paris controller selection. |
+| MediaTek GPU power domains and GPUEB mailbox | Disabled | The router profiles do not use the MT8196/MT6991 GPU subsystem. |
+| ADSP, CMDQ, VCP and other new mailbox drivers | Disabled | No supported router device tree requires these drivers. |
+| Watchdog dump governor | Disabled | Preserve the existing panic pretimeout governor and recovery policy. |
+| `SWIOTLB_DEFAULT_SIZE_MB` | 64 | Preserve the kernel default. A smaller pool needs device-specific DMA testing; this option alone does not prove how much memory a board allocates. |
+| New AMD sensor, DAPU/retimer PHY, QEMU reset, M.2/WCN sequencing, battery/PMIC/regulator and LED-controller drivers | Disabled | The supported boards do not require this hardware. |
+
+The SWIOTLB setting is the default bounce-buffer pool size, not a throughput
+tuning knob. DMA bounce buffering depends on the device's addressing and
+mapping constraints; see the [SWIOTLB documentation](https://docs.kernel.org/core-api/swiotlb.html).
+The new option declarations were resolved with Linux 7.3.4's native Kconfig
+tool and explicit parent capabilities. No unanswered options remained in
+those reviewed declarations; that focused check is not a complete firmware
+build.
+
 ## Other feature decisions
 
 | New or substantially extended feature family | Default decision |
@@ -112,6 +140,13 @@ preemption for MT76x8.
 The local Python 3.12 suite completed with 97 passing tests and 15 skipped
 platform/tool-dependent tests. Device Build source checks passed for all six
 profiles.
+
+The manual **Linux 7.3 compile checks** workflow applies the same overlays and
+ordered patch stacks, resolves each target fragment with a Linux-hosted cross
+compiler, and builds the kernel and its configured in-tree modules. Its
+artifacts include the resolved kernel configuration, newly discovered options,
+and complete build logs. It does not build external mt76/mac80211 packages or
+firmware images; the Device Build workflow remains responsible for those.
 
 These checks validate configuration selection. They are not a full firmware
 compile or a hardware latency/throughput benchmark. After updating an existing

@@ -1,0 +1,107 @@
+name: Linux 7.3 compile checks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kernel-7.3-compile-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  kernel:
+    name: Compile ${{ matrix.subtarget }} kernel
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: mediatek
+            subtarget: filogic
+            arch: arm64
+            cross: aarch64-linux-gnu-
+            compiler: gcc-aarch64-linux-gnu
+            image: Image
+          - target: ramips
+            subtarget: mt76x8
+            arch: mips
+            cross: mipsel-linux-gnu-
+            compiler: gcc-mipsel-linux-gnu
+            image: vmlinux
+    env:
+      TARGET: ${{ matrix.target }}
+      SUBTARGET: ${{ matrix.subtarget }}
+      ARCH: ${{ matrix.arch }}
+      CROSS_COMPILE: ${{ matrix.cross }}
+      COMPILER: ${{ matrix.compiler }}
+      IMAGE: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install kernel build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            "$COMPILER" bc bison build-essential flex libelf-dev libssl-dev \
+            patch python3 xz-utils
+      - name: Read pinned kernel version
+        id: source
+        run: |
+          python3 scripts/device-build.py check-source
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          data = json.loads(Path('config/device-build.json').read_text())
+          print('version=' + data['kernel'])
+          print('sha256=' + data['kernel_sha256'])
+          PY
+      - name: Download and verify Linux
+        env:
+          VERSION: ${{ steps.source.outputs.version }}
+          SHA256: ${{ steps.source.outputs.sha256 }}
+        run: |
+          mkdir -p logs
+          curl --fail --location --retry 3 \
+            "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-$VERSION.tar.xz" \
+            --output "$RUNNER_TEMP/linux.tar.xz"
+          printf '%s  %s\n' "$SHA256" "$RUNNER_TEMP/linux.tar.xz" | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/kernel"
+          tar -xJf "$RUNNER_TEMP/linux.tar.xz" --strip-components=1 -C "$RUNNER_TEMP/kernel"
+      - name: Apply source overlays and ordered patches
+        run: |
+          for overlay in generic/files generic/files-7.3 "$TARGET/files" "$TARGET/files-7.3"; do
+            if [ -d "target/linux/$overlay" ]; then
+              cp -a "target/linux/$overlay/." "$RUNNER_TEMP/kernel/"
+            fi
+          done
+          for patches in generic/backport-7.3 generic/pending-7.3 generic/hack-7.3 "$TARGET/patches-7.3"; do
+            PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
+              "$RUNNER_TEMP/kernel" "target/linux/$patches" 2>&1 | tee -a logs/patches.log
+          done
+      - name: Resolve target kernel defaults
+        run: |
+          scripts/kconfig.pl + target/linux/generic/config-7.3 \
+            "target/linux/$TARGET/$SUBTARGET/config-7.3" > "$RUNNER_TEMP/kernel/.config"
+          make -C "$RUNNER_TEMP/kernel" listnewconfig 2>&1 | tee logs/new-options.log
+          make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
+          cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config
+      - name: Compile kernel and built-in drivers
+        run: |
+          make -C "$RUNNER_TEMP/kernel" -j"$(nproc)" "$IMAGE" modules \
+            2>&1 | tee logs/compile.log
+      - name: Upload kernel diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-7.3-${{ matrix.subtarget }}-diagnostics
+          path: logs/*
+          if-no-files-found: ignore
+          retention-days: 7
