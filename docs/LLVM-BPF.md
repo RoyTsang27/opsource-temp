@@ -1,10 +1,12 @@
-# LLVM-BPF builds on hosts with limited RAM
+# LLVM-BPF build parallelism
 
-The reported LLVM 22.1.3 build stopped after Clang Sema compilations. The pasted
-tail contains `#include_next` warnings and Ninja's final failure, but no failed
-command or fatal diagnostic. The warnings are not fatal with the shown flags.
-Reported high memory use and the large amount of system CPU time suggest memory
-pressure; an out-of-memory kill has not been confirmed.
+LLVM-BPF source builds now use **16 Ninja workers** by default. The build owner
+reports that 16 workers succeed on the 24-thread Linux host, while using all
+24 fails. The previous single-worker default serialized compilation even when
+the surrounding firmware build used `make -j24`.
+
+The limit is specific to LLVM-BPF and applies to compilation and installation.
+LLVM's separate link pool remains limited to one job.
 
 ## Use OpenWrt's prebuilt tools on Linux x86-64
 
@@ -47,17 +49,36 @@ source build even when prebuilt tools are selected.
 
 ## Continue building LLVM from source
 
-`tools/llvm-bpf/Makefile` now passes an explicit `-j1` to Ninja, limiting LLVM
-compilation and installation independently of the parent make jobserver.
-This prevents an unusable jobserver from causing Ninja to use every CPU.
-It also bounds LLVM resource use during a normal parallel firmware build.
-One large compilation can still require substantial RAM.
+`tools/llvm-bpf/Makefile` passes an explicit `-j16` to Ninja. This overrides the
+buildroot's serial fallback and is independent of the parent make jobserver,
+so `make -j24` still limits LLVM to 16 concurrent commands. The build log prints
+the selected worker count. Compilation can use up to 16 workers when enough
+independent files are ready; linking remains serial with
+`LLVM_PARALLEL_LINK_JOBS=1`.
 
-On hosts with sufficient RAM, the owner can explicitly increase the limit:
+Stop any running build, pull the updated `main`, then resume without cleaning:
 
 ```sh
-make tools/llvm-bpf/compile LLVM_BPF_JOBS=2 V=s
+git pull --ff-only origin main
+make tools/llvm-bpf/compile V=s
+make -j24 V=s
 ```
+
+Completed LLVM objects are retained. A numeric `LLVM_BPF_JOBS` override remains
+available, for example `make tools/llvm-bpf/compile LLVM_BPF_JOBS=16 V=s`.
+
+## Concurrency preflight on 2026-11-12
+
+The regression workload contains 24 independent jobs and runs through the
+actual LLVM recipe, buildroot Ninja wrapper, and CMake compile/install
+commands. It checks that the default peaks at 16 workers under `make -j24`
+with an unusable parent jobserver, under serial make with no jobserver, and
+when installation has pending build work. A two-worker override is also tested.
+The old recipe reproduced a peak of one worker under the same `make -j24` test.
+
+These checks verify scheduling, not a full LLVM compilation or firmware build
+on the Linux machine. The one-job link pool uses LLVM's
+[Ninja job-pool support](https://github.com/llvm/llvm-project/blob/llvmorg-22.1.3/llvm/cmake/modules/HandleLLVMOptions.cmake).
 
 ## Missing prebuilt compiler when building bpf-headers
 

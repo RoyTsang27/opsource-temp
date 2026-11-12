@@ -22,9 +22,9 @@ CMAKE_SOURCE_SUBDIR := llvm
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/cmake.mk
 
-# LLVM's C++ front end can exhaust RAM when Ninja uses all host CPUs.
-# Set an explicit limit, including when the parent make has a jobserver.
-LLVM_BPF_JOBS ?= 1
+# Use the build owner's tested 16-worker limit instead of all 24 host CPUs.
+# Pass it explicitly so the parent make jobserver cannot serialize LLVM.
+LLVM_BPF_JOBS ?= 16
 NINJA += -j$(LLVM_BPF_JOBS)
 
 ifneq ($(HOST_OS),Linux)
@@ -60,6 +60,11 @@ CMAKE_HOST_OPTIONS += \
 	-DLLVM_ENABLE_ZSTD=OFF \
 	-DLLVM_PARALLEL_LINK_JOBS=1 \
 	-DCMAKE_SKIP_RPATH=OFF
+
+define Host/Compile
+	@echo "LLVM-BPF: using $(LLVM_BPF_JOBS) Ninja worker(s); link jobs limited to 1"
+	$(call Host/Compile/Default)
+endef
 
 define Host/Install
 	rm -rf $(STAGING_DIR_HOST)/llvm-bpf*

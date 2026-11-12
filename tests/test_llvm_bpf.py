@@ -149,7 +149,7 @@ class PrebuiltTests(unittest.TestCase):
 
 @unittest.skipUnless(NINJA, 'Ninja is unavailable; set NINJA_TEST_BIN for the concurrency preflight')
 class NinjaLimitTests(unittest.TestCase):
-    def check_limit(self, jobs, expected):
+    def check_limit(self, jobs, expected, parent_jobs=24, jobserver=True, install=False):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / 'include').mkdir()
@@ -158,12 +158,14 @@ class NinjaLimitTests(unittest.TestCase):
             rule = (ROOT / 'rules.mk').read_text().split('NINJA = \\\n', 1)[1].split('\n\n', 1)[0]
             (root / 'rules.mk').write_text('NINJA = \\\n' + rule + '\n')
             (root / 'include/host-build.mk').write_text('')
-            (root / 'include/cmake.mk').write_text('')
+            (root / 'include/cmake.mk').symlink_to(ROOT / 'include/cmake.mk')
             harness = root / 'Makefile'
             harness.write_text(f'TOPDIR:={root}\nINCLUDE_DIR:={root}/include\n'
                                f'STAGING_DIR_HOST:={root}\n'
                                f'include {ROOT}/tools/llvm-bpf/Makefile\n'
-                               'all:\n\t+$(NINJA) -C $(TOPDIR)\n')
+                               'HOST_CMAKE_BINARY_DIR:=$(TOPDIR)\n'
+                               'all:\n\t$(call Host/Compile/Default)\n'
+                               'install:\n\t$(call Host/Install/Default)\n')
             worker = root / 'worker.py'
             worker.write_text('import json, os, sys, time\n'
                               'from pathlib import Path\n'
@@ -176,9 +178,12 @@ class NinjaLimitTests(unittest.TestCase):
             (root / 'build.ninja').write_text(
                 'rule work\n  command = ' + shlex.quote(sys.executable) + ' ' +
                 shlex.quote(str(worker)) + ' $out\n' +
-                ''.join(f'build out{i}: work\n' for i in range(4)))
-            command = ['make', '-f', str(harness),
-                       'MAKE_JOBSERVER=--jobserver-auth=fifo:/nonexistent-test-jobserver']
+                ''.join(f'build out{i}: work\n' for i in range(24)) +
+                'build install: phony ' + ' '.join(f'out{i}' for i in range(24)) + '\n')
+            command = ['make', '-j' + str(parent_jobs), '-f', str(harness),
+                       'MAKE_JOBSERVER=' + ('--jobserver-auth=fifo:/nonexistent-test-jobserver' if jobserver else '')]
+            if install:
+                command.append('install')
             if jobs:
                 command.append('LLVM_BPF_JOBS=' + jobs)
             result = subprocess.run(command, cwd=root, capture_output=True, text=True)
@@ -190,8 +195,14 @@ class NinjaLimitTests(unittest.TestCase):
             self.assertEqual(current, 0)
             self.assertEqual(peak, expected)
 
-    def test_default_runs_one_job_even_with_unusable_parent_jobserver(self):
-        self.check_limit(None, 1)
+    def test_default_runs_sixteen_jobs_under_make_j24(self):
+        self.check_limit(None, 16)
+
+    def test_default_runs_sixteen_jobs_under_serial_parent_make(self):
+        self.check_limit(None, 16, parent_jobs=1, jobserver=False)
+
+    def test_install_rebuild_uses_sixteen_jobs(self):
+        self.check_limit(None, 16, install=True)
 
     def test_explicit_override_sets_the_limit(self):
         self.check_limit('2', 2)
