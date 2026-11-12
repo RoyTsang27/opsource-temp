@@ -100,6 +100,7 @@ endif
 
 KERNEL_MAKE = $(MAKE) $(KERNEL_MAKEOPTS)
 
+# Linux 7.3's syscall check must run to generate the dependency file for fixdep.
 KERNEL_MAKE_FLAGS = \
 	KCFLAGS="$(call iremap,$(BUILD_DIR),$(notdir $(BUILD_DIR))) $(IREMAP_STAGING_DIR) $(filter-out -fno-plt,$(call qstrip,$(CONFIG_EXTRA_OPTIMIZATION))) $(call qstrip,$(CONFIG_KERNEL_CFLAGS))" \
 	KAFLAGS="$(call iremap,$(BUILD_DIR),$(notdir $(BUILD_DIR))) $(IREMAP_STAGING_DIR)" \
@@ -115,7 +116,7 @@ KERNEL_MAKE_FLAGS = \
 	CONFIG_SHELL="$(BASH)" \
 	$(if $(findstring c,$(OPENWRT_VERBOSE)),V=1,V='') \
 	$(if $(PKG_BUILD_ID),LDFLAGS_MODULE=--build-id=0x$(PKG_BUILD_ID)) \
-	cmd_syscalls= \
+	$(if $(call kernel_patchver_ge,7.3),,cmd_syscalls=) \
 	$(if $(__package_mk),KBUILD_EXTRA_SYMBOLS="$(wildcard $(PKG_SYMVERS_DIR)/*.symvers)")
 
 ifneq (,$(KERNEL_CC))
