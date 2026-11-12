@@ -15,7 +15,7 @@
     "mirror_sha256": "3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f"
   },
   "patch": "patches/op-source-6.18.60-to-6.18.63.patch",
-  "patch_sha256": "2af16e3f411542b7f21e165188753198a4f1a4544f61e1038ec8f5486dc2e74c",
+  "patch_sha256": "2ba7ac92002fb67aaaaff8ad6f7eea8b3c8c9f627d7304173926968beef8b9ca",
   "files": [
     {
       "path": "package/kernel/mac80211/Makefile",
@@ -791,6 +791,22 @@
       "after": null
     },
     {
+      "path": "target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch",
+      "before": [
+        null
+      ],
+      "after": "9dde36e5fba8a5f592d1b6e56c86af1503c282980b80f72389b304e0c15c8737",
+      "payload": "files/target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch",
+      "before": [
+        null
+      ],
+      "after": "44c61dea645a84f981995a696eeacb17cb904f467b79116c013c73581c57a9f1",
+      "payload": "files/target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch"
+    },
+    {
       "path": "target/linux/generic/backport-6.18/734-v7.3-net-ethernet-mtk_wed-increase-WED-v2-WDMA-RESV_BUFF-.patch",
       "before": [
         "23c1ac1c4d6580b666659840076732589d1157270e2d2e6279e3ec8a52f548d5",
@@ -805,6 +821,14 @@
         null
       ],
       "after": null
+    },
+    {
+      "path": "target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch",
+      "before": [
+        "300bb870e91e226715ada8f3fdbb9fc9c781ebfa3e5cb3c3ad3d34825b59ef84"
+      ],
+      "after": "4e981cae8ff5b7b61d29ac94d631d9eb2ae7eb7b7101f9b017aa228987eb6a0b",
+      "payload": "files/target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch"
     },
     {
       "path": "target/linux/generic/kernel-6.18",

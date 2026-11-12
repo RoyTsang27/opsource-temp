@@ -1,0 +1,44 @@
+{
+  "kernel": "6.18.63",
+  "kernel_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.63.tar.xz",
+  "supported_kernels": {
+    "6.18.63": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71"
+  },
+  "patch": "patches/mac80211-forward-path.patch",
+  "patch_sha256": "8bbaea44f20d0bc8c5f1faec713e803fdea7426c7caf38088ecfd7ad581784bf",
+  "files": [
+    {
+      "path": "target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch",
+      "before": [
+        null
+      ],
+      "after": "9dde36e5fba8a5f592d1b6e56c86af1503c282980b80f72389b304e0c15c8737",
+      "payload": "files/target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch"
+    },
+    {
+      "path": "target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch",
+      "before": [
+        null
+      ],
+      "after": "44c61dea645a84f981995a696eeacb17cb904f467b79116c013c73581c57a9f1",
+      "payload": "files/target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch"
+    },
+    {
+      "path": "target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch",
+      "before": [
+        "300bb870e91e226715ada8f3fdbb9fc9c781ebfa3e5cb3c3ad3d34825b59ef84"
+      ],
+      "after": "4e981cae8ff5b7b61d29ac94d631d9eb2ae7eb7b7101f9b017aa228987eb6a0b",
+      "payload": "files/target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch"
+    },
+    {
+      "path": "target/linux/generic/kernel-6.18",
+      "before": [],
+      "after": "358c81eed73458938f83cfd369fa799b2a630ba8afc355953c70e2c911600950",
+      "payload": "files/target/linux/generic/kernel-6.18"
+    }
+  ],
+  "baseline_commit": "9c028879bb79eee95130a33df1134c5eeafb3292",
+  "baseline_repository": "https://github.com/RoyTsang27/opsource-temp"
+}

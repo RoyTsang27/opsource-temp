@@ -1,0 +1,189 @@
+{
+  "version": "6.18.63",
+  "sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "targets": {
+    "generic": {
+      "patches": 453,
+      "failure": null
+    },
+    "airoha": {
+      "patches": 595,
+      "failure": null
+    },
+    "apm821xx": {
+      "patches": 459,
+      "failure": null
+    },
+    "armsr": {
+      "patches": 456,
+      "failure": null
+    },
+    "ath79": {
+      "patches": 490,
+      "failure": null
+    },
+    "bcm27xx": {
+      "patches": 1359,
+      "failure": null
+    },
+    "bcm47xx": {
+      "patches": 468,
+      "failure": null
+    },
+    "bcm53xx": {
+      "patches": 491,
+      "failure": null
+    },
+    "bmips": {
+      "patches": 467,
+      "failure": null
+    },
+    "d1": {
+      "patches": 455,
+      "failure": null
+    },
+    "econet": {
+      "patches": 514,
+      "failure": null
+    },
+    "gemini": {
+      "patches": 471,
+      "failure": null
+    },
+    "ipq40xx": {
+      "patches": 476,
+      "failure": null
+    },
+    "ixp4xx": {
+      "patches": 456,
+      "failure": null
+    },
+    "kirkwood": {
+      "patches": 476,
+      "failure": null
+    },
+    "lantiq": {
+      "patches": 474,
+      "failure": null
+    },
+    "layerscape": {
+      "patches": 462,
+      "failure": null
+    },
+    "loongarch64": {
+      "patches": 453,
+      "failure": null
+    },
+    "malta": {
+      "patches": 453,
+      "failure": null
+    },
+    "mediatek": {
+      "patches": 592,
+      "failure": null
+    },
+    "microchipsw": {
+      "patches": 480,
+      "failure": null
+    },
+    "mpc85xx": {
+      "patches": 471,
+      "failure": null
+    },
+    "mvebu": {
+      "patches": 497,
+      "failure": null
+    },
+    "mxs": {
+      "patches": 453,
+      "failure": null
+    },
+    "octeon": {
+      "patches": 465,
+      "failure": null
+    },
+    "omap": {
+      "patches": 454,
+      "failure": null
+    },
+    "pistachio": {
+      "patches": 466,
+      "failure": null
+    },
+    "qoriq": {
+      "patches": 453,
+      "failure": null
+    },
+    "qualcommax": {
+      "patches": 546,
+      "failure": null
+    },
+    "qualcommbe": {
+      "patches": 520,
+      "failure": null
+    },
+    "ramips": {
+      "patches": 499,
+      "failure": null
+    },
+    "realtek": {
+      "patches": 563,
+      "failure": null
+    },
+    "rockchip": {
+      "patches": 595,
+      "failure": null
+    },
+    "sifiveu": {
+      "patches": 454,
+      "failure": null
+    },
+    "siflower": {
+      "patches": 469,
+      "failure": null
+    },
+    "starfive": {
+      "patches": 509,
+      "failure": null
+    },
+    "stm32": {
+      "patches": 456,
+      "failure": null
+    },
+    "sunxi": {
+      "patches": 476,
+      "failure": null
+    },
+    "tegra": {
+      "patches": 454,
+      "failure": null
+    },
+    "uml": {
+      "patches": 454,
+      "failure": null
+    },
+    "x86": {
+      "patches": 455,
+      "failure": null
+    },
+    "zynq": {
+      "patches": 455,
+      "failure": null
+    }
+  },
+  "checked_on": "2026-11-12",
+  "host": "macOS arm64",
+  "scope": "Native forward-path backports and legacy xt_FLOWOFFLOAD API caller",
+  "fuzz": 0,
+  "rejects": 0,
+  "regression_tests": {
+    "run": 90,
+    "skipped": 1
+  },
+  "compiler_probe": "Reproduced both compiler errors before the header patch; host execution and AArch64/MIPS syntax checks passed after it",
+  "migration": "Cumulative kit checked on the actual 6.18.60 and 6.18.62 source files; standalone kit checked on published 6.18.63 commit 9c028879",
+  "limitations": [
+    "Full firmware build not performed",
+    "Hardware offload runtime not tested"
+  ]
+}

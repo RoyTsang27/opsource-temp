@@ -77,3 +77,8 @@ two mt76 patches, AArch64 socket and flow-layout compiler probes, a MIPS
 flow-layout syntax check, and update preservation, conflict and rollback
 tests. The extracted delivery kit was tested on the actual 6.18.60 and
 6.18.62 source files. A full firmware build and hardware boot were not tested.
+
+The 2026-11-12 correction adds both native forward-path prerequisites required
+by the mac80211 backport and updates the legacy flow-offload caller. For an
+already upgraded tree, use `updates/mac80211-forward-path/` to apply only this
+repair before rebuilding the kernel and wireless modules.

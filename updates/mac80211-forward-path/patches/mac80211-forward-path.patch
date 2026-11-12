@@ -1,0 +1,306 @@
+diff --git a/target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch b/target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch
+new file mode 100644
+index 00000000..f60610aa
+--- /dev/null
++++ b/target/linux/generic/backport-6.18/706-01-v7.3-net-pass-net_device_path_ctx-to-dev_fill_forward_path.patch
+@@ -0,0 +1,163 @@
++From 95133a416809c7e822da4023b7f4193ef2620796 Mon Sep 17 00:00:00 2001
++From: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
++Date: Thu, 6 Aug 2026 23:09:03 +0200
++Subject: [PATCH] net: pass net_device_path_ctx to dev_fill_forward_path()
++
++Refactor dev_fill_forward_path() to take a struct net_device_path_ctx
++pointer instead of a (dev, daddr) pair, so the caller can build and
++populate the context up front and keep it after the forward path walk.
++
++This allows additional fields (e.g. vlan and ether_type) to be carried
++in the context and shared with ndo_fill_forward_path implementations,
++instead of being reconstructed on the stack inside the core helper.
++
++Update the mtk_ppe_offload, airoha_ppe and nf_flow_table_path callers to
++allocate and fill the context before invoking dev_fill_forward_path().
++The network topology resolution behaviour is unchanged.
++
++This is a preliminary patch to enable HW flowtable offload for IPv4
++over IPv6 tunnels.
++
++Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
++Reviewed-by: Simon Horman <horms@kernel.org>
++Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
++---
++ drivers/net/ethernet/airoha/airoha_ppe.c       |  7 ++++++-
++ .../net/ethernet/mediatek/mtk_ppe_offload.c    |  7 ++++++-
++ include/linux/netdevice.h                      |  2 +-
++ net/core/dev.c                                 | 18 +++++++-----------
++ net/netfilter/nf_flow_table_path.c             |  7 ++++++-
++ 5 files changed, 26 insertions(+), 15 deletions(-)
++
++--- a/drivers/net/ethernet/airoha/airoha_ppe.c
+++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
++@@ -229,14 +229,19 @@ static int airoha_ppe_get_wdma_info(stru
++ 				    struct airoha_wdma_info *info)
++ {
++ 	struct net_device_path_stack stack;
+++	struct net_device_path_ctx ctx = {
+++		.dev = dev,
+++	};
++ 	struct net_device_path *path;
++ 	int err;
++ 
++ 	if (!dev)
++ 		return -ENODEV;
++ 
+++	ether_addr_copy(ctx.daddr, addr);
+++
++ 	rcu_read_lock();
++-	err = dev_fill_forward_path(dev, addr, &stack);
+++	err = dev_fill_forward_path(&ctx, &stack);
++ 	rcu_read_unlock();
++ 	if (err)
++ 		return err;
++--- a/drivers/net/ethernet/mediatek/mtk_ppe_offload.c
+++++ b/drivers/net/ethernet/mediatek/mtk_ppe_offload.c
++@@ -92,6 +92,9 @@ static int
++ mtk_flow_get_wdma_info(struct net_device *dev, const u8 *addr, struct mtk_wdma_info *info)
++ {
++ 	struct net_device_path_stack stack;
+++	struct net_device_path_ctx ctx = {
+++		.dev = dev,
+++	};
++ 	struct net_device_path *path;
++ 	int err;
++ 
++@@ -101,8 +104,10 @@ mtk_flow_get_wdma_info(struct net_device
++ 	if (!IS_ENABLED(CONFIG_NET_MEDIATEK_SOC_WED))
++ 		return -1;
++ 
+++	ether_addr_copy(ctx.daddr, addr);
+++
++ 	rcu_read_lock();
++-	err = dev_fill_forward_path(dev, addr, &stack);
+++	err = dev_fill_forward_path(&ctx, &stack);
++ 	rcu_read_unlock();
++ 	if (err)
++ 		return err;
++--- a/include/linux/netdevice.h
+++++ b/include/linux/netdevice.h
++@@ -3360,7 +3360,7 @@ void dev_remove_offload(struct packet_of
++ 
++ int dev_get_iflink(const struct net_device *dev);
++ int dev_fill_metadata_dst(struct net_device *dev, struct sk_buff *skb);
++-int dev_fill_forward_path(const struct net_device *dev, const u8 *daddr,
+++int dev_fill_forward_path(struct net_device_path_ctx *ctx,
++ 			  struct net_device_path_stack *stack);
++ struct net_device *dev_get_by_name(struct net *net, const char *name);
++ struct net_device *dev_get_by_name_rcu(struct net *net, const char *name);
++--- a/net/core/dev.c
+++++ b/net/core/dev.c
++@@ -744,41 +744,37 @@ static struct net_device_path *dev_fwd_p
++ 	return &stack->path[k];
++ }
++ 
++-int dev_fill_forward_path(const struct net_device *dev, const u8 *daddr,
+++int dev_fill_forward_path(struct net_device_path_ctx *ctx,
++ 			  struct net_device_path_stack *stack)
++ {
++ 	const struct net_device *last_dev;
++-	struct net_device_path_ctx ctx = {
++-		.dev	= dev,
++-	};
++ 	struct net_device_path *path;
++ 	int ret = 0;
++ 
++-	memcpy(ctx.daddr, daddr, sizeof(ctx.daddr));
++ 	stack->num_paths = 0;
++-	while (ctx.dev && ctx.dev->netdev_ops->ndo_fill_forward_path) {
++-		last_dev = ctx.dev;
+++	while (ctx->dev && ctx->dev->netdev_ops->ndo_fill_forward_path) {
+++		last_dev = ctx->dev;
++ 		path = dev_fwd_path(stack);
++ 		if (!path)
++ 			return -1;
++ 
++ 		memset(path, 0, sizeof(struct net_device_path));
++-		ret = ctx.dev->netdev_ops->ndo_fill_forward_path(&ctx, path);
+++		ret = ctx->dev->netdev_ops->ndo_fill_forward_path(ctx, path);
++ 		if (ret < 0)
++ 			return -1;
++ 
++-		if (WARN_ON_ONCE(last_dev == ctx.dev))
+++		if (WARN_ON_ONCE(last_dev == ctx->dev))
++ 			return -1;
++ 	}
++ 
++-	if (!ctx.dev)
+++	if (!ctx->dev)
++ 		return ret;
++ 
++ 	path = dev_fwd_path(stack);
++ 	if (!path)
++ 		return -1;
++ 	path->type = DEV_PATH_ETHERNET;
++-	path->dev = ctx.dev;
+++	path->dev = ctx->dev;
++ 
++ 	return ret;
++ }
++--- a/net/netfilter/nf_flow_table_path.c
+++++ b/net/netfilter/nf_flow_table_path.c
++@@ -49,6 +49,9 @@ static int nft_dev_fill_forward_path(con
++ {
++ 	const void *daddr = &ct->tuplehash[!dir].tuple.src.u3;
++ 	struct net_device *dev = dst_cache->dev;
+++	struct net_device_path_ctx ctx = {
+++		.dev = dev,
+++	};
++ 	struct neighbour *n;
++ 	u8 nud_state;
++ 
++@@ -71,7 +74,9 @@ static int nft_dev_fill_forward_path(con
++ 		return -1;
++ 
++ out:
++-	return dev_fill_forward_path(dev, ha, stack);
+++	ether_addr_copy(ctx.daddr, ha);
+++
+++	return dev_fill_forward_path(&ctx, stack);
++ }
++ 
++ struct nft_forward_info {
+diff --git a/target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch b/target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch
+new file mode 100644
+index 00000000..4e5e1181
+--- /dev/null
++++ b/target/linux/generic/backport-6.18/706-02-v7.3-netfilter-flowtable-restore-ieee80211-forward-path.patch
+@@ -0,0 +1,97 @@
++From 3ae37eafd36694bb2d3227f60ac98fbf602470a2 Mon Sep 17 00:00:00 2001
++From: Pablo Neira Ayuso <pablo@netfilter.org>
++Date: Wed, 23 Sep 2026 20:46:18 +0200
++Subject: [PATCH] netfilter: flowtable: restore ieee80211 forward path
++
++Before commit 871df5007eda ("netfilter: flowtable: bail out if forward
++path cannot be discovered"), there was a fallback to set up a forward
++path in case .ndo_fill_forward_path fails or DEV_PATH_MTK_WDMA was used.
++Such fallback was used by commit d787a3e38f01 ("mac80211: add support
++for .ndo_fill_forward_path").
++
++One possibility is to handle DEV_PATH_MTK_WDMA from the flowtable
++forward path discovery. However, this is only used internally by drivers
++to retrieve mtk_wdma information to set up hardware offload. Felix
++decided to use the .fill_forward_path interface for this purpose due to
++the lack of a better interface at that time.
++
++Add a new DEV_PATH_IEEE80211 path which is offered if the new ieee80211
++flag is set on in the struct net_device_path_ctx to restore the
++flowtable with a ieee80211 netdevice. Handle this new DEV_PATH_IEEE80211
++path just like DEV_PATH_ETHERNET and DEV_PATH_DSA, ie. this is the last
++netdevice in the stack.
++
++This new ieee80211 flag is implicitly unset for mtk_ppe and airoha which
++call dev_fill_forward_path() to retrieve a DEV_PATH_MTK_WDMA path.
++
++Fixes: 871df5007eda ("netfilter: flowtable: bail out if forward path cannot be discovered")
++Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
++---
++ include/linux/netdevice.h          | 3 +++
++ net/mac80211/iface.c               | 7 +++++++
++ net/netfilter/nf_flow_table_path.c | 3 +++
++ 3 files changed, 13 insertions(+)
++
++--- a/include/linux/netdevice.h
+++++ b/include/linux/netdevice.h
++@@ -878,6 +878,7 @@ enum net_device_path_type {
++ 	DEV_PATH_PPPOE,
++ 	DEV_PATH_DSA,
++ 	DEV_PATH_MTK_WDMA,
+++	DEV_PATH_IEEE80211,
++ };
++ 
++ struct net_device_path {
++@@ -930,6 +931,8 @@ struct net_device_path_ctx {
++ 		u16		id;
++ 		__be16		proto;
++ 	} vlan[NET_DEVICE_PATH_VLAN_MAX];
+++
+++	bool			ieee80211;
++ };
++ 
++ enum tc_setup_type {
++--- a/net/mac80211/iface.c
+++++ b/net/mac80211/iface.c
++@@ -985,6 +985,13 @@ static int ieee80211_netdev_fill_forward
++ 	struct sta_info *sta;
++ 	int ret = -ENOENT;
++ 
+++	if (ctx->ieee80211) {
+++		path->type = DEV_PATH_IEEE80211;
+++		path->dev = ctx->dev;
+++		ctx->dev = NULL;
+++		return 0;
+++	}
+++
++ 	sdata = IEEE80211_DEV_TO_SUB_IF(ctx->dev);
++ 	local = sdata->local;
++ 
++--- a/net/netfilter/nf_flow_table_path.c
+++++ b/net/netfilter/nf_flow_table_path.c
++@@ -51,6 +51,7 @@ static int nft_dev_fill_forward_path(con
++ 	struct net_device *dev = dst_cache->dev;
++ 	struct net_device_path_ctx ctx = {
++ 		.dev = dev,
+++		.ieee80211 = true,
++ 	};
++ 	struct neighbour *n;
++ 	u8 nud_state;
++@@ -107,6 +108,7 @@ static void nft_dev_path_info(const stru
++ 		path = &stack->path[i];
++ 		switch (path->type) {
++ 		case DEV_PATH_ETHERNET:
+++		case DEV_PATH_IEEE80211:
++ 		case DEV_PATH_DSA:
++ 		case DEV_PATH_VLAN:
++ 		case DEV_PATH_PPPOE:
++@@ -114,7 +116,8 @@ static void nft_dev_path_info(const stru
++ 			if (is_zero_ether_addr(info->h_source))
++ 				memcpy(info->h_source, path->dev->dev_addr, ETH_ALEN);
++ 
++-			if (path->type == DEV_PATH_ETHERNET)
+++			if (path->type == DEV_PATH_ETHERNET ||
+++			    path->type == DEV_PATH_IEEE80211)
++ 				break;
++ 			if (path->type == DEV_PATH_DSA) {
++ 				i = stack->num_paths;
+diff --git a/target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch b/target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch
+index 02abf04e..632af841 100644
+--- a/target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch
++++ b/target/linux/generic/hack-6.18/650-netfilter-add-xt_FLOWOFFLOAD-target.patch
+@@ -44,7 +44,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  obj-$(CONFIG_NETFILTER_XT_TARGET_LED) += xt_LED.o
+ --- /dev/null
+ +++ b/net/netfilter/xt_FLOWOFFLOAD.c
+-@@ -0,0 +1,709 @@
++@@ -0,0 +1,714 @@
+ +/*
+ + * Copyright (C) 2018-2021 Felix Fietkau <nbd@nbd.name>
+ + *
+@@ -410,6 +410,9 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ +{
+ +	const void *daddr = &ct->tuplehash[!dir].tuple.src.u3;
+ +	struct net_device *dev = dst_cache->dev;
+++	struct net_device_path_ctx ctx = {
+++		.dev = dev,
+++	};
+ +	struct neighbour *n;
+ +	u8 nud_state;
+ +
+@@ -430,7 +433,9 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ +		return -1;
+ +
+ +out:
+-+	return dev_fill_forward_path(dev, ha, stack);
+++	ether_addr_copy(ctx.daddr, ha);
+++
+++	return dev_fill_forward_path(&ctx, stack);
+ +}
+ +
+ +static void nf_dev_forward_path(struct nf_flow_route *route,
