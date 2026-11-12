@@ -22,8 +22,8 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
 ---
  drivers/nvmem/layouts/Kconfig  |   9 +++
  drivers/nvmem/layouts/Makefile |   1 +
- drivers/nvmem/layouts/adtran.c | 135 +++++++++++++++++++++++++++++++++
- 3 files changed, 145 insertions(+)
+ drivers/nvmem/layouts/adtran.c | 136 +++++++++++++++++++++++++++++++++
+ 3 files changed, 146 insertions(+)
  create mode 100644 drivers/nvmem/layouts/adtran.c
 
 --- a/drivers/nvmem/layouts/Kconfig
@@ -54,10 +54,11 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
  obj-$(CONFIG_NVMEM_LAYOUT_ASCII_ENV) += ascii-env.o
 --- /dev/null
 +++ b/drivers/nvmem/layouts/adtran.c
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,136 @@
 +// SPDX-License-Identifier: GPL-2.0
 +#include <linux/ctype.h>
 +#include <linux/etherdevice.h>
++#include <linux/hex.h>
 +#include <linux/nvmem-consumer.h>
 +#include <linux/nvmem-provider.h>
 +#include <linux/of.h>

@@ -96,6 +96,14 @@ tool and explicit parent capabilities. No unanswered options remained in
 those reviewed declarations; that focused check is not a complete firmware
 build.
 
+The Linux-hosted configuration check also identified the new Black Sesame
+and Microchip architecture menus and the MediaTek Fast Ethernet PHY driver.
+The unrelated architecture menus are explicitly disabled. MT76x8 retains its
+existing `rt5350-eth`/`rt3050-esw` device-tree and swconfig path, with the new
+PHY driver disabled as before. Stack-frame warnings continue to use the
+normal `KERNEL_FRAME_WARN` build-menu setting (2048 bytes for ARM64 and 1024
+bytes for this MIPS target).
+
 ## Other feature decisions
 
 | New or substantially extended feature family | Default decision |
