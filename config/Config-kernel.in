@@ -1680,10 +1680,13 @@ config KERNEL_WERROR
 
 choice
 	prompt "Preemption Model"
+	default KERNEL_PREEMPT_LAZY if LINUX_7_3 && aarch64
+	default KERNEL_PREEMPT_VOLUNTARY if LINUX_7_3
 	default KERNEL_PREEMPT_NONE
 
 config KERNEL_PREEMPT_NONE
 	bool "No Forced Preemption (Server)"
+	depends on !LINUX_7_3
 	help
 	  This is the traditional Linux preemption model, geared towards
 	  throughput. It will still provide good latencies most of the
@@ -1697,6 +1700,7 @@ config KERNEL_PREEMPT_NONE
 
 config KERNEL_PREEMPT_VOLUNTARY
 	bool "Voluntary Kernel Preemption (Desktop)"
+	depends on !(LINUX_7_3 && aarch64)
 	help
 	  This option reduces the latency of the kernel by adding more
 	  "explicit preemption points" to the kernel code. These new
@@ -1711,6 +1715,14 @@ config KERNEL_PREEMPT_VOLUNTARY
 	  under load.
 
 	  Select this if you are building a kernel for a desktop system.
+
+config KERNEL_PREEMPT_LAZY
+	bool "Scheduler Controlled Preemption"
+	depends on LINUX_7_3 && aarch64
+	help
+	  Use the Linux 7.3 ARM64 default. The scheduler delays preemption of
+	  normal tasks to reduce lock-holder preemption while still allowing
+	  prompt preemption for higher-priority tasks.
 
 config KERNEL_PREEMPT
 	bool "Preemptible Kernel (Low-Latency Desktop)"

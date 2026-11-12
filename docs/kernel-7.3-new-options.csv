@@ -1,0 +1,850 @@
+symbol,source_paths,type,prompt
+CONFIG_32BIT_REDUCED,arch/loongarch/Kconfig,bool,32-bit kernel for LA32R
+CONFIG_32BIT_STANDARD,arch/loongarch/Kconfig,bool,32-bit kernel for LA32S
+CONFIG_4KB_2LEVEL,arch/loongarch/Kconfig,bool,4KB with 2 levels
+CONFIG_ABP2030PA,drivers/iio/pressure/Kconfig,tristate,
+CONFIG_ABP2030PA_I2C,drivers/iio/pressure/Kconfig,tristate,Honeywell ABP2 pressure sensor series I2C driver
+CONFIG_ABP2030PA_SPI,drivers/iio/pressure/Kconfig,tristate,Honeywell ABP2 pressure sensor series SPI driver
+CONFIG_ACPI_APEI_GHES_NVIDIA,drivers/acpi/apei/Kconfig,tristate,NVIDIA GHES vendor record handler
+CONFIG_ACPI_MPAM,drivers/acpi/arm64/Kconfig,bool,
+CONFIG_ACPI_WMI_MARSHALLING_KUNIT_TEST,drivers/platform/wmi/tests/Kconfig,tristate,KUnit Test for ACPI-WMI marshalling
+CONFIG_ACPI_WMI_STRING_KUNIT_TEST,drivers/platform/wmi/tests/Kconfig,tristate,KUnit Test for ACPI-WMI string conversion
+CONFIG_AD4062,drivers/iio/adc/Kconfig,tristate,Analog Devices AD4062 Driver
+CONFIG_AD4134,drivers/iio/adc/Kconfig,tristate,Analog Device AD4134 ADC Driver
+CONFIG_AD4691,drivers/iio/adc/Kconfig,tristate,Analog Devices AD4691 Family ADC Driver
+CONFIG_AD5446_I2C,drivers/iio/dac/Kconfig,tristate,Analog Devices AD5446 and similar single channel DACs driver (I2C)
+CONFIG_AD5446_SPI,drivers/iio/dac/Kconfig,tristate,Analog Devices AD5446 and similar single channel DACs driver (SPI)
+CONFIG_AD5706R,drivers/iio/dac/Kconfig,tristate,Analog Devices AD5706R DAC driver
+CONFIG_ADF41513,drivers/iio/frequency/Kconfig,tristate,Analog Devices ADF41513 PLL Frequency Synthesizer
+CONFIG_ADIN1140,drivers/net/ethernet/adi/Kconfig,tristate,Analog Devices ADIN1140 MAC-PHY
+CONFIG_ADIN1140_PHY,drivers/net/phy/Kconfig,tristate,Analog Devices ADIN1140 10BASE-T1S PHY
+CONFIG_ADL8113,drivers/iio/amplifiers/Kconfig,tristate,Analog Devices ADL8113 Low Noise Amplifier
+CONFIG_ADP810,drivers/iio/pressure/Kconfig,tristate,Aosong adp810 differential pressure and temperature sensor
+CONFIG_AF_RXRPC_KUNIT_TEST,net/rxrpc/Kconfig,tristate,RxRPC crypto KUnit test
+CONFIG_AIR_AN8801_PHY,drivers/net/phy/Kconfig,tristate,Airoha AN8801 Gigabit PHY
+CONFIG_AIR_NET_PHYLIB,drivers/net/phy/Kconfig,tristate,
+CONFIG_ALIBABA_EEA,drivers/net/ethernet/alibaba/Kconfig,tristate,Alibaba Elastic Ethernet Adapter support
+CONFIG_AMD_AXI_I3C_MASTER,drivers/i3c/master/Kconfig,tristate,AMD AXI I3C Master driver
+CONFIG_AMD_HALO_LED,drivers/platform/x86/amd/Kconfig,tristate,AMD Halo Box RGB LED Driver
+CONFIG_AMD_IOMMU_IOMMUFD,drivers/iommu/amd/Kconfig,bool,Enable IOMMUFD features for AMD IOMMU (EXPERIMENTAL)
+CONFIG_AMD_MBV_BRAM_REMOTEPROC,drivers/remoteproc/Kconfig,tristate,AMD MicroBlaze/V BRAM-based remoteproc support
+CONFIG_AMD_PMF_UTIL_SUPPORT,drivers/platform/x86/amd/pmf/Kconfig,bool,AMD PMF Util layer support
+CONFIG_AMD_SBTSI,drivers/misc/amd-sbi/Kconfig,tristate,AMD side band TSI support
+CONFIG_APDS9999,drivers/iio/light/Kconfig,tristate,"Broadcom APDS9999 ALS, RGB and proximity sensor"
+CONFIG_APPLE_PMGR_MISC,drivers/soc/apple/Kconfig,tristate,Apple SoC PMGR miscellaneous support
+CONFIG_APPLE_TUNABLE,drivers/soc/apple/Kconfig,tristate,
+CONFIG_ARCH_ANLOGIC,arch/riscv/Kconfig.socs,bool,Anlogic SoCs
+CONFIG_ARCH_BST,arch/arm64/Kconfig.platforms,bool,Black Sesame Technologies SoC Family
+CONFIG_ARCH_CC_CAN_LINK,arch/arm/Kconfig; arch/mips/Kconfig; arch/riscv/Kconfig; arch/s390/Kconfig; arch/sparc/Kconfig,bool,
+CONFIG_ARCH_CC_CAN_LINK_N32,arch/mips/Kconfig,bool,
+CONFIG_ARCH_CC_CAN_LINK_N64,arch/mips/Kconfig,bool,
+CONFIG_ARCH_CC_CAN_LINK_O32,arch/mips/Kconfig,bool,
+CONFIG_ARCH_HAS_BATCHED_DMA_SYNC,kernel/dma/Kconfig,bool,
+CONFIG_ARCH_HAS_CC_CAN_LINK,init/Kconfig,bool,
+CONFIG_ARCH_HAS_DELAY_TIMER,arch/Kconfig,bool,
+CONFIG_ARCH_HAS_LAZY_MMU_MODE,mm/Kconfig,bool,
+CONFIG_ARCH_HAS_PMD_SOFTLEAVES,mm/Kconfig,bool,
+CONFIG_ARCH_HAS_PTE_PROTNONE,init/Kconfig,bool,
+CONFIG_ARCH_MEMORY_ORDER_TSO,arch/Kconfig,bool,
+CONFIG_ARCH_R9A08G046,drivers/soc/renesas/Kconfig,bool,ARM64 Platform support for R9A08G046 (RZ/G3L)
+CONFIG_ARCH_SUPPORTS_CMDLINE_FROM_BOOTCONFIG,init/Kconfig,bool,
+CONFIG_ARCH_SUPPORTS_SYSCALL_USER_DISPATCH,arch/Kconfig,bool,
+CONFIG_ARCH_TEGRA_238_SOC,drivers/soc/tegra/Kconfig,bool,NVIDIA Tegra238 SoC
+CONFIG_ARCH_TENSTORRENT,arch/riscv/Kconfig.socs,bool,Tenstorrent SoCs
+CONFIG_ARCH_ULTRARISC,arch/riscv/Kconfig.socs,bool,UltraRISC RISC-V SoCs
+CONFIG_ARCH_USERFLAGS,arch/arm/Kconfig; arch/mips/Kconfig; arch/riscv/Kconfig; arch/s390/Kconfig; arch/sparc/Kconfig,string,
+CONFIG_ARCH_WANTS_CLOCKSOURCE_READ_INLINE,kernel/time/Kconfig,bool,
+CONFIG_ARCH_WANTS_MODULES_TEXT_SECTIONS,arch/Kconfig,bool,
+CONFIG_ARCH_ZTE,arch/arm/mach-zte/Kconfig,bool,ZTE zx family
+CONFIG_ARM64_ERRATUM_4311569,arch/arm64/Kconfig,bool,SI L1: 4311569: workaround for premature CMO completion erratum
+CONFIG_ARM64_LSUI,arch/arm64/Kconfig,bool,Support Unprivileged Load Store Instructions (LSUI)
+CONFIG_ARM64_MPAM,arch/arm64/Kconfig,bool,Enable support for MPAM
+CONFIG_ARM64_MPAM_DRIVER,drivers/resctrl/Kconfig,bool,MPAM driver
+CONFIG_ARM64_MPAM_DRIVER_DEBUG,drivers/resctrl/Kconfig,bool,Enable debug messages from the MPAM driver
+CONFIG_ARM64_MPAM_RESCTRL_FS,drivers/resctrl/Kconfig,bool,
+CONFIG_ARM64_WORKAROUND_DISABLE_CNP,arch/arm64/Kconfig,bool,
+CONFIG_ARM64_WORKAROUND_REPEAT_TLBI_SYNC,arch/arm64/Kconfig,bool,
+CONFIG_ARM_SDEI_NMI,drivers/firmware/Kconfig,bool,SDEI-based cross-CPU NMI service (arm64)
+CONFIG_ASPEED_AST2700_INTC,drivers/irqchip/Kconfig,bool,ASPEED AST2700 Interrupt Controller support
+CONFIG_ASPEED_AST2700_INTC_TEST,drivers/irqchip/Kconfig,bool,Tests for the ASPEED AST2700 Interrupt Controller
+CONFIG_ASUS_ARMOURY,drivers/platform/x86/Kconfig,tristate,ASUS Armoury driver
+CONFIG_ASUS_WMI_DEPRECATED_ATTRS,drivers/platform/x86/Kconfig,bool,BIOS option support in WMI platform (DEPRECATED)
+CONFIG_AS_HAS_LSUI,arch/arm64/Kconfig,def_bool,
+CONFIG_AS_HAS_SCQ_EXTENSION,arch/loongarch/Kconfig,def_bool,
+CONFIG_AS_HAS_SME,arch/arm64/Kconfig,def_bool,
+CONFIG_ATCWDT200_WATCHDOG,drivers/watchdog/Kconfig,tristate,Andes ATCWDT200 Watchdog support
+CONFIG_ATH11K_CFR,drivers/net/wireless/ath/ath11k/Kconfig,bool,ath11k channel frequency response support
+CONFIG_AXIADO_MAILBOX,drivers/mailbox/Kconfig,tristate,Axiado mailbox driver
+CONFIG_AYANEO_EC,drivers/platform/x86/Kconfig,tristate,Ayaneo EC platform control
+CONFIG_BACKLIGHT_AW99706,drivers/video/backlight/Kconfig,tristate,Backlight Driver for Awinic AW99706
+CONFIG_BACKLIGHT_CGBC,drivers/video/backlight/Kconfig,tristate,Congatec Board Controller (CGBC) backlight support
+CONFIG_BACKLIGHT_MAX25014,drivers/video/backlight/Kconfig,tristate,Backlight driver for Maxim MAX25014
+CONFIG_BACKLIGHT_SY7758,drivers/video/backlight/Kconfig,tristate,Backlight Driver for Silergy SY7758
+CONFIG_BALLOON,mm/Kconfig,bool,
+CONFIG_BALLOON_MIGRATION,mm/Kconfig,bool,Allow for balloon memory migration
+CONFIG_BASE64_KUNIT,lib/Kconfig.debug,tristate,KUnit test for base64 decoding and encoding
+CONFIG_BATTERY_CHARGER_SURFACE_RT,drivers/power/supply/Kconfig,tristate,Battery & Charger driver for Microsoft Surface RT
+CONFIG_BATTERY_S2MU005,drivers/power/supply/Kconfig,tristate,Samsung S2MU005 PMIC fuel gauge driver
+CONFIG_BINFMT_MISC_BPF,fs/Kconfig.binfmt,bool,BPF-selected interpreters for misc binaries
+CONFIG_BITLAND_MIFS_WMI,drivers/platform/x86/Kconfig,tristate,Bitland MIFS (MiInterface) WMI driver
+CONFIG_BITOPS_KUNIT,lib/Kconfig.debug,tristate,KUnit test for bitops
+CONFIG_BLK_ERROR_INJECTION,block/Kconfig,bool,Enable block layer error injection
+CONFIG_BMA220_I2C,drivers/iio/accel/Kconfig,tristate,
+CONFIG_BMA220_SPI,drivers/iio/accel/Kconfig,tristate,
+CONFIG_BOOTPARAM_WQ_STALL_PANIC,lib/Kconfig.debug,int,Panic on Nth workqueue stall
+CONFIG_CACHEMAINT_FOR_DMA,drivers/cache/Kconfig,bool,Cache management for noncoherent DMA
+CONFIG_CACHEMAINT_FOR_HOTPLUG,drivers/cache/Kconfig,bool,Cache management for memory hot plug like operations
+CONFIG_CAN_DUMMY,drivers/net/can/Kconfig,tristate,Dummy CAN
+CONFIG_CAN_VIRTIO_CAN,drivers/net/can/Kconfig,tristate,Virtio CAN device support
+CONFIG_CC_HAS_ALLOC_TOKEN,init/Kconfig,def_bool,
+CONFIG_CC_HAS_ASM_IMMEDIATE_STRINGS,arch/s390/Kconfig,def_bool,
+CONFIG_CC_HAS_BROKEN_COUNTED_BY_REF,init/Kconfig,bool,
+CONFIG_CC_HAS_COUNTED_BY_PTR,init/Kconfig,bool,
+CONFIG_CC_HAS_STACKPROTECTOR_GLOBAL,arch/s390/Kconfig,def_bool,
+CONFIG_CC_MS_EXTENSIONS,init/Kconfig,string,
+CONFIG_CHARGER_BD71828,drivers/power/supply/Kconfig,tristate,Power-supply driver for ROHM BD71828 and BD71815 PMIC
+CONFIG_CHARGER_BQ25630,drivers/power/supply/Kconfig,tristate,TI BQ25630 battery charger driver
+CONFIG_CHARGER_MAX77759,drivers/power/supply/Kconfig,tristate,Maxim MAX77759 battery charger driver
+CONFIG_CHARGER_PF1550,drivers/power/supply/Kconfig,tristate,NXP PF1550 battery charger driver
+CONFIG_CHARGER_RT9756,drivers/power/supply/Kconfig,tristate,Richtek RT9756 smart cap divider charger driver
+CONFIG_CHARGER_S2M,drivers/power/supply/Kconfig,tristate,Samsung S2M series PMIC battery charger support
+CONFIG_CHARGER_SGM41542,drivers/power/supply/Kconfig,tristate,SGM41542 charger driver
+CONFIG_CLK_DIVIDER_KUNIT_TEST,drivers/clk/Kconfig,tristate,KUnit tests for clk divider bestdiv
+CONFIG_CLK_ELIZA_DISPCC,drivers/clk/qcom/Kconfig,tristate,Eliza Display Clock Controller
+CONFIG_CLK_ELIZA_GCC,drivers/clk/qcom/Kconfig,tristate,Eliza Global Clock Controller
+CONFIG_CLK_ELIZA_TCSRCC,drivers/clk/qcom/Kconfig,tristate,Eliza TCSR Clock Controller
+CONFIG_CLK_GLYMUR_CAMCC,drivers/clk/qcom/Kconfig,tristate,Glymur Camera Clock Controller
+CONFIG_CLK_GLYMUR_EVACC,drivers/clk/qcom/Kconfig,tristate,Glymur EVA Clock Controller
+CONFIG_CLK_GLYMUR_GPUCC,drivers/clk/qcom/Kconfig,tristate,Glymur Graphics Clock Controller
+CONFIG_CLK_GLYMUR_VIDEOCC,drivers/clk/qcom/Kconfig,tristate,Glymur Video Clock Controller
+CONFIG_CLK_HAWI_GCC,drivers/clk/qcom/Kconfig,tristate,Hawi Global Clock Controller
+CONFIG_CLK_HAWI_TCSRCC,drivers/clk/qcom/Kconfig,tristate,Hawi TCSR Clock Controller
+CONFIG_CLK_HAWI_VIDEOCC,drivers/clk/qcom/Kconfig,tristate,Hawi Video Clock Controller
+CONFIG_CLK_KAANAPALI_CAMCC,drivers/clk/qcom/Kconfig,tristate,Kaanapali Camera Clock Controller
+CONFIG_CLK_KAANAPALI_DISPCC,drivers/clk/qcom/Kconfig,tristate,Kaanapali Display Clock Controller
+CONFIG_CLK_KAANAPALI_GCC,drivers/clk/qcom/Kconfig,tristate,Kaanapali Global Clock Controller
+CONFIG_CLK_KAANAPALI_GPUCC,drivers/clk/qcom/Kconfig,tristate,Kaanapali Graphics Clock Controller
+CONFIG_CLK_KAANAPALI_TCSRCC,drivers/clk/qcom/Kconfig,tristate,Kaanapali TCSR Clock Controller
+CONFIG_CLK_KAANAPALI_VIDEOCC,drivers/clk/qcom/Kconfig,tristate,Kaanapali Video Clock Controller
+CONFIG_CLK_MAILI_VIDEOCC,drivers/clk/qcom/Kconfig,tristate,Maili Video Clock Controller
+CONFIG_CLK_NORD_DISPCC,drivers/clk/qcom/Kconfig,tristate,Nord Display Clock Controller
+CONFIG_CLK_NORD_GCC,drivers/clk/qcom/Kconfig,tristate,Nord Global Clock Controller
+CONFIG_CLK_NORD_GPUCC,drivers/clk/qcom/Kconfig,tristate,Nord Graphics Clock Controller
+CONFIG_CLK_NORD_TCSRCC,drivers/clk/qcom/Kconfig,tristate,Nord TCSR Clock Controller
+CONFIG_CLK_R8A78000,drivers/clk/renesas/Kconfig,bool,R-Car X5H clock support
+CONFIG_CLK_R9A08G046,drivers/clk/renesas/Kconfig,bool,RZ/G3L clock support
+CONFIG_CLK_RK3506,drivers/clk/rockchip/Kconfig,bool,Rockchip RK3506 clock controller support
+CONFIG_CLK_RV1103B,drivers/clk/rockchip/Kconfig,bool,Rockchip RV1103B clock controller support
+CONFIG_CLK_RV1106,drivers/clk/rockchip/Kconfig,bool,Rockchip RV1106 clock controller support
+CONFIG_CLK_RV1126B,drivers/clk/rockchip/Kconfig,bool,Rockchip RV1126B clock controller support
+CONFIG_CLK_RZV2H_CPG_LIB,drivers/clk/renesas/Kconfig,bool,RZV2H CPG library functions
+CONFIG_CLK_SHIKRA_AUDIOCORECC,drivers/clk/qcom/Kconfig,tristate,Shikra Audio Core Clock Controller
+CONFIG_CLK_SHIKRA_GCC,drivers/clk/qcom/Kconfig,tristate,Shikra Global Clock Controller
+CONFIG_CLK_SKY1_AUDSS,drivers/clk/cix/Kconfig,tristate,Cixtech Sky1 Audio Subsystem Clock Driver
+CONFIG_CLK_ULTRARISC,drivers/clk/ultrarisc/Kconfig,tristate,
+CONFIG_CLK_ULTRARISC_DP1000,drivers/clk/ultrarisc/Kconfig,tristate,UltraRISC DP1000 clock controller
+CONFIG_CLK_X1P42100_CAMCC,drivers/clk/qcom/Kconfig,tristate,X1P42100 Camera Clock Controller
+CONFIG_CLK_X1P42100_VIDEOCC,drivers/clk/qcom/Kconfig,tristate,X1P42100 Video Clock Controller
+CONFIG_CMA_SIZE_PERNUMA,kernel/dma/Kconfig,bool,Default CMA area per NUMA node
+CONFIG_CMDLINE_FROM_BOOTCONFIG,init/Kconfig,bool,Render embedded bootconfig as kernel cmdline at build time
+CONFIG_CMDLINE_LOG_WRAP_IDEAL_LEN,init/Kconfig,int,Length to try to wrap the cmdline when logged at boot
+CONFIG_COMMON_CLK_A9_AO,drivers/clk/meson/Kconfig,tristate,Amlogic A9 SoC AO clock controller support
+CONFIG_COMMON_CLK_A9_PERIPHERALS,drivers/clk/meson/Kconfig,tristate,Amlogic A9 SoC peripherals clock controller support
+CONFIG_COMMON_CLK_AST2700,drivers/clk/aspeed/Kconfig,bool,Clock driver for AST2700 SoC
+CONFIG_COMMON_CLK_EIC7700,drivers/clk/eswin/Kconfig,tristate,EIC7700 Clock Driver
+CONFIG_COMMON_CLK_EIC7700_HSP,drivers/clk/eswin/Kconfig,tristate,EIC7700 HSP Clock Driver
+CONFIG_COMMON_CLK_ESWIN,drivers/clk/eswin/Kconfig,bool,
+CONFIG_COMMON_CLK_HISI,drivers/clk/hisilicon/Kconfig,bool,
+CONFIG_COMMON_CLK_K230,drivers/clk/Kconfig,bool,Clock driver for the Canaan Kendryte K230 SoC
+CONFIG_COMMON_CLK_MT8173_MFGTOP,drivers/clk/mediatek/Kconfig,tristate,Clock and power driver for MediaTek MT8173 mfgtop
+CONFIG_COMMON_CLK_T7_PERIPHERALS,drivers/clk/meson/Kconfig,tristate,Amlogic T7 SoC peripherals clock controller support
+CONFIG_COMMON_CLK_T7_PLL,drivers/clk/meson/Kconfig,tristate,Amlogic T7 SoC PLL controller support
+CONFIG_CONTEXT_ANALYSIS_TEST,lib/Kconfig.debug,bool,Compiler context-analysis warnings test
+CONFIG_CPU_ARM1136R0,arch/arm/mm/Kconfig,bool,
+CONFIG_CPU_ARM1136R1,arch/arm/mm/Kconfig,bool,
+CONFIG_CPU_ARM1176,arch/arm/mm/Kconfig,bool,
+CONFIG_CPU_HAS_AMO,arch/loongarch/Kconfig,bool,
+CONFIG_CRYPTO_LIB_AES_ARCH,lib/crypto/Kconfig,bool,
+CONFIG_CRYPTO_LIB_AES_CBC,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_AES_CBC_MACS,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_AES_CBC_MACS_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,"KUnit tests for AES-CMAC, AES-XCBC-MAC, and AES-CBC-MAC"
+CONFIG_CRYPTO_LIB_AES_CCM,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_AES_CCM_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for AES-CCM
+CONFIG_CRYPTO_LIB_AES_CTR,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_AES_ECB,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_AES_GCM,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_AES_GCM_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for AES-GCM
+CONFIG_CRYPTO_LIB_AES_XTS,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_BLAKE2B,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_BLAKE2B_ARCH,lib/crypto/Kconfig,bool,
+CONFIG_CRYPTO_LIB_BLAKE2B_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for BLAKE2b
+CONFIG_CRYPTO_LIB_CHACHA20POLY1305_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for ChaCha20Poly1305
+CONFIG_CRYPTO_LIB_GF128HASH,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_GF128HASH_ARCH,lib/crypto/Kconfig,bool,
+CONFIG_CRYPTO_LIB_GHASH_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for GHASH
+CONFIG_CRYPTO_LIB_MLDSA,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_MLDSA_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for ML-DSA
+CONFIG_CRYPTO_LIB_NH,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_NH_ARCH,lib/crypto/Kconfig,bool,
+CONFIG_CRYPTO_LIB_NH_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for NH
+CONFIG_CRYPTO_LIB_POLYVAL_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for POLYVAL
+CONFIG_CRYPTO_LIB_SHA3,lib/crypto/Kconfig,tristate,
+CONFIG_CRYPTO_LIB_SHA3_ARCH,lib/crypto/Kconfig,bool,
+CONFIG_CRYPTO_LIB_SHA3_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for SHA-3
+CONFIG_CRYPTO_LIB_SM3_ARCH,lib/crypto/Kconfig,bool,
+CONFIG_CRYPTO_LIB_SM3_KUNIT_TEST,lib/crypto/tests/Kconfig,tristate,KUnit tests for SM3
+CONFIG_CRYPTO_MLDSA,crypto/Kconfig,tristate,ML-DSA (Module-Lattice-Based Digital Signature Algorithm)
+CONFIG_CRYPTO_SM3,crypto/Kconfig,tristate,SM3 (ShangMi 3)
+CONFIG_CXL_ATL,drivers/cxl/Kconfig,def_bool,
+CONFIG_DAMON_DEBUG_SANITY,mm/damon/Kconfig,bool,Check sanity of DAMON code
+CONFIG_DAP8211R_PHY,drivers/net/phy/Kconfig,tristate,DAPU Telecom DAP8211R(I) Gigabit Ethernet PHY
+CONFIG_DEBUG_ATOMIC,lib/Kconfig.debug,bool,Debug atomic variables
+CONFIG_DEBUG_ATOMIC_LARGEST_ALIGN,lib/Kconfig.debug,bool,Check alignment only up to __aligned_largest
+CONFIG_DEBUG_BUGVERBOSE_DETAILED,lib/Kconfig.debug,bool,Verbose WARN_ON_ONCE() reporting (adds 100K)
+CONFIG_DEBUG_GENERIC_PT,drivers/iommu/generic_pt/Kconfig,bool,Extra debugging checks for GENERIC_PT
+CONFIG_DEBUG_KMEMLEAK_VERBOSE,mm/Kconfig.debug,bool,Default kmemleak to verbose mode
+CONFIG_DELL_DW5826E_RESET,drivers/platform/x86/dell/Kconfig,tristate,Dell DW5826e PLDR reset support
+CONFIG_DEV_DAX_FSDEV,drivers/dax/Kconfig,tristate,
+CONFIG_DIMLIB_KUNIT_TEST,lib/Kconfig.debug,tristate,KUnit test for the DIM library
+CONFIG_DINGHAI,drivers/net/ethernet/zte/dinghai/Kconfig,bool,ZTE DingHai Ethernet driver
+CONFIG_DINGHAI_PF,drivers/net/ethernet/zte/dinghai/Kconfig,tristate,ZTE DingHai PF (Physical Function) driver
+CONFIG_DMABUF_HEAPS_SYSTEM_CC_SHARED,drivers/dma-buf/heaps/Kconfig,bool,DMA-BUF System Heap for decrypted CoCo VMs
+CONFIG_DMABUF_KUNIT_TEST,drivers/dma-buf/Kconfig,tristate,KUnit tests for DMA-BUF
+CONFIG_DM_INLINECRYPT,drivers/md/Kconfig,tristate,Inline encryption target support
+CONFIG_DPLL_REFCNT_TRACKER,drivers/dpll/Kconfig,bool,DPLL reference count tracking
+CONFIG_DPM_WATCHDOG_ENABLED,kernel/power/Kconfig,bool,Enable DPM watchdog by default
+CONFIG_DRIVER_DEFERRED_PROBE_TIMEOUT,drivers/base/Kconfig,int,Default value for deferred_probe_timeout
+CONFIG_DRIVER_SWNODE_KUNIT_TEST,drivers/base/test/Kconfig,tristate,KUnit Tests for software node fw_devlink links
+CONFIG_DRM_ACCEL_ARM_ETHOSU,drivers/accel/ethosu/Kconfig,tristate,Arm Ethos-U65/U85 NPU
+CONFIG_DRM_AMD_DC_KUNIT_TEST,drivers/gpu/drm/amd/display/Kconfig,tristate,KUnit tests for the AMD DC display driver
+CONFIG_DRM_COREBOOTDRM,drivers/gpu/drm/sysfb/Kconfig,tristate,Coreboot framebuffer driver
+CONFIG_DRM_DW_HDMI_QP_CEC,drivers/gpu/drm/bridge/synopsys/Kconfig,bool,Synopsis Designware QP CEC interface
+CONFIG_DRM_I915_KUNIT_TEST,drivers/gpu/drm/i915/Kconfig.debug,tristate,KUnit tests for the drm i915 driver
+CONFIG_DRM_IMX8MP_DW_HDMI_BRIDGE_CONNECTOR_FIXUP,drivers/gpu/drm/bridge/imx/Kconfig,bool,
+CONFIG_DRM_IMX8MP_HDMI_PAI,drivers/gpu/drm/bridge/imx/Kconfig,tristate,Freescale i.MX8MP HDMI PAI bridge support
+CONFIG_DRM_IMX93_PARALLEL_DISP_FMT_CONVERTER,drivers/gpu/drm/bridge/imx/Kconfig,tristate,NXP i.MX91/i.MX93 parallel display format converter
+CONFIG_DRM_INNO_HDMI,drivers/gpu/drm/bridge/Kconfig,tristate,
+CONFIG_DRM_LONTIUM_LT8713SX,drivers/gpu/drm/bridge/Kconfig,tristate,Lontium LT8713SX DP MST bridge
+CONFIG_DRM_MEDIATEK_HDMI_COMMON,drivers/gpu/drm/mediatek/Kconfig,tristate,
+CONFIG_DRM_MEDIATEK_HDMI_V2,drivers/gpu/drm/mediatek/Kconfig,tristate,DRM HDMI v2 IP support for MediaTek SoCs
+CONFIG_DRM_OF_DISPLAY_MODE_BRIDGE,drivers/gpu/drm/bridge/Kconfig,tristate,
+CONFIG_DRM_PANEL_ANBERNIC_TD4310,drivers/gpu/drm/panel/Kconfig,tristate,Anbernic TD4310 LCD panel
+CONFIG_DRM_PANEL_CHIPONE_ICNA35XX,drivers/gpu/drm/panel/Kconfig,tristate,Chipone ICNA35XX panel driver
+CONFIG_DRM_PANEL_CHIPWEALTH_CH13726A,drivers/gpu/drm/panel/Kconfig,tristate,CHIPWEALTH CH13726A-based DSI panel
+CONFIG_DRM_PANEL_FOCALTECH_OTA7290B,drivers/gpu/drm/panel/Kconfig,tristate,Focaltech OTA7290B
+CONFIG_DRM_PANEL_HIMAX_HX83121A,drivers/gpu/drm/panel/Kconfig,tristate,Himax HX83121A-based DSI panel
+CONFIG_DRM_PANEL_ILITEK_ILI7807S,drivers/gpu/drm/panel/Kconfig,tristate,Ilitek ILI7807S-based panels
+CONFIG_DRM_PANEL_ILITEK_ILI9488,drivers/gpu/drm/panel/Kconfig,tristate,Ilitek ILI9488-based panels
+CONFIG_DRM_PANEL_ILITEK_ILI9806E_CORE,drivers/gpu/drm/panel/Kconfig,tristate,
+CONFIG_DRM_PANEL_ILITEK_ILI9806E_DSI,drivers/gpu/drm/panel/Kconfig,tristate,Ilitek ILI9806E-based DSI panels
+CONFIG_DRM_PANEL_ILITEK_ILI9806E_SPI,drivers/gpu/drm/panel/Kconfig,tristate,Ilitek ILI9806E-based RGB SPI panel
+CONFIG_DRM_PANEL_LG_LD070WX3,drivers/gpu/drm/panel/Kconfig,tristate,LG LD070WX3 MIPI DSI panel
+CONFIG_DRM_PANEL_LXD_M9189A,drivers/gpu/drm/panel/Kconfig,tristate,LXD M9189A MIPI-DSI LCD panel
+CONFIG_DRM_PANEL_MOTOROLA_MOT,drivers/gpu/drm/panel/Kconfig,tristate,Atrix 4G and Droid X2 540x960 DSI video mode panel
+CONFIG_DRM_PANEL_NOVATEK_NT35532,drivers/gpu/drm/panel/Kconfig,tristate,Novatek NT35532-based DSI video mode panel
+CONFIG_DRM_PANEL_NOVATEK_NT36536,drivers/gpu/drm/panel/Kconfig,tristate,Novatek NT36536 panel driver
+CONFIG_DRM_PANEL_NOVATEK_NT37700F,drivers/gpu/drm/panel/Kconfig,tristate,Novatek NT37700F DSI panel
+CONFIG_DRM_PANEL_RENESAS_R63419,drivers/gpu/drm/panel/Kconfig,tristate,Renesas R63419 dual-DSI video mode panels
+CONFIG_DRM_PANEL_SAMSUNG_LTL106HL02,drivers/gpu/drm/panel/Kconfig,tristate,Samsung LTL106HL02 panel
+CONFIG_DRM_PANEL_SAMSUNG_S6E3FC2X01,drivers/gpu/drm/panel/Kconfig,tristate,Samsung S6E3FC2X01 DSI panel controller
+CONFIG_DRM_PANEL_SAMSUNG_S6E8FC0,drivers/gpu/drm/panel/Kconfig,tristate,Samsung S6E8FC0 DSI controller
+CONFIG_DRM_PANEL_SHARP_LQ079L1SX01,drivers/gpu/drm/panel/Kconfig,tristate,Sharp LQ079L1SX01 panel
+CONFIG_DRM_PANEL_SYNAPTICS_TDDI,drivers/gpu/drm/panel/Kconfig,tristate,Synaptics TDDI display panels
+CONFIG_DRM_POWERVR_KUNIT_TEST,drivers/gpu/drm/imagination/Kconfig,tristate,KUnit tests for the drm powervr driver
+CONFIG_DRM_RAS,drivers/gpu/drm/Kconfig,bool,DRM RAS support
+CONFIG_DRM_ST7571,drivers/gpu/drm/sitronix/Kconfig,tristate,DRM support for Sitronix ST7567/ST7571 display panels
+CONFIG_DRM_ST7571_SPI,drivers/gpu/drm/sitronix/Kconfig,tristate,DRM support for Sitronix ST7567/ST7571 display panels (SPI)
+CONFIG_DRM_ST7920,drivers/gpu/drm/sitronix/Kconfig,tristate,DRM support for Sitronix ST7920 LCD displays
+CONFIG_DRM_THEAD_TH1520_DW_HDMI,drivers/gpu/drm/bridge/Kconfig,tristate,T-Head TH1520 DesignWare HDMI bridge
+CONFIG_DRM_TILCDC_PANEL_LEGACY,drivers/gpu/drm/tilcdc/Kconfig,bool,Support device tree blobs using TI LCDC Panel binding
+CONFIG_DRM_VERISILICON_DC,drivers/gpu/drm/verisilicon/Kconfig,tristate,DRM Support for Verisilicon DC-series display controllers
+CONFIG_DRM_XE_DEBUG_PAGE_SIZE,drivers/gpu/drm/xe/Kconfig.debug,bool,Enable debug control for user BO page-size allocation
+CONFIG_DWMAC_EIC7700,drivers/net/ethernet/stmicro/stmmac/Kconfig,tristate,Support for Eswin eic7700 ethernet driver
+CONFIG_DWMAC_MOTORCOMM,drivers/net/ethernet/stmicro/stmmac/Kconfig,tristate,Motorcomm PCI DWMAC support
+CONFIG_DWMAC_NUVOTON,drivers/net/ethernet/stmicro/stmmac/Kconfig,tristate,Nuvoton MA35 dwmac support
+CONFIG_DWMAC_SPACEMIT,drivers/net/ethernet/stmicro/stmmac/Kconfig,tristate,Spacemit dwmac support
+CONFIG_DYNAMIC_FTRACE_WITH_JMP,kernel/trace/Kconfig,def_bool,
+CONFIG_EC_QCOM_HAMOA,drivers/platform/arm64/Kconfig,tristate,Embedded Controller driver for Qualcomm Hamoa/Glymur reference devices
+CONFIG_EDAC_IMH,drivers/edac/Kconfig,tristate,Intel Integrated Memory/IO Hub MC
+CONFIG_EROFS_FS_PAGE_CACHE_SHARE,fs/erofs/Kconfig,bool,EROFS page cache share support (experimental)
+CONFIG_EXT_SUB_SCHED,init/Kconfig,def_bool,
+CONFIG_EXYNOS_ACPM_CLK,drivers/clk/samsung/Kconfig,tristate,Clock driver controlled via ACPM interface
+CONFIG_FONT_TER10x18,lib/fonts/Kconfig,bool,Terminus 10x18 font (not supported by all drivers)
+CONFIG_FPGA_MGR_EFINIX_SPI,drivers/fpga/Kconfig,tristate,Efinix FPGA configuration over SPI
+CONFIG_FUNCTION_SELF_TRACING,kernel/trace/Kconfig,bool,Function trace tracing code
+CONFIG_FUTEX_ROBUST_UNLOCK,init/Kconfig,def_bool,
+CONFIG_FWCTL_BNXT,drivers/fwctl/Kconfig,tristate,bnxt control fwctl driver
+CONFIG_GCOV_PROFILE_AMDGPU,drivers/gpu/drm/amd/amdgpu/Kconfig,bool,Enable GCOV profiling on amdgpu
+CONFIG_GCOV_PROFILE_IPSET,net/netfilter/ipset/Kconfig,bool,Enable GCOV profiling for ipset
+CONFIG_GCOV_PROFILE_IPVS,net/netfilter/ipvs/Kconfig,bool,Enable GCOV profiling for IPVS
+CONFIG_GCOV_PROFILE_NETFILTER,net/netfilter/Kconfig,bool,Enable GCOV profiling for netfilter
+CONFIG_GENERIC_BITREVERSE,lib/Kconfig,tristate,
+CONFIG_GENERIC_CLOCKEVENTS_COUPLED,kernel/time/Kconfig,bool,
+CONFIG_GENERIC_CLOCKEVENTS_COUPLED_INLINE,kernel/time/Kconfig,bool,
+CONFIG_GENERIC_CPU_CACHE_MAINTENANCE,lib/Kconfig,bool,
+CONFIG_GENERIC_PINCTRL,drivers/pinctrl/Kconfig,bool,
+CONFIG_GENERIC_PT,drivers/iommu/generic_pt/Kconfig,bool,Generic Radix Page Table
+CONFIG_GLOB_KUNIT_TEST,lib/Kconfig.debug,tristate,Glob matching test
+CONFIG_GPIO_BD72720,drivers/gpio/Kconfig,tristate,ROHM BD72720 and BD73900 PMIC GPIO support
+CONFIG_GPIO_BY_PINCTRL,drivers/gpio/Kconfig,tristate,GPIO support based on a pure pin control backend
+CONFIG_GPIO_KUNIT,drivers/gpio/Kconfig,tristate,Build GPIO Kunit test cases
+CONFIG_GPIO_LINE_MUX,drivers/gpio/Kconfig,tristate,GPIO line mux driver
+CONFIG_GPIO_LTC4283,drivers/gpio/Kconfig,tristate,Analog Devices LTC4283 GPIO support
+CONFIG_GPIO_NOVALAKE,drivers/gpio/Kconfig,tristate,Intel Nova Lake GPIO-signaled ACPI events support
+CONFIG_GPIO_PPC44X,drivers/gpio/Kconfig,tristate,PPC44x GPIO support
+CONFIG_GPIO_QIXIS_FPGA,drivers/gpio/Kconfig,tristate,NXP QIXIS FPGA GPIO support
+CONFIG_GPIO_RTD1625,drivers/gpio/Kconfig,tristate,Realtek DHC RTD1625 GPIO support
+CONFIG_GPIO_SHARED,drivers/gpio/Kconfig,def_bool,
+CONFIG_GPIO_SHARED_PROXY,drivers/gpio/Kconfig,tristate,Proxy driver for non-exclusive GPIOs
+CONFIG_GPIO_WAVESHARE_DSI_TOUCH,drivers/gpio/Kconfig,tristate,Waveshare GPIO controller for DSI panels
+CONFIG_GUNYAH_WATCHDOG,drivers/watchdog/Kconfig,tristate,Qualcomm Gunyah Watchdog
+CONFIG_HAS_SEPARATE_PREEMPT_RESCHED_BITS,kernel/Kconfig.preempt,bool,
+CONFIG_HAVE_ARCH_TLB_REMOVE_TABLE,mm/Kconfig,def_bool,
+CONFIG_HAVE_DYNAMIC_FTRACE_WITH_JMP,kernel/trace/Kconfig,bool,
+CONFIG_HAVE_FUTEX_ROBUST_UNLOCK,init/Kconfig,bool,
+CONFIG_HAVE_KLP_BUILD,kernel/livepatch/Kconfig,bool,
+CONFIG_HAVE_KVM_ARCH_GMEM_CONVERT,virt/kvm/Kconfig,bool,
+CONFIG_HAVE_KVM_ARCH_GMEM_RECLAIM,virt/kvm/Kconfig,bool,
+CONFIG_HAVE_PV_STEAL_CLOCK_GEN,arch/Kconfig,bool,
+CONFIG_HAVE_SHARED_GPIOS,drivers/gpio/Kconfig,bool,
+CONFIG_HAVE_SINGLE_FTRACE_DIRECT_OPS,kernel/trace/Kconfig,bool,
+CONFIG_HAVE_TRUSTED_KEYS_DEBUG,security/keys/trusted-keys/Kconfig,bool,
+CONFIG_HA_MON_EVENTS_ID,kernel/trace/rv/Kconfig,bool,
+CONFIG_HA_MON_EVENTS_IMPLICIT,kernel/trace/rv/Kconfig,bool,
+CONFIG_HFSPLUS_KUNIT_TEST,fs/hfsplus/Kconfig,tristate,KUnit tests for HFS+ filesystem
+CONFIG_HFS_KUNIT_TEST,fs/hfs/Kconfig,tristate,KUnit tests for HFS filesystem
+CONFIG_HID_HUAWEI,drivers/hid/Kconfig,tristate,Huawei HID devices support
+CONFIG_HID_HYPERV_MOUSE_KUNIT_TEST,drivers/hid/Kconfig,bool,KUnit tests for Hyper-V mouse driver
+CONFIG_HID_HYPERX,drivers/hid/Kconfig,tristate,HyperX microphones
+CONFIG_HID_LENOVO_GO,drivers/hid/Kconfig,tristate,HID Driver for Lenovo Legion Go Series Controllers
+CONFIG_HID_LENOVO_GO_S,drivers/hid/Kconfig,tristate,HID Driver for Lenovo Legion Go S Controller
+CONFIG_HID_MSI,drivers/hid/Kconfig,tristate,MSI Claw Gamepad Support
+CONFIG_HID_OXP,drivers/hid/Kconfig,tristate,OneXPlayer handheld controller configuration support
+CONFIG_HID_RAKK,drivers/hid/Kconfig,tristate,Rakk support
+CONFIG_HID_RAPOO,drivers/hid/Kconfig,tristate,Rapoo non-fully HID-compliant devices
+CONFIG_HID_ROCCAT_KONE_KUNIT_TEST,drivers/hid/Kconfig,bool,KUnit tests for the Roccat Kone driver
+CONFIG_HISILICON_ERRATUM_162100125,arch/arm64/Kconfig,bool,Hisilicon erratum 162100125
+CONFIG_HISI_SOC_HHA,drivers/cache/Kconfig,tristate,HiSilicon Hydra Home Agent (HHA) device driver
+CONFIG_HRTIMER_REARM_DEFERRED,kernel/time/Kconfig,def_bool,
+CONFIG_HW_RANDOM_HISI_TRNG,drivers/char/hw_random/Kconfig,tristate,HiSilicon True Random Number Generator support
+CONFIG_HW_RANDOM_QCOM,drivers/char/hw_random/Kconfig,tristate,Qualcomm True Random Number Generator Driver
+CONFIG_HW_RANDOM_XILINX,drivers/char/hw_random/Kconfig,tristate,Support for Xilinx True Random Generator
+CONFIG_I2C_LS2X_V2,drivers/i2c/busses/Kconfig,tristate,Loongson-2 Fast Speed I2C adapter
+CONFIG_I3C_OR_I2C,drivers/i3c/Kconfig,tristate,
+CONFIG_IMA_INIT_LATE_SYNC,security/integrity/ima/Kconfig,bool,Initialise IMA at late_initcall_sync
+CONFIG_IMA_STAGING,security/integrity/ima/Kconfig,bool,Support for staging the measurements list
+CONFIG_IMX91_THERMAL,drivers/thermal/Kconfig,tristate,Temperature sensor driver for NXP i.MX91 SoC
+CONFIG_INFINIBAND_BNG_RE,drivers/infiniband/hw/bng_re/Kconfig,tristate,Broadcom Next generation RoCE HCA support
+CONFIG_INFINIBAND_USER_ACCESS_CORE,drivers/infiniband/Kconfig,bool,
+CONFIG_INPUT_AMD_SFH_TABLETMODE,drivers/input/misc/Kconfig,tristate,AMD SFH tablet-mode switch
+CONFIG_INPUT_ISA1200_HAPTIC,drivers/input/misc/Kconfig,tristate,Imagis ISA1200 haptic feedback unit
+CONFIG_INPUT_PF1550_ONKEY,drivers/input/misc/Kconfig,tristate,NXP PF1550 Onkey support
+CONFIG_INTEL_EHL_PSE_IO,drivers/platform/x86/intel/Kconfig,tristate,Intel Elkhart Lake PSE I/O driver
+CONFIG_INTEL_MEI_CSC,drivers/misc/mei/Kconfig,tristate,Intel MEI CSC embedded device
+CONFIG_INTEL_PMC_PWRM_TELEMETRY,drivers/platform/x86/intel/pmc/Kconfig,tristate,
+CONFIG_INTEL_SSEI,drivers/misc/issei/Kconfig,tristate,Intel Silicon Security Engine Interface
+CONFIG_INTEL_SSEI_HW_HECI,drivers/misc/issei/Kconfig,tristate,Intel Silicon Security Engine Interface Hardware
+CONFIG_INTERCONNECT_KUNIT_TEST,drivers/interconnect/Kconfig,tristate,KUnit tests for Interconnect framework
+CONFIG_INTERCONNECT_MTK_MT8196,drivers/interconnect/mediatek/Kconfig,tristate,MediaTek MT8196 interconnect driver
+CONFIG_INTERCONNECT_QCOM_ELIZA,drivers/interconnect/qcom/Kconfig,tristate,Qualcomm Eliza interconnect driver
+CONFIG_INTERCONNECT_QCOM_HAWI,drivers/interconnect/qcom/Kconfig,tristate,Qualcomm HAWI interconnect driver
+CONFIG_INTERCONNECT_QCOM_KAANAPALI,drivers/interconnect/qcom/Kconfig,tristate,Qualcomm Kaanapali interconnect driver
+CONFIG_INTERCONNECT_QCOM_MAILI,drivers/interconnect/qcom/Kconfig,tristate,Qualcomm MAILI interconnect driver
+CONFIG_INTERCONNECT_QCOM_NORD,drivers/interconnect/qcom/Kconfig,tristate,Qualcomm Nord interconnect driver
+CONFIG_INTERCONNECT_QCOM_SHIKRA,drivers/interconnect/qcom/Kconfig,tristate,Qualcomm SHIKRA interconnect driver
+CONFIG_INV_ICM42607,drivers/iio/imu/inv_icm42607/Kconfig,tristate,
+CONFIG_INV_ICM42607_I2C,drivers/iio/imu/inv_icm42607/Kconfig,tristate,InvenSense ICM-42607 I2C driver
+CONFIG_INV_ICM42607_SPI,drivers/iio/imu/inv_icm42607/Kconfig,tristate,InvenSense ICM-42607 SPI driver
+CONFIG_INV_ICM45600,drivers/iio/imu/inv_icm45600/Kconfig,tristate,
+CONFIG_INV_ICM45600_I2C,drivers/iio/imu/inv_icm45600/Kconfig,tristate,InvenSense ICM-456xx I2C driver
+CONFIG_INV_ICM45600_I3C,drivers/iio/imu/inv_icm45600/Kconfig,tristate,InvenSense ICM-456xx I3C driver
+CONFIG_INV_ICM45600_SPI,drivers/iio/imu/inv_icm45600/Kconfig,tristate,InvenSense ICM-456xx SPI driver
+CONFIG_IOMMUFD_NOIOMMU,drivers/iommu/iommufd/Kconfig,bool,
+CONFIG_IOMMU_DEBUG_PAGEALLOC,drivers/iommu/Kconfig,bool,Debug IOMMU mappings against page allocations
+CONFIG_IOMMU_IO_PGTABLE_LPAE_KUNIT_TEST,drivers/iommu/Kconfig,tristate,KUnit tests for LPAE
+CONFIG_IOMMU_PT,drivers/iommu/generic_pt/Kconfig,tristate,IOMMU Page Tables
+CONFIG_IOMMU_PT_AMDV1,drivers/iommu/generic_pt/Kconfig,tristate,IOMMU page table for 64-bit AMD IOMMU v1
+CONFIG_IOMMU_PT_KUNIT_TEST,drivers/iommu/generic_pt/Kconfig,tristate,IOMMU Page Table KUnit Test
+CONFIG_IOMMU_PT_RISCV64,drivers/iommu/generic_pt/Kconfig,tristate,IOMMU page table for RISC-V 64 bit Sv57/Sv48/Sv39
+CONFIG_IOMMU_PT_VTDSS,drivers/iommu/generic_pt/Kconfig,tristate,IOMMU page table for Intel VT-d Second Stage
+CONFIG_IOMMU_PT_X86_64,drivers/iommu/generic_pt/Kconfig,tristate,"IOMMU page table for x86 64-bit, 4/5 levels"
+CONFIG_IO_URING_BPF,io_uring/Kconfig,def_bool,
+CONFIG_IO_URING_BPF_OPS,io_uring/Kconfig,def_bool,
+CONFIG_IPMI_SI_ASYNC_INIT,drivers/char/ipmi/Kconfig,bool,
+CONFIG_IPQ_GCC_5210,drivers/clk/qcom/Kconfig,tristate,IPQ5210 Global Clock Controller
+CONFIG_IPQ_GCC_9650,drivers/clk/qcom/Kconfig,tristate,IPQ9650 Global Clock Controller
+CONFIG_IPQ_NSSCC_5424,drivers/clk/qcom/Kconfig,tristate,IPQ5424 NSS Clock Controller
+CONFIG_ISM_VFIO_PCI,drivers/vfio/pci/ism/Kconfig,tristate,VFIO support for ISM devices
+CONFIG_IXD,drivers/net/ethernet/intel/ixd/Kconfig,tristate,Intel(R) Control Plane Function Support
+CONFIG_KEXEC_HANDOVER_ENABLE_DEFAULT,kernel/liveupdate/Kconfig,bool,Enable kexec handover by default
+CONFIG_KEYBOARD_CHARLIEPLEX,drivers/input/keyboard/Kconfig,tristate,GPIO driven charlieplex keypad support
+CONFIG_KLP_BUILD,kernel/livepatch/Kconfig,def_bool,
+CONFIG_KMALLOC_PARTITION_CACHES,mm/Kconfig,bool,Partitioned slab caches for normal kmalloc
+CONFIG_KMALLOC_PARTITION_RANDOM,mm/Kconfig,bool,Randomize slab caches for normal kmalloc
+CONFIG_KMALLOC_PARTITION_TYPED,mm/Kconfig,bool,Type based slab cache selection for normal kmalloc
+CONFIG_KUNIT_DEFAULT_FILTER,lib/kunit/Kconfig,string,Default value of the filter module parameter
+CONFIG_KUNIT_DEFAULT_FILTER_ACTION,lib/kunit/Kconfig,string,Default value of the filter_action module parameter
+CONFIG_KUNIT_DEFAULT_FILTER_GLOB,lib/kunit/Kconfig,string,Default value of the filter_glob module parameter
+CONFIG_LAZY_MMU_MODE_KUNIT_TEST,mm/Kconfig,tristate,KUnit tests for the lazy MMU mode
+CONFIG_LEDS_LP5812,drivers/leds/rgb/Kconfig,tristate,LED support for Texas Instruments LP5812
+CONFIG_LEDS_LP5860_CORE,drivers/leds/rgb/Kconfig,tristate,Core Driver for TI LP5860
+CONFIG_LEDS_LP5860_SPI,drivers/leds/rgb/Kconfig,tristate,LED Support for TI LP5860 SPI LED driver chip
+CONFIG_LEDS_LTC3220,drivers/leds/Kconfig,tristate,LED Driver for Analog Devices Inc. LTC3220
+CONFIG_LEDS_OSRAM_AMS_AS3668,drivers/leds/Kconfig,tristate,LED support for Osram AMS AS3668
+CONFIG_LEDS_S2M_FLASH,drivers/leds/flash/Kconfig,tristate,Samsung S2M series PMICs flash/torch LED support
+CONFIG_LEDS_S2M_RGB,drivers/leds/rgb/Kconfig,tristate,Samsung S2M series PMICs RGB LED support
+CONFIG_LENOVO_SE30G2_SE60_WDT,drivers/watchdog/Kconfig,tristate,"Lenovo SE30 Gen 2, SE60 Watchdog"
+CONFIG_LENOVO_WMI_CAPDATA,drivers/platform/x86/lenovo/Kconfig,tristate,
+CONFIG_LENOVO_YB9_KBDOCK,drivers/platform/x86/lenovo/Kconfig,tristate,Lenovo Yoga Book 9 keyboard dock detection
+CONFIG_LIBIE_CP,drivers/net/ethernet/intel/libie/Kconfig,tristate,
+CONFIG_LIBIE_PCI,drivers/net/ethernet/intel/libie/Kconfig,tristate,
+CONFIG_LIST_PRIVATE_KUNIT_TEST,lib/Kconfig.debug,tristate,KUnit Test for Kernel Private Linked-list structures
+CONFIG_LIVEUPDATE,kernel/liveupdate/Kconfig,bool,Live Update Orchestrator
+CONFIG_LIVEUPDATE_MEMFD,kernel/liveupdate/Kconfig,bool,Live update support for memfd
+CONFIG_LIVEUPDATE_TEST,lib/Kconfig.debug,bool,Live Update Kernel Test
+CONFIG_LOGO_LINUX_CLUT224_FILE,drivers/video/logo/Kconfig,string,224-color logo .ppm file
+CONFIG_LOGO_LINUX_MONO_FILE,drivers/video/logo/Kconfig,string,Monochrome logo .pbm file
+CONFIG_LOGO_LINUX_VGA16_FILE,drivers/video/logo/Kconfig,string,16-color logo .ppm file
+CONFIG_LOONGSON2_APB_CMC_DMA,drivers/dma/loongson/Kconfig,tristate,Loongson2 Chain Multi-Channel DMA support
+CONFIG_LTC2378,drivers/iio/adc/Kconfig,tristate,Analog Devices LTC2378 ADC driver
+CONFIG_LTO_CLANG_THIN_DIST,arch/Kconfig,bool,Clang ThinLTO in distributed mode (EXPERIMENTAL)
+CONFIG_MA35D1_WDT,drivers/watchdog/Kconfig,tristate,Nuvoton MA35D1 Watchdog Timer
+CONFIG_MACH_EYEQ6LPLUS,arch/mips/mobileye/Kconfig,bool,Mobileye EyeQ6Lplus SoC
+CONFIG_MACH_MT6582,arch/arm/mach-mediatek/Kconfig,bool,MediaTek MT6582 SoCs support
+CONFIG_MACSMC_POWER,drivers/power/supply/Kconfig,tristate,Apple SMC Battery and Power Driver
+CONFIG_MAX14001,drivers/iio/adc/Kconfig,tristate,Analog Devices MAX14001/MAX14002 ADC driver
+CONFIG_MAX22007,drivers/iio/dac/Kconfig,tristate,Analog Devices MAX22007 DAC Driver
+CONFIG_MCF54415_DAC,drivers/iio/dac/Kconfig,tristate,NXP MCF54415 DAC driver
+CONFIG_MCP47A1,drivers/iio/dac/Kconfig,tristate,MCP47A1 DAC driver
+CONFIG_MCP47FEB02,drivers/iio/dac/Kconfig,tristate,MCP47F(E/V)B01/02/04/08/11/12/14/18/21/22/24/28 DAC driver
+CONFIG_MCTP_TRANSPORT_USBLIB,drivers/net/mctp/Kconfig,tristate,MCTP over USB common library
+CONFIG_MCTP_TRANSPORT_USBLIB_TEST,drivers/net/mctp/Kconfig,bool,MCTP usblib tests
+CONFIG_MDIO_PIC64HPSC,drivers/net/mdio/Kconfig,tristate,PIC64-HPSC/HX MDIO interface support
+CONFIG_MDLC_R8A78000,drivers/pmdomain/renesas/Kconfig,bool,Module Controller support for R8A78000 (R-Car X5H)
+CONFIG_MEDIATEK_FE_SOC_PHY,drivers/net/phy/mediatek/Kconfig,tristate,MediaTek SoC Fast Ethernet PHYs
+CONFIG_MEDIATEK_MT6323_AUXADC,drivers/iio/adc/Kconfig,tristate,MediaTek MT6323 PMIC AUXADC driver
+CONFIG_MFD_PF1550,drivers/mfd/Kconfig,tristate,NXP PF1550 PMIC Support
+CONFIG_MFD_ROHM_PWRBUTTON,drivers/mfd/Kconfig,tristate,
+CONFIG_MGBE,drivers/net/ethernet/mucse/Kconfig,tristate,Mucse(R) 1GbE PCI Express adapters support
+CONFIG_MIN_HEAP_KUNIT_TEST,lib/Kconfig.debug,tristate,Min heap test
+CONFIG_MIPS_GENERIC_GETTIMEOFDAY,arch/mips/Kconfig,def_bool,
+CONFIG_MM81X,drivers/net/wireless/morsemicro/mm81x/Kconfig,tristate,Morse Micro MM81x wireless devices
+CONFIG_MM81X_SDIO,drivers/net/wireless/morsemicro/mm81x/Kconfig,tristate,Morse Micro MM81x SDIO support
+CONFIG_MM81X_USB,drivers/net/wireless/morsemicro/mm81x/Kconfig,tristate,Morse Micro MM81x USB support
+CONFIG_MMC5633,drivers/iio/magnetometer/Kconfig,tristate,MEMSIC MMC5633 3-axis magnetic sensor
+CONFIG_MMC5983,drivers/iio/magnetometer/Kconfig,tristate,MEMSIC MMC5983 3-axis magnetic sensor
+CONFIG_MMC_SDHCI_BST,drivers/mmc/host/Kconfig,tristate,SDHCI support for Black Sesame Technologies BST C1200 controller
+CONFIG_MODULE_SIG_KEY_TYPE_MLDSA_44,certs/Kconfig,bool,ML-DSA-44
+CONFIG_MODULE_SIG_KEY_TYPE_MLDSA_65,certs/Kconfig,bool,ML-DSA-65
+CONFIG_MODULE_SIG_KEY_TYPE_MLDSA_87,certs/Kconfig,bool,ML-DSA-87
+CONFIG_MPAM_KUNIT_TEST,drivers/resctrl/Kconfig,bool,KUnit tests for MPAM driver 
+CONFIG_MSHV_VTL,drivers/hv/Kconfig,tristate,Microsoft Hyper-V VTL driver
+CONFIG_MT7996_NPU,drivers/net/wireless/mediatek/mt76/mt7996/Kconfig,bool,MT7996 (PCIe) NPU support
+CONFIG_MTD_VIRT_CONCAT,drivers/mtd/Kconfig,bool,Virtual concatenated MTD devices
+CONFIG_MTK_MFG_PM_DOMAIN,drivers/pmdomain/mediatek/Kconfig,bool,MediaTek MFlexGraphics power domain
+CONFIG_MTK_VCP_MBOX,drivers/mailbox/Kconfig,tristate,MediaTek VCP Mailbox Support
+CONFIG_MUX_CORE,drivers/mux/Kconfig,bool,Generic Multiplexer Support
+CONFIG_NET_DSA_LANTIQ_COMMON,drivers/net/dsa/lantiq/Kconfig,tristate,
+CONFIG_NET_DSA_MT7628,drivers/net/dsa/Kconfig,tristate,MediaTek MT7628 Embedded Ethernet switch support
+CONFIG_NET_DSA_MXL862,drivers/net/dsa/mxl862xx/Kconfig,tristate,MaxLinear MxL862xx
+CONFIG_NET_DSA_MXL_GSW1XX,drivers/net/dsa/lantiq/Kconfig,tristate,MaxLinear GSW1xx Ethernet switch support
+CONFIG_NET_DSA_NETC_SWITCH,drivers/net/dsa/netc/Kconfig,tristate,NXP NETC Ethernet switch support
+CONFIG_NET_DSA_TAG_MT7628,net/dsa/Kconfig,tristate,Tag driver for the MT7628 embedded switch
+CONFIG_NET_DSA_TAG_MXL_862XX,net/dsa/Kconfig,tristate,Tag driver for MaxLinear MxL862xx switches
+CONFIG_NET_DSA_TAG_MXL_GSW1XX,net/dsa/Kconfig,tristate,Tag driver for MaxLinear GSW1xx switches
+CONFIG_NET_DSA_TAG_NETC,net/dsa/Kconfig,tristate,Tag driver for NXP NETC switches
+CONFIG_NET_DSA_TAG_YT921X,net/dsa/Kconfig,tristate,Tag driver for Motorcomm YT921x switches
+CONFIG_NET_DSA_YT921X,drivers/net/dsa/Kconfig,tristate,Motorcomm YT9215 ethernet switch chip support
+CONFIG_NET_VENDOR_ALIBABA,drivers/net/ethernet/alibaba/Kconfig,bool,Alibaba Devices
+CONFIG_NET_VENDOR_MUCSE,drivers/net/ethernet/mucse/Kconfig,bool,Mucse devices
+CONFIG_NET_VENDOR_ZTE,drivers/net/ethernet/zte/Kconfig,bool,ZTE devices
+CONFIG_NFSD_V4_POSIX_ACLS,fs/nfsd/Kconfig,bool,Support NFSv4 POSIX draft ACLs
+CONFIG_NFS_V4_0,fs/nfs/Kconfig,bool,NFS client support for NFSv4.0
+CONFIG_NTFS_DEBUG,fs/ntfs/Kconfig,bool,NTFS debugging support
+CONFIG_NTFS_FS_POSIX_ACL,fs/ntfs/Kconfig,bool,NTFS POSIX Access Control Lists
+CONFIG_NTFS_FS_WOF_COMPRESSION,fs/ntfs/Kconfig,bool,NTFS Windows system compression support
+CONFIG_NUMA_MIGRATION,mm/Kconfig,bool,NUMA page migration
+CONFIG_NVHE_EL2_TRACING,arch/arm64/kvm/Kconfig,bool,
+CONFIG_NVIDIA_OLYMPUS_1027_ERRATUM,arch/arm64/Kconfig,bool,NVIDIA Olympus: device store/load ordering erratum
+CONFIG_NVIDIA_TEGRA410_C2C_PMU,drivers/perf/Kconfig,tristate,NVIDIA Tegra410 C2C PMU
+CONFIG_NVIDIA_TEGRA410_CMEM_LATENCY_PMU,drivers/perf/Kconfig,tristate,NVIDIA Tegra410 CPU Memory Latency PMU
+CONFIG_NVMEM_AIROHA_SMC_EFUSES,drivers/nvmem/Kconfig,tristate,Airoha SMC eFuse support
+CONFIG_NVMEM_QNAP_MCU_EEPROM,drivers/nvmem/Kconfig,tristate,QNAP MCU EEPROM Support
+CONFIG_NVME_AUTH_KUNIT_TEST,drivers/nvme/common/Kconfig,tristate,KUnit tests for NVMe authentication
+CONFIG_NVME_TARGET_AUTH_DEBUG,drivers/nvme/target/Kconfig,bool,NVMe over Fabrics In-band Authentication debug messages
+CONFIG_NXPWIFI,drivers/net/wireless/nxp/nxpwifi/Kconfig,tristate,NXP WiFi Driver
+CONFIG_NXPWIFI_SDIO,drivers/net/wireless/nxp/nxpwifi/Kconfig,tristate,NXP WiFi Driver for IW61x
+CONFIG_NXP_SAR_ADC,drivers/iio/adc/Kconfig,tristate,NXP S32G SAR-ADC driver
+CONFIG_OPENSSL_SUPPORTS_ML_DSA,certs/Kconfig,def_bool,
+CONFIG_PCIE_ANDES_QILAI,drivers/pci/controller/dwc/Kconfig,tristate,Andes QiLai PCIe controller
+CONFIG_PCIE_ASPEED,drivers/pci/controller/Kconfig,bool,ASPEED PCIe controller
+CONFIG_PCIE_CADENCE_DEBUGFS,drivers/pci/controller/cadence/Kconfig,bool,Cadence PCIe debugfs entries
+CONFIG_PCIE_ESWIN,drivers/pci/controller/dwc/Kconfig,tristate,ESWIN PCIe controller
+CONFIG_PCIE_NXP_S32G,drivers/pci/controller/dwc/Kconfig,bool,NXP S32G PCIe controller (host mode)
+CONFIG_PCIE_RENESAS_RZG3S_HOST,drivers/pci/controller/Kconfig,bool,Renesas RZ/G3S PCIe host controller
+CONFIG_PCIE_SPACEMIT_K1,drivers/pci/controller/dwc/Kconfig,tristate,SpacemiT K1 PCIe controller (host mode)
+CONFIG_PCIE_TEGRA264,drivers/pci/controller/Kconfig,tristate,NVIDIA Tegra264 PCIe controller
+CONFIG_PCIE_ULTRARISC,drivers/pci/controller/dwc/Kconfig,tristate,UltraRISC PCIe host controller
+CONFIG_PCI_IDE,drivers/pci/Kconfig,bool,
+CONFIG_PCI_KEYSTONE_TRISTATE,drivers/pci/controller/dwc/Kconfig,tristate,
+CONFIG_PCI_PWRCTRL_GENERIC,drivers/pci/pwrctrl/Kconfig,tristate,Generic PCI Power Control driver for PCI slots and endpoints
+CONFIG_PCI_PWRCTRL_TC9563,drivers/pci/pwrctrl/Kconfig,tristate,PCI Power Control driver for TC9563 PCIe switch
+CONFIG_PCI_SKY1_HOST,drivers/pci/controller/cadence/Kconfig,tristate,CIX SKY1 PCIe controller (host mode)
+CONFIG_PCI_TSM,drivers/pci/Kconfig,bool,PCI TSM: Device security protocol support
+CONFIG_PERF_GUEST_MEDIATED_PMU,init/Kconfig,bool,
+CONFIG_PHY_APPLE_ATC,drivers/phy/apple/Kconfig,tristate,Apple Type-C PHY
+CONFIG_PHY_AX3000_EMMC,drivers/phy/axiado/Kconfig,tristate,Axiado eMMC PHY driver
+CONFIG_PHY_CANAAN_USB,drivers/phy/canaan/Kconfig,tristate,Canaan USB2 PHY Driver
+CONFIG_PHY_COMMON_PROPS,drivers/phy/Kconfig,bool,PHY common properties
+CONFIG_PHY_COMMON_PROPS_TEST,drivers/phy/Kconfig,tristate,KUnit tests for PHY common props
+CONFIG_PHY_ECONET_PCIE,drivers/phy/Kconfig,tristate,EcoNet PCIe-PHY Driver
+CONFIG_PHY_EIC7700_SATA,drivers/phy/eswin/Kconfig,tristate,eic7700 Sata SerDes/PHY driver
+CONFIG_PHY_EYEQ5_ETH,drivers/phy/Kconfig,tristate,Ethernet PHY Driver on EyeQ5
+CONFIG_PHY_FSL_LYNX_10G,drivers/phy/freescale/Kconfig,tristate,Freescale Layerscape Lynx 10G SerDes PHY support
+CONFIG_PHY_FSL_LYNX_CORE,drivers/phy/freescale/Kconfig,tristate,
+CONFIG_PHY_GOOGLE_USB,drivers/phy/Kconfig,tristate,Google Tensor SoC USB PHY driver
+CONFIG_PHY_NXP_TJA1145,drivers/phy/Kconfig,tristate,NXP TJA1145 CAN transceiver PHY
+CONFIG_PHY_QCOM_QMP_PCIE_MULTIPHY,drivers/phy/qualcomm/Kconfig,tristate,Qualcomm QMP PCIe Multi PHY Driver
+CONFIG_PHY_RZ_G3E_USB3,drivers/phy/renesas/Kconfig,tristate,Renesas RZ/G3E USB 3.0 PHY driver
+CONFIG_PHY_SPACEMIT_K1_PCIE,drivers/phy/spacemit/Kconfig,tristate,PCIe and combo PHY driver for the SpacemiT K1 SoC
+CONFIG_PHY_SPACEMIT_K1_USB2,drivers/phy/spacemit/Kconfig,tristate,SpacemiT K1 USB 2.0 PHY support
+CONFIG_PHY_SPACEMIT_K3_COMBO_PHY,drivers/phy/spacemit/Kconfig,tristate,SpacemiT K3 USB3/PCIe PHY support
+CONFIG_PHY_SPACEMIT_K3_COMMON_OPS,drivers/phy/spacemit/Kconfig,tristate,
+CONFIG_PHY_TI_DS125DF111,drivers/phy/ti/Kconfig,tristate,TI DS125DF111 2-Channel Retimer Driver
+CONFIG_PINCTRL_AIROHA_AN7563,drivers/pinctrl/airoha/Kconfig,tristate,AN7563 pinctrl
+CONFIG_PINCTRL_AIROHA_AN7581,drivers/pinctrl/airoha/Kconfig,tristate,AN7581 pinctrl
+CONFIG_PINCTRL_AIROHA_AN7583,drivers/pinctrl/airoha/Kconfig,tristate,AN7583 pinctrl
+CONFIG_PINCTRL_AIROHA_EN7523,drivers/pinctrl/airoha/Kconfig,tristate,EN7523 pinctrl
+CONFIG_PINCTRL_ASPEED_G7_SOC0,drivers/pinctrl/aspeed/Kconfig,bool,Aspeed G7 SoC pin control
+CONFIG_PINCTRL_ASPEED_G7_SOC1,drivers/pinctrl/aspeed/Kconfig,bool,Aspeed G7 SoC1 pin control
+CONFIG_PINCTRL_ELIZA,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm Eliza pin controller driver
+CONFIG_PINCTRL_GENERIC_MUX,drivers/pinctrl/Kconfig,tristate,Generic Pinctrl driver by using multiplexer
+CONFIG_PINCTRL_HAWI,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm Hawi pin controller driver
+CONFIG_PINCTRL_IPQ5210,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm IPQ5210 pin controller driver
+CONFIG_PINCTRL_IPQ9650,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm IPQ9650 pin controller driver
+CONFIG_PINCTRL_KAANAPALI,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm Kaanapali pin controller driver
+CONFIG_PINCTRL_MAILI,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm Technologies Inc Maili pin controller driver
+CONFIG_PINCTRL_MILOS_LPASS_LPI,drivers/pinctrl/qcom/Kconfig,tristate,Qualcomm Milos LPASS LPI pin controller driver
+CONFIG_PINCTRL_MT6858,drivers/pinctrl/mediatek/Kconfig,tristate,MediaTek MT6858 pin control
+CONFIG_PINCTRL_MT6878,drivers/pinctrl/mediatek/Kconfig,tristate,MediaTek MT6878 pin control
+CONFIG_PINCTRL_NORD,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm Nord pin controller driver
+CONFIG_PINCTRL_PIC64GX,drivers/pinctrl/microchip/Kconfig,bool,pic64gx gpio2 pinctrl driver
+CONFIG_PINCTRL_POLARFIRE_SOC,drivers/pinctrl/microchip/Kconfig,bool,Polarfire SoC pinctrl drivers
+CONFIG_PINCTRL_RTD1625,drivers/pinctrl/realtek/Kconfig,tristate,Realtek DHC 1625 pin controller driver
+CONFIG_PINCTRL_SDM670_LPASS_LPI,drivers/pinctrl/qcom/Kconfig,tristate,Qualcomm SDM670 LPASS LPI pin controller driver
+CONFIG_PINCTRL_SHIKRA,drivers/pinctrl/qcom/Kconfig.msm,tristate,Qualcomm Shikra pin controller driver
+CONFIG_PINCTRL_SKY1,drivers/pinctrl/cix/Kconfig,tristate,Cix Sky1 pinctrl driver
+CONFIG_PINCTRL_SKY1_BASE,drivers/pinctrl/cix/Kconfig,tristate,
+CONFIG_PINCTRL_SM6350_LPASS_LPI,drivers/pinctrl/qcom/Kconfig,tristate,Qualcomm SM6350 LPASS LPI pin controller driver
+CONFIG_PINCTRL_TEGRA238,drivers/pinctrl/tegra/Kconfig,tristate,NVIDIA Tegra238 pinctrl driver
+CONFIG_PINCTRL_TEGRA264,drivers/pinctrl/tegra/Kconfig,tristate,NVIDIA Tegra264 pinctrl driver
+CONFIG_PINCTRL_ULTRARISC,drivers/pinctrl/ultrarisc/Kconfig,tristate,
+CONFIG_PINCTRL_ULTRARISC_DP1000,drivers/pinctrl/ultrarisc/Kconfig,tristate,UltraRISC DP1000 SoC Pinctrl driver
+CONFIG_PKCS7_WAIVE_AUTHATTRS_REJECTION_FOR_MLDSA,crypto/asymmetric_keys/Kconfig,bool,Waive rejection of authenticatedAttributes for ML-DSA
+CONFIG_PKVM_DISABLE_STAGE2_ON_PANIC,arch/arm64/kvm/Kconfig,bool,Disable the host stage-2 on panic
+CONFIG_PKVM_STACKTRACE,arch/arm64/kvm/Kconfig,bool,Protected KVM hypervisor stacktraces
+CONFIG_PM_QOS_CPU_SYSTEM_WAKEUP,kernel/power/Kconfig,bool,User space interface for CPU system wakeup QoS
+CONFIG_POLARFIRE_SOC_IRQ_MUX,drivers/soc/microchip/Kconfig,bool,Microchip PolarFire SoC's GPIO IRQ Mux
+CONFIG_POLARFIRE_SOC_SYSCONS,drivers/soc/microchip/Kconfig,bool,PolarFire SoC (MPFS) syscon drivers
+CONFIG_POLYNOMIAL_KUNIT_TEST,lib/Kconfig.debug,tristate,Polynomial calculation (polynomial_calc) test
+CONFIG_POWER_RESET_MCF_RCM,drivers/power/reset/Kconfig,tristate,Freescale ColdFire RCM power-on reason driver
+CONFIG_POWER_RESET_QEMU_VIRT_CTRL,drivers/power/reset/Kconfig,tristate,QEMU Virt Machine System Controller
+CONFIG_POWER_RESET_SPACEMIT_P1,drivers/power/reset/Kconfig,tristate,SpacemiT P1 poweroff and reset driver
+CONFIG_POWER_SEQUENCING_PCIE_M2,drivers/power/sequencing/Kconfig,tristate,PCIe M.2 connector power sequencing driver
+CONFIG_PPPOX,drivers/net/ppp/Kconfig,tristate,
+CONFIG_PRANDOM_KUNIT_TEST,lib/Kconfig.debug,tristate,KUnit test for prandom
+CONFIG_PRINTK_EXECUTION_CTX,lib/Kconfig.debug,bool,
+CONFIG_PROBE_EVENTS_DUMP_FETCHARG,kernel/trace/Kconfig,bool,Dump of dynamic probe event fetch-arguments
+CONFIG_PSE_REALTEK_MCU,drivers/net/pse-pd/Kconfig,tristate,
+CONFIG_PSE_REALTEK_MCU_I2C,drivers/net/pse-pd/Kconfig,tristate,Realtek PSE MCU driver (I2C transport)
+CONFIG_PSE_REALTEK_MCU_UART,drivers/net/pse-pd/Kconfig,tristate,Realtek PSE MCU driver (UART transport)
+CONFIG_PWM_AIROHA,drivers/pwm/Kconfig,tristate,Airoha PWM support
+CONFIG_PWM_IPQ,drivers/pwm/Kconfig,tristate,IPQ PWM support
+CONFIG_PWM_TH1520,drivers/pwm/Kconfig,tristate,TH1520 PWM support
+CONFIG_QCOM_PAS,drivers/firmware/qcom/Kconfig,tristate,Qualcomm generic PAS interface driver
+CONFIG_QCOM_PAS_TEE,drivers/firmware/qcom/Kconfig,tristate,Qualcomm PAS TEE interface driver
+CONFIG_QCOM_SOC,drivers/soc/qcom/Kconfig,bool,Qualcomm SoC drivers
+CONFIG_QCOM_SPMI_ADC5_GEN3,drivers/iio/adc/Kconfig,tristate,Qualcomm SPMI PMIC5 GEN3 ADC
+CONFIG_QCOM_SPMI_ADC_TM5_GEN3,drivers/thermal/qcom/Kconfig,tristate,Qualcomm SPMI PMIC Thermal Monitor ADC5 Gen3
+CONFIG_QCOM_SPMI_MBG_TM,drivers/thermal/qcom/Kconfig,tristate,Qualcomm SPMI PMIC MBG Temperature monitor
+CONFIG_QMC5883L,drivers/iio/magnetometer/Kconfig,tristate,QST QMC5883L 3-Axis Magnetic Sensor
+CONFIG_QMC6308,drivers/iio/magnetometer/Kconfig,tristate,QST QMC6308 3-Axis Magnetic Sensor
+CONFIG_QUEUED_SPINLOCKS_TRACE_CONTENDED_RELEASE,kernel/Kconfig.locks,bool,Trace contended_release on queued spinlocks
+CONFIG_RAID6_PQ_ARCH,lib/raid/Kconfig,bool,
+CONFIG_RAID6_PQ_KUNIT_BENCHMARK,lib/raid/Kconfig,bool,Benchmark for RAID6 PQ
+CONFIG_RAID6_PQ_KUNIT_TEST,lib/raid/Kconfig,tristate,KUnit tests for RAID6 PQ functions
+CONFIG_RAMDAX,drivers/nvdimm/Kconfig,tristate,Support persistent memory interfaces on RAM carveouts
+CONFIG_RCAR_MFIS,drivers/soc/renesas/Kconfig,tristate,Renesas R-Car MFIS driver
+CONFIG_RCU_DYNTICKS_TORTURE,kernel/rcu/Kconfig.debug,bool,Minimize RCU dynticks counter size
+CONFIG_REFCOUNT_INTERRUPT_KUNIT_TEST,kernel/irq/Kconfig,tristate,Test refcounted interrupt enable/disable
+CONFIG_REGION_ALLOC_BENCHMARK,lib/Kconfig.debug,tristate,"Benchmark bitmap, IDA and Maple Tree region allocation"
+CONFIG_REGULATOR_FP9931,drivers/regulator/Kconfig,tristate,FitiPower FP9931/JD9930 EPD regulator
+CONFIG_REGULATOR_MAX77675,drivers/regulator/Kconfig,tristate,Maxim MAX77675 regulator driver
+CONFIG_REGULATOR_MT6316,drivers/regulator/Kconfig,tristate,MT6316 SPMI PMIC regulator driver
+CONFIG_REGULATOR_MT6363,drivers/regulator/Kconfig,tristate,MT6363 SPMI PMIC regulator driver
+CONFIG_REGULATOR_PF1550,drivers/regulator/Kconfig,tristate,NXP PF1550 regulator
+CONFIG_REGULATOR_RT8092,drivers/regulator/Kconfig,tristate,Richtek RT8092 voltage regulator
+CONFIG_REGULATOR_SC2730,drivers/regulator/Kconfig,tristate,Spreadtrum SC2730 power regulator driver
+CONFIG_REGULATOR_SGM3804,drivers/regulator/Kconfig,tristate,SGMicro SGM3804 voltage regulator
+CONFIG_REGULATOR_TPS65185,drivers/regulator/Kconfig,tristate,TI TPS65185 EPD regulator
+CONFIG_RENESAS_ERRATUM_GEN4GICITS1,arch/arm64/Kconfig,bool,Renesas R-Car Gen4: GIC600 can not access physical addresses above 4 GiB
+CONFIG_RENESAS_RZT2H_ICU,drivers/irqchip/Kconfig,bool,"Renesas RZ/{T2H,N2H} ICU support"
+CONFIG_RENESAS_WWDT,drivers/watchdog/Kconfig,tristate,Renesas Window WWDT Watchdog
+CONFIG_RESET_EIC7700,drivers/reset/Kconfig,bool,Reset controller driver for ESWIN SoCs
+CONFIG_RESET_EIC7700_HSP,drivers/reset/Kconfig,tristate,EIC7700 HSP Reset controller
+CONFIG_RESET_SKY1,drivers/reset/Kconfig,bool,Cix Sky1 reset controller
+CONFIG_RESET_SKY1_AUDSS,drivers/reset/Kconfig,tristate,Cix Sky1 Audio Subsystem reset controller
+CONFIG_RESET_SPACEMIT_COMMON,drivers/reset/spacemit/Kconfig,tristate,
+CONFIG_RESET_SPACEMIT_K1,drivers/reset/spacemit/Kconfig,tristate,Support for SpacemiT K1 SoC
+CONFIG_RESET_SPACEMIT_K3,drivers/reset/spacemit/Kconfig,tristate,Support for SpacemiT K3 SoC
+CONFIG_RESET_TENSTORRENT_ATLANTIS,drivers/reset/Kconfig,tristate,Tenstorrent atlantis reset driver
+CONFIG_RING_BUFFER_PERSISTENT_INJECT,kernel/trace/Kconfig,bool,Enable persistent ring buffer error injection test
+CONFIG_RISCV_ISA_SSQOSID,arch/riscv/Kconfig,bool,Ssqosid extension support for supervisor mode Quality of Service ID
+CONFIG_RISCV_ISA_SVRSW60T59B,arch/riscv/Kconfig,bool,Svrsw60t59b extension support for using PTE bits 60 and 59
+CONFIG_RISCV_SBI_FWFT_DELEGATE_MISALIGNED,arch/riscv/Kconfig,bool,Request firmware delegation of unaligned access exceptions
+CONFIG_RISCV_USER_CFI,arch/riscv/Kconfig,def_bool,
+CONFIG_RSEQ_DEBUG_DEFAULT_ENABLE,init/Kconfig,bool,Enable restartable sequences debug mode by default
+CONFIG_RSEQ_SLICE_EXTENSION,init/Kconfig,bool,Enable rseq-based time slice extension mechanism
+CONFIG_RSEQ_STATS,init/Kconfig,bool,Enable lightweight statistics of restartable sequences
+CONFIG_RTC_DRV_ATCRTC100,drivers/rtc/Kconfig,tristate,Andes ATCRTC100
+CONFIG_RTC_DRV_MACSMC,drivers/rtc/Kconfig,tristate,Apple Mac System Management Controller RTC
+CONFIG_RTC_DRV_NVIDIA_VRS10,drivers/rtc/Kconfig,tristate,NVIDIA VRS10 RTC device
+CONFIG_RTK_SYSTIMER,drivers/clocksource/Kconfig,bool,Realtek SYSTIMER support
+CONFIG_RTW89_8852AU,drivers/net/wireless/realtek/rtw89/Kconfig,tristate,Realtek 8852AU USB wireless network (Wi-Fi 6) adapter
+CONFIG_RTW89_8852CU,drivers/net/wireless/realtek/rtw89/Kconfig,tristate,Realtek 8852CU USB wireless network (Wi-Fi 6E) adapter
+CONFIG_RTW89_8922AU,drivers/net/wireless/realtek/rtw89/Kconfig,tristate,Realtek 8922AU USB wireless network (Wi-Fi 7) adapter
+CONFIG_RTW89_8922D,drivers/net/wireless/realtek/rtw89/Kconfig,tristate,
+CONFIG_RTW89_8922DE,drivers/net/wireless/realtek/rtw89/Kconfig,tristate,Realtek 8922DE/8922DE-VS PCI wireless network (Wi-Fi 7) adapter
+CONFIG_RTW89_LEDS,drivers/net/wireless/realtek/rtw89/Kconfig,bool,
+CONFIG_RTW89_LEDS_MC,drivers/net/wireless/realtek/rtw89/Kconfig,bool,
+CONFIG_RUSTC_CLANG_LLVM_COMPATIBLE,init/Kconfig,bool,
+CONFIG_RUSTC_LLVM_MAJOR_VERSION,init/Kconfig,int,
+CONFIG_RUST_ALLOCATOR_KUNIT_TEST,rust/kernel/Kconfig.test,bool,KUnit tests for Rust allocator API
+CONFIG_RUST_ATOMICS_KUNIT_TEST,rust/kernel/Kconfig.test,bool,KUnit tests for Rust atomics API
+CONFIG_RUST_BITFIELD_KUNIT_TEST,rust/kernel/Kconfig.test,bool,KUnit tests for the Rust `bitfield!` macro
+CONFIG_RUST_BITMAP_KUNIT_TEST,rust/kernel/Kconfig.test,bool,KUnit tests for Rust bitmap API
+CONFIG_RUST_DRM_GEM_SHMEM_HELPER,drivers/gpu/drm/Kconfig,bool,
+CONFIG_RUST_DRM_GPUVM,drivers/gpu/drm/Kconfig,bool,
+CONFIG_RUST_FWCTL_ABSTRACTIONS,drivers/fwctl/Kconfig,bool,Rust fwctl abstractions
+CONFIG_RUST_INLINE_HELPERS,lib/Kconfig.debug,bool,Inline C helpers into Rust code (EXPERIMENTAL)
+CONFIG_RUST_KUNIT_SELFTEST,rust/kernel/Kconfig.test,bool,KUnit selftests for Rust
+CONFIG_RUST_KUNIT_TESTS,rust/kernel/Kconfig.test,bool,Rust KUnit tests
+CONFIG_RUST_KVEC_KUNIT_TEST,rust/kernel/Kconfig.test,bool,KUnit tests for Rust KVec API
+CONFIG_RUST_PWM_ABSTRACTIONS,drivers/pwm/Kconfig,bool,
+CONFIG_RUST_SERIAL_DEV_BUS_ABSTRACTIONS,drivers/tty/serdev/Kconfig,bool,Rust Serial device bus abstractions
+CONFIG_RUST_STR_KUNIT_TEST,rust/kernel/Kconfig.test,bool,KUnit tests for Rust strings API
+CONFIG_RV_HA_MONITOR,kernel/trace/rv/Kconfig,bool,
+CONFIG_RV_MONITORS_KUNIT_TEST,kernel/trace/rv/Kconfig,tristate,KUnit tests for RV monitors
+CONFIG_RV_MON_DEADLINE,kernel/trace/rv/monitors/deadline/Kconfig,bool,deadline monitor
+CONFIG_RV_MON_NOMISS,kernel/trace/rv/monitors/nomiss/Kconfig,bool,nomiss monitor
+CONFIG_RV_MON_STALL,kernel/trace/rv/monitors/stall/Kconfig,bool,stall monitor
+CONFIG_RV_MON_WAKEUP,kernel/trace/rv/monitors/wakeup/Kconfig,bool,wakeup monitor
+CONFIG_RZN1_ADC,drivers/iio/adc/Kconfig,tristate,Renesas RZ/N1 ADC driver
+CONFIG_RZN1_IRQMUX,drivers/soc/renesas/Kconfig,bool,Renesas RZ/N1 GPIO IRQ multiplexer support
+CONFIG_RZT2H_ADC,drivers/iio/adc/Kconfig,tristate,Renesas RZ/T2H / RZ/N2H ADC driver
+CONFIG_S390_CPUIDLE,drivers/cpuidle/Kconfig.s390,bool,S390 CPU idle driver
+CONFIG_SAMPLE_RUST_DRIVER_I2C,samples/rust/Kconfig,tristate,I2C Driver
+CONFIG_SAMPLE_RUST_DRIVER_SERDEV,samples/rust/Kconfig,tristate,Serial Device Bus Device Driver
+CONFIG_SAMPLE_RUST_I2C_CLIENT,samples/rust/Kconfig,tristate,I2C Client Registration
+CONFIG_SAMPLE_RUST_SOC,samples/rust/Kconfig,tristate,SoC Driver
+CONFIG_SCHED_CACHE,init/Kconfig,bool,Cache aware load balance
+CONFIG_SCSI_LEAPRAID,drivers/scsi/leapraid/Kconfig,tristate,LeapIO RAID Adapter
+CONFIG_SCSI_UFS_AMD_VERSAL2,drivers/ufs/host/Kconfig,tristate,AMD Versal Gen 2 UFS controller platform driver
+CONFIG_SECURITY_APPARMOR_COMPRESSED_POLICY,security/apparmor/Kconfig,bool,Allow loading policy in a compressed format
+CONFIG_SECURITY_COMMONCAP_KUNIT_TEST,security/Kconfig,bool,Build KUnit tests for commoncap
+CONFIG_SECURITY_LANDLOCK_LOG,security/landlock/Kconfig,bool,
+CONFIG_SECURITY_SELINUX_AVC_HASH_BITS,security/selinux/Kconfig,int,SELinux avc hashtable size
+CONFIG_SENSIRION_SLF3S,drivers/iio/flow/Kconfig,tristate,Sensirion SLF3S liquid flow sensor
+CONFIG_SENSORS_ALTERA_SOCFPGA_HWMON,drivers/hwmon/Kconfig,tristate,Altera SoC FPGA hardware monitoring features
+CONFIG_SENSORS_APS_379,drivers/hwmon/pmbus/Kconfig,tristate,Sony APS-379 Power Supplies
+CONFIG_SENSORS_ARCTIC_FAN_CONTROLLER,drivers/hwmon/Kconfig,tristate,ARCTIC Fan Controller
+CONFIG_SENSORS_D1U74T,drivers/hwmon/pmbus/Kconfig,tristate,Murata D1U74T Power Supply
+CONFIG_SENSORS_E50SN12051,drivers/hwmon/pmbus/Kconfig,tristate,Delta E50SN12051 Power Modules
+CONFIG_SENSORS_EIC7700_PVT,drivers/hwmon/Kconfig,tristate,"Eswin EIC7700 Voltage, Temperature sensor driver"
+CONFIG_SENSORS_EMC1812,drivers/hwmon/Kconfig,tristate,Microchip Technology EMC1812 driver
+CONFIG_SENSORS_HAC300S,drivers/hwmon/pmbus/Kconfig,tristate,Hitron HAC300S-D120E PSU
+CONFIG_SENSORS_KB9002,drivers/hwmon/Kconfig,tristate,Kandou KB9002 PCIe retimer
+CONFIG_SENSORS_LATTEPANDA_SIGMA_EC,drivers/hwmon/Kconfig,tristate,LattePanda Sigma EC hardware monitoring
+CONFIG_SENSORS_LTC4283,drivers/hwmon/Kconfig,tristate,Analog Devices LTC4283
+CONFIG_SENSORS_LX1308,drivers/hwmon/pmbus/Kconfig,tristate,Luxshare LX1308 DC/DC Power Module
+CONFIG_SENSORS_MACSMC_HWMON,drivers/hwmon/Kconfig,tristate,Apple SMC (Apple Silicon)
+CONFIG_SENSORS_MAX17616,drivers/hwmon/pmbus/Kconfig,tristate,Analog Devices MAX17616/MAX17616A
+CONFIG_SENSORS_MAX20830,drivers/hwmon/pmbus/Kconfig,tristate,Analog Devices MAX20830 and compatibles
+CONFIG_SENSORS_MAX20860A,drivers/hwmon/pmbus/Kconfig,tristate,Analog Devices MAX20860A
+CONFIG_SENSORS_MAX20860A_REGULATOR,drivers/hwmon/pmbus/Kconfig,bool,Regulator support for MAX20860A
+CONFIG_SENSORS_MCP9982,drivers/hwmon/Kconfig,tristate,Microchip Technology MCP9982 driver
+CONFIG_SENSORS_MP2925,drivers/hwmon/pmbus/Kconfig,tristate,MPS MP2925
+CONFIG_SENSORS_MP2985,drivers/hwmon/pmbus/Kconfig,tristate,MPS MP2985
+CONFIG_SENSORS_MP5926,drivers/hwmon/pmbus/Kconfig,tristate,MPS MP5926
+CONFIG_SENSORS_MP9945,drivers/hwmon/pmbus/Kconfig,tristate,MPS MP9945
+CONFIG_SENSORS_MPQ82D00,drivers/hwmon/pmbus/Kconfig,tristate,MPS MPQ82D00
+CONFIG_SENSORS_MPQ8646,drivers/hwmon/pmbus/Kconfig,tristate,MPS MPQ8646
+CONFIG_SENSORS_MPQ8646_DEBUG_UNSAFE,drivers/hwmon/pmbus/Kconfig,bool,MPQ8646 unsafe write/provisioning debugfs (DANGEROUS)
+CONFIG_SENSORS_POLARFIRE_SOC_TVS,drivers/hwmon/Kconfig,tristate,PolarFire SoC (MPFS) temperature and voltage sensor
+CONFIG_SENSORS_PROM21_XHCI,drivers/hwmon/Kconfig,tristate,AMD Promontory 21 xHCI temperature sensor
+CONFIG_SENSORS_SQ24860,drivers/hwmon/pmbus/Kconfig,tristate,Silergy SQ24860
+CONFIG_SENSORS_SQ24860_REGULATOR,drivers/hwmon/pmbus/Kconfig,bool,Regulator support for SQ24860
+CONFIG_SENSORS_STEF48H28,drivers/hwmon/pmbus/Kconfig,tristate,ST STEF48H28
+CONFIG_SENSORS_TSC1641,drivers/hwmon/Kconfig,tristate,ST Microelectronics TSC1641 Power Monitor
+CONFIG_SENSORS_VT7505,drivers/hwmon/pmbus/Kconfig,tristate,"Analog Devices MAX16545, MAX16550 and Volterra VT7505"
+CONFIG_SENSORS_XDP720,drivers/hwmon/pmbus/Kconfig,tristate,Infineon XDP720 family
+CONFIG_SENSORS_XDPE1A2G7B,drivers/hwmon/pmbus/Kconfig,tristate,Infineon XDPE1A2G7B
+CONFIG_SENSORS_XDPE1A2G7B_REGULATOR,drivers/hwmon/pmbus/Kconfig,bool,Regulator support for XDPE1A2G7B and compatibles
+CONFIG_SENSORS_YOGAFAN,drivers/hwmon/Kconfig,tristate,Lenovo Yoga Fan Hardware Monitoring
+CONFIG_SERIAL_8250_KEBA,drivers/tty/serial/8250/Kconfig,tristate,Support for KEBA 8250 UART
+CONFIG_SERIAL_8250_LOONGSON,drivers/tty/serial/8250/Kconfig,tristate,Loongson 8250 based serial port
+CONFIG_SERIAL_8250_MOXA_PCIE,drivers/tty/serial/8250/Kconfig,tristate,8250/16550 Moxa PCIe device support
+CONFIG_SERIO_GSCPS2_RDI_KEYCODES,drivers/input/serio/Kconfig,bool,Use PrecisionBook keyboard scancodes
+CONFIG_SFC_CXL,drivers/net/ethernet/sfc/Kconfig,bool,Solarflare SFC9100-family CXL support
+CONFIG_SHDI3_KUNIT_TEST,lib/Kconfig.debug,tristate,"KUnit test for __ashldi3(), __ashrdi3(), and __lshrdi3()"
+CONFIG_SIMPLE_RING_BUFFER,kernel/trace/Kconfig,bool,
+CONFIG_SMB1_KUNIT_TESTS,fs/smb/client/Kconfig,tristate,KUnit tests for SMB1
+CONFIG_SMBDIRECT,fs/smb/smbdirect/Kconfig,def_tristate,
+CONFIG_SMB_KUNIT_TESTS,fs/smb/Kconfig,tristate,KUnit tests for SMB
+CONFIG_SMC_HS_CTRL_BPF,net/smc/Kconfig,bool,Generic eBPF hook for SMC handshake flow
+CONFIG_SMI330,drivers/iio/imu/smi330/Kconfig,tristate,
+CONFIG_SMI330_I2C,drivers/iio/imu/smi330/Kconfig,tristate,Bosch SMI330 I2C driver
+CONFIG_SMI330_SPI,drivers/iio/imu/smi330/Kconfig,tristate,Bosch SMI330 SPI driver
+CONFIG_SM_CAMCC_8750,drivers/clk/qcom/Kconfig,tristate,SM8750 Camera Clock Controller
+CONFIG_SM_GPUCC_8750,drivers/clk/qcom/Kconfig,tristate,SM8750 Graphics Clock Controller
+CONFIG_SM_VIDEOCC_8750,drivers/clk/qcom/Kconfig,tristate,SM8750 Video Clock Controller
+CONFIG_SND_HDA_CIX_IPBLOQ,sound/hda/controllers/Kconfig,tristate,CIX IPBLOQ HD Audio
+CONFIG_SND_HDA_SCODEC_AW88399,sound/hda/codecs/side-codecs/Kconfig,tristate,
+CONFIG_SND_HDA_SCODEC_AW88399_I2C,sound/hda/codecs/side-codecs/Kconfig,tristate,Build AW88399 HD-audio side codec support for I2C Bus
+CONFIG_SND_HDA_SCODEC_CS35L56_CAL_DEBUGFS,sound/hda/codecs/side-codecs/Kconfig,bool,CS35L56 create debugfs for factory calibration
+CONFIG_SND_SOC_ACPI_AMD_SDCA_QUIRKS,sound/soc/amd/acp/Kconfig,bool,AMD ACPI SDCA quirks
+CONFIG_SND_SOC_AMD_ACP7X,sound/soc/amd/Kconfig,tristate,AMD Audio Coprocessor-v7.x support
+CONFIG_SND_SOC_AW88399_LIB,sound/soc/codecs/Kconfig,tristate,
+CONFIG_SND_SOC_CS35L56_CAL_DEBUGFS,sound/soc/codecs/Kconfig,bool,CS35L56 create debugfs for factory calibration
+CONFIG_SND_SOC_CS35L56_CAL_DEBUGFS_COMMON,sound/soc/codecs/Kconfig,bool,
+CONFIG_SND_SOC_CS35L56_CAL_PERFORM_CTRL,sound/soc/codecs/Kconfig,bool,CS35L56 ALSA control to perform factory calibration
+CONFIG_SND_SOC_CS35L56_CAL_SET_CTRL,sound/soc/codecs/Kconfig,bool,CS35L56 ALSA control to restore factory calibration
+CONFIG_SND_SOC_CS35L56_SHARED_TEST,sound/soc/codecs/Kconfig,tristate,KUnit test for Cirrus Logic cs35l56-shared
+CONFIG_SND_SOC_CS35L56_TEST,sound/soc/codecs/Kconfig,tristate,KUnit test for Cirrus Logic cs35l56 driver
+CONFIG_SND_SOC_CS42XX8_SPI,sound/soc/codecs/Kconfig,tristate,Cirrus Logic CS42448/CS42888 CODEC (SPI)
+CONFIG_SND_SOC_CS530X_SPI,sound/soc/codecs/Kconfig,tristate,Cirrus Logic CS530x ADCs (SPI)
+CONFIG_SND_SOC_CS_AMP_LIB_TEST_HOOKS,sound/soc/codecs/Kconfig,bool,
+CONFIG_SND_SOC_CV1800B_ADC_CODEC,sound/soc/sophgo/Kconfig,tristate,Sophgo CV1800B/SG2002 internal ADC codec
+CONFIG_SND_SOC_CV1800B_DAC_CODEC,sound/soc/sophgo/Kconfig,tristate,Sophgo CV1800B/SG2002 internal DAC codec
+CONFIG_SND_SOC_CV1800B_TDM,sound/soc/sophgo/Kconfig,tristate,Sophgo CV1800B I2S/TDM support
+CONFIG_SND_SOC_ES9356,sound/soc/codecs/Kconfig,tristate,Everest Semi ES9356 CODEC SDW
+CONFIG_SND_SOC_INTEL_SOF_TI_COMMON,sound/soc/intel/boards/Kconfig,tristate,
+CONFIG_SND_SOC_K1_I2S,sound/soc/spacemit/Kconfig,tristate,K1 I2S Device Driver
+CONFIG_SND_SOC_MT2701_HDMI,sound/soc/mediatek/Kconfig,tristate,ASoC Audio driver for MT2701 with on-chip HDMI codec
+CONFIG_SND_SOC_MT8189,sound/soc/mediatek/Kconfig,tristate,ASoC support for Mediatek MT8189 chip
+CONFIG_SND_SOC_MT8189_NAU8825,sound/soc/mediatek/Kconfig,tristate,ASoc Audio driver for MT8189 with NAU8825 and I2S codec
+CONFIG_SND_SOC_MT8196,sound/soc/mediatek/Kconfig,tristate,ASoC support for Mediatek MT8196 chip
+CONFIG_SND_SOC_MT8196_NAU8825,sound/soc/mediatek/Kconfig,tristate,ASoc Audio driver for MT8196 with NAU8825 and I2S codec
+CONFIG_SND_SOC_RT5575,sound/soc/codecs/Kconfig,tristate,Realtek ALC5575 Codec - I2C
+CONFIG_SND_SOC_RT5575_SPI,sound/soc/codecs/Kconfig,bool,Realtek ALC5575 Codec - SPI
+CONFIG_SND_SOC_RT766_SDCA_SDW,sound/soc/codecs/Kconfig,tristate,Realtek RT766 SDCA Codec - SDW
+CONFIG_SND_SOC_SDCA_CLASS,sound/soc/sdca/Kconfig,tristate,SDCA Class Driver
+CONFIG_SND_SOC_SDCA_CLASS_FUNCTION,sound/soc/sdca/Kconfig,tristate,
+CONFIG_SND_SOC_SDCA_FDL,sound/soc/sdca/Kconfig,bool,SDCA FDL (File DownLoad) support
+CONFIG_SND_SOC_SOF_AMD_ACP7X,sound/soc/sof/amd/Kconfig,tristate,SOF support for ACP7.B/7.F platforms
+CONFIG_SND_SOC_SOF_INTEL_NVL,sound/soc/sof/intel/Kconfig,tristate,
+CONFIG_SND_SOC_SOF_NOVALAKE,sound/soc/sof/intel/Kconfig,tristate,SOF support for Novalake
+CONFIG_SND_SOC_TAC5XX2_SDW,sound/soc/codecs/Kconfig,tristate,Texas Instruments TAC5XX2 SoundWire Smart Amplifier
+CONFIG_SND_SOC_TAS675X,sound/soc/codecs/Kconfig,tristate,Texas Instruments TAS675x Quad-Channel Audio Amplifier
+CONFIG_SND_SOC_TEGRA_CPCAP,sound/soc/tegra/Kconfig,tristate,SoC Audio support for Tegra boards using a CPCAP codec
+CONFIG_SND_SOC_TEGRA_WM8962,sound/soc/tegra/Kconfig,tristate,SoC Audio support for Tegra boards using a WM8962 codec
+CONFIG_SND_SOC_WM_ADSP_TEST,sound/soc/codecs/Kconfig,tristate,KUnit tests for Cirrus Logic wm_adsp
+CONFIG_SND_SOC_WSA885X,sound/soc/codecs/Kconfig,tristate,WSA885X Codec
+CONFIG_SOC_ZX297520V3,arch/arm/mach-zte/Kconfig,bool,zx297520v3 SoC
+CONFIG_SPACEMIT_K1_TSENSOR,drivers/thermal/spacemit/Kconfig,tristate,SpacemiT K1 thermal sensor driver
+CONFIG_SPACEMIT_K3_CCU,drivers/clk/spacemit/Kconfig,tristate,Support for SpacemiT K3 SoC
+CONFIG_SPI_ATCSPI200,drivers/spi/Kconfig,tristate,Andes ATCSPI200 SPI controller
+CONFIG_SPI_AXIADO,drivers/spi/Kconfig,tristate,Axiado DB-H SPI controller
+CONFIG_SPI_DMA_KUNIT_TEST,drivers/spi/Kconfig,tristate,KUnit tests for SPI core DMA mapping
+CONFIG_SPI_MA35D1_QSPI,drivers/spi/Kconfig,tristate,Nuvoton MA35D1 QSPI controller
+CONFIG_SPI_MICROCHIP_CORE_SPI,drivers/spi/Kconfig,tristate,Microchip FPGA CoreSPI controller
+CONFIG_SPI_NXP_XSPI,drivers/spi/Kconfig,tristate,NXP xSPI controller
+CONFIG_SPI_SPACEMIT_K1,drivers/spi/Kconfig,tristate,K1 SPI Controller
+CONFIG_SSIF_IPMI_BMC_KUNIT_TEST,drivers/char/ipmi/Kconfig,bool,KUnit tests for SSIF IPMI BMC driver
+CONFIG_STARFIVE_JHB100_INTC,drivers/irqchip/Kconfig,bool,StarFive JHB100 External Interrupt Controller
+CONFIG_STM32_DBG_BUS,drivers/bus/Kconfig,tristate,OP-TEE based debug access bus
+CONFIG_STMMAC_LIBPCI,drivers/net/ethernet/stmicro/stmmac/Kconfig,tristate,
+CONFIG_STRING_KUNIT_BENCH,lib/Kconfig.debug,bool,Benchmark string functions at runtime
+CONFIG_SWIOTLB_DEFAULT_SIZE_MB,kernel/dma/Kconfig,int,Default SWIOTLB bounce buffer size in MB
+CONFIG_SWITCHTEC_DMA,drivers/dma/Kconfig,tristate,Switchtec PSX/PFX Switch DMA Engine Support
+CONFIG_SYSCALL_USER_DISPATCH,arch/Kconfig,bool,Syscall User Dispatch
+CONFIG_SYSC_R9A08G046,drivers/soc/renesas/Kconfig,bool,Renesas System controller support for R9A08G046 (RZ/G3L)
+CONFIG_TASKS_TRACE_RCU_NO_MB,kernel/rcu/Kconfig,bool,Override RCU Tasks Trace inclusion of read-side memory barriers
+CONFIG_TDX_HOST_SERVICES,drivers/virt/coco/tdx-host/Kconfig,tristate,
+CONFIG_TEGRA114_EMC,drivers/memory/tegra/Kconfig,tristate,NVIDIA Tegra114 External Memory Controller driver
+CONFIG_TEGRA_EMC_COMMON,drivers/memory/tegra/Kconfig,tristate,
+CONFIG_TENSTORRENT_ATLANTIS_PRCM,drivers/clk/tenstorrent/Kconfig,tristate,Support for Tenstorrent Atlantis PRCM Clock Controller
+CONFIG_TEST_WORKQUEUE,lib/Kconfig.debug,tristate,Test module for stress/performance analysis of workqueue
+CONFIG_TIME_NS_VDSO,init/Kconfig,def_bool,
+CONFIG_TI_ADS1018,drivers/iio/adc/Kconfig,tristate,Texas Instruments ADS1018 ADC
+CONFIG_TI_ADS112C14,drivers/iio/adc/Kconfig,tristate,Texas Instruments ADS112C14/ADS122C14
+CONFIG_TI_ADS131M02,drivers/iio/adc/Kconfig,tristate,Texas Instruments ADS131M02
+CONFIG_TOUCHSCREEN_WACOM_W9000,drivers/input/touchscreen/Kconfig,tristate,Wacom W9000-series penabled touchscreen (I2C)
+CONFIG_TRACE_REMOTE,kernel/trace/Kconfig,bool,
+CONFIG_TRACE_REMOTE_TEST,kernel/trace/Kconfig,tristate,Test module for remote tracing
+CONFIG_TRACE_SYSCALL_BUF_SIZE_DEFAULT,kernel/trace/Kconfig,int,System call user read max size
+CONFIG_TRANSPARENT_HUGEPAGE_SHMEM_HUGE_ADVISE,mm/Kconfig,bool,advise
+CONFIG_TRANSPARENT_HUGEPAGE_SHMEM_HUGE_ALWAYS,mm/Kconfig,bool,always
+CONFIG_TRANSPARENT_HUGEPAGE_SHMEM_HUGE_NEVER,mm/Kconfig,bool,never
+CONFIG_TRANSPARENT_HUGEPAGE_SHMEM_HUGE_WITHIN_SIZE,mm/Kconfig,bool,within_size
+CONFIG_TRANSPARENT_HUGEPAGE_TMPFS_HUGE_ADVISE,mm/Kconfig,bool,advise
+CONFIG_TRANSPARENT_HUGEPAGE_TMPFS_HUGE_ALWAYS,mm/Kconfig,bool,always
+CONFIG_TRANSPARENT_HUGEPAGE_TMPFS_HUGE_NEVER,mm/Kconfig,bool,never
+CONFIG_TRANSPARENT_HUGEPAGE_TMPFS_HUGE_WITHIN_SIZE,mm/Kconfig,bool,within_size
+CONFIG_TRIVIAL_PREEMPT_RCU,kernel/rcu/Kconfig.debug,bool,Textbook trivial preemptible RCU in rcutorture
+CONFIG_TRUSTED_KEYS_DEBUG,security/keys/trusted-keys/Kconfig,bool,Debug trusted keys
+CONFIG_TRUSTED_KEYS_PKWM,security/keys/trusted-keys/Kconfig,bool,PKWM-based trusted keys
+CONFIG_TSM,drivers/virt/coco/Kconfig,bool,
+CONFIG_UIO_PCI_GENERIC_SVA,drivers/uio/Kconfig,tristate,Generic driver for PCI Express that supports sva
+CONFIG_UML_SUBARCH_SUPPORTS_SMP,arch/um/Kconfig,bool,
+CONFIG_UNIWILL_LAPTOP,drivers/platform/x86/uniwill/Kconfig,tristate,Uniwill Laptop Extras
+CONFIG_USB4_CONFIGFS,drivers/thunderbolt/Kconfig,def_tristate,
+CONFIG_USB4_STREAM,drivers/thunderbolt/Kconfig,tristate,Stream data over Thunderbolt/USB4 cable
+CONFIG_USB_DWC3_APPLE,drivers/usb/dwc3/Kconfig,tristate,Apple Silicon DWC3 Platform Driver
+CONFIG_USB_DWC3_GOOGLE,drivers/usb/dwc3/Kconfig,tristate,Google Platform
+CONFIG_USB_DWC3_IMX,drivers/usb/dwc3/Kconfig,tristate,NXP iMX Platform
+CONFIG_USB_XHCI_PCI_PROM21,drivers/usb/host/Kconfig,tristate,
+CONFIG_USERFAULTFD_RWP,mm/Kconfig,def_bool,
+CONFIG_UUID_KUNIT_TEST,lib/Kconfig.debug,tristate,KUnit test for UUID
+CONFIG_V4L2_ISP,drivers/media/v4l2-core/Kconfig,tristate,
+CONFIG_VDSO_DATASTORE,lib/vdso/Kconfig,bool,
+CONFIG_VEML3328,drivers/iio/light/Kconfig,tristate,VEML3328 RGBCIR light sensor
+CONFIG_VERSAL_SYSMON,drivers/iio/adc/Kconfig,tristate,AMD Versal SysMon driver
+CONFIG_VERSAL_SYSMON_CORE,drivers/iio/adc/Kconfig,tristate,
+CONFIG_VERSAL_SYSMON_I2C,drivers/iio/adc/Kconfig,tristate,AMD Versal SysMon I2C driver
+CONFIG_VFIO_PCI_DMABUF,drivers/vfio/pci/Kconfig,def_bool,
+CONFIG_VF_TIMER_NONE,drivers/clocksource/Kconfig,bool,None (Use standard Arch Timer)
+CONFIG_VIDEO_AMD_ISP4_CAPTURE,drivers/media/platform/amd/isp4/Kconfig,tristate,AMD ISP4 and camera driver
+CONFIG_VIDEO_DCT_RPPX1,drivers/media/platform/dreamchip/rppx1/Kconfig,tristate,
+CONFIG_VIDEO_DW_MIPI_CSI2RX,drivers/media/platform/synopsys/Kconfig,tristate,Synopsys DesignWare MIPI CSI-2 Receiver
+CONFIG_VIDEO_HWS,drivers/media/pci/hws/Kconfig,tristate,AVMatrix HWS PCIe capture devices
+CONFIG_VIDEO_IMX111,drivers/media/i2c/Kconfig,tristate,Sony IMX111 sensor support
+CONFIG_VIDEO_IMX471,drivers/media/i2c/Kconfig,tristate,Sony IMX471 sensor support
+CONFIG_VIDEO_IMX678,drivers/media/i2c/Kconfig,tristate,Sony IMX678 sensor support
+CONFIG_VIDEO_INTEL_CVS,drivers/media/i2c/cvs/Kconfig,tristate,Intel CVS CSI-2 bridge support
+CONFIG_VIDEO_MALI_C55,drivers/media/platform/arm/mali-c55/Kconfig,tristate,ARM Mali-C55 Image Signal Processor driver
+CONFIG_VIDEO_OS05B10,drivers/media/i2c/Kconfig,tristate,OmniVision OS05B10 sensor support
+CONFIG_VIDEO_OV2732,drivers/media/i2c/Kconfig,tristate,OmniVision OV2732 sensor support
+CONFIG_VIDEO_ROCKCHIP_CIF,drivers/media/platform/rockchip/rkcif/Kconfig,tristate,Rockchip Camera Interface (CIF)
+CONFIG_VIDEO_RZV2H_IVC,drivers/media/platform/renesas/rzv2h-ivc/Kconfig,tristate,Renesas RZ/V2H(P) Input Video Control block driver
+CONFIG_VIDEO_S5K3M5,drivers/media/i2c/Kconfig,tristate,Samsung S5K3M5 sensor support
+CONFIG_VIDEO_S5KJN1,drivers/media/i2c/Kconfig,tristate,Samsung S5KJN1 sensor support
+CONFIG_VIDEO_T4KA3,drivers/media/i2c/Kconfig,tristate,Toshiba T4KA3 sensor support
+CONFIG_VIDEO_TI_VIP,drivers/media/platform/ti/Kconfig,tristate,TI Video Input Port
+CONFIG_VL53L1X_I2C,drivers/iio/proximity/Kconfig,tristate,STMicroelectronics VL53L1X ToF ranger sensor (I2C)
+CONFIG_VSI_IOMMU,drivers/iommu/Kconfig,tristate,Verisilicon IOMMU Support
+CONFIG_WARN_CONTEXT_ANALYSIS,lib/Kconfig.debug,bool,Compiler context-analysis warnings
+CONFIG_WARN_CONTEXT_ANALYSIS_ALL,lib/Kconfig.debug,bool,Enable context analysis for all source files
+CONFIG_WATCHDOG_PRETIMEOUT_DEFAULT_GOV_DUMP,drivers/watchdog/Kconfig,bool,dump
+CONFIG_WATCHDOG_PRETIMEOUT_GOV_DUMP,drivers/watchdog/Kconfig,tristate,Dump watchdog pretimeout governor
+CONFIG_WLAN_VENDOR_MORSEMICRO,drivers/net/wireless/morsemicro/Kconfig,bool,Morse Micro devices
+CONFIG_WLAN_VENDOR_NXP,drivers/net/wireless/nxp/Kconfig,bool,NXP devices
+CONFIG_X86_CPU_RESCTRL_INTEL_AET,arch/x86/Kconfig,bool,Intel Application Energy Telemetry
+CONFIG_X86_DISABLED_FEATURE_LASS,arch/x86/Kconfig.cpufeatures,def_bool,
+CONFIG_X86_DISABLED_FEATURE_SYSCALL32,arch/x86/Kconfig.cpufeatures,def_bool,
+CONFIG_X86_PLATFORM_DRIVERS_UNIWILL,drivers/platform/x86/uniwill/Kconfig,bool,Uniwill X86 Platform Specific Device Drivers
+CONFIG_X86_REQUIRED_FEATURE_SYSFAST32,arch/x86/Kconfig.cpufeatures,def_bool,
+CONFIG_XE_VFIO_PCI,drivers/vfio/pci/xe/Kconfig,tristate,VFIO support for Intel Graphics
+CONFIG_XOR_BENCHMARK,lib/raid/Kconfig,bool,Benchmark for xor_gen
+CONFIG_XOR_BLOCKS_ARCH,lib/raid/Kconfig,bool,
+CONFIG_XOR_KUNIT_TEST,lib/raid/Kconfig,tristate,KUnit tests for xor_gen
