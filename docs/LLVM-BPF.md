@@ -59,6 +59,27 @@ On hosts with sufficient RAM, the owner can explicitly increase the limit:
 make tools/llvm-bpf/compile LLVM_BPF_JOBS=2 V=s
 ```
 
+## Missing prebuilt compiler when building bpf-headers
+
+If `bpf-headers` reports that `llvm-bpf/bin/clang` does not exist, the
+configuration has selected prebuilt LLVM but the toolchain has not been
+installed in this build tree. A blank compiler version does not mean an old
+LLVM version was found. The build now reports a missing compiler or a failed
+version query separately from an unsupported version.
+
+From the existing build root, install the toolchain and retry the package:
+
+```sh
+python3 scripts/setup-llvm-bpf.py
+make package/kernel/bpf-headers/compile -j1 V=s
+make -j2 V=s
+```
+
+The helper verifies and tests the tools before resolving `.config` with
+`make defconfig`. Completed firmware build objects are retained. Compiler
+validation remains disabled for metadata, download and refresh operations,
+which must work before a toolchain is installed.
+
 ## Local preflight on 2026-10-17
 
 - Built Ninja 1.13.2 on Apple Silicon and ran the actual LLVM recipe with a
