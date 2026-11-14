@@ -26,6 +26,7 @@ PKG_BUILD_FLAGS:=gc-sections lto
 PKG_BUILD_PARALLEL:=1
 PKG_FIXUP:=autoreconf
 PKG_INSTALL:=1
+PKG_CONFIG_DEPENDS:=CONFIG_PACKAGE_ppp-mod-pppoa
 
 include $(INCLUDE_DIR)/package.mk
 CONFIGURE_ARGS += \

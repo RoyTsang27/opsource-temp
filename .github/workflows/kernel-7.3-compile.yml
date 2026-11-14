@@ -28,12 +28,14 @@ jobs:
             arch: arm64
             cross: aarch64-linux-gnu-
             compiler: gcc-aarch64-linux-gnu
+            libc: libc6-dev-arm64-cross
             image: Image
           - target: ramips
             subtarget: mt76x8
             arch: mips
             cross: mipsel-linux-gnu-
             compiler: gcc-mipsel-linux-gnu
+            libc: libc6-dev-mipsel-cross
             image: vmlinux
     env:
       TARGET: ${{ matrix.target }}
@@ -41,6 +43,7 @@ jobs:
       ARCH: ${{ matrix.arch }}
       CROSS_COMPILE: ${{ matrix.cross }}
       COMPILER: ${{ matrix.compiler }}
+      LIBC: ${{ matrix.libc }}
       IMAGE: ${{ matrix.image }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -50,7 +53,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            "$COMPILER" autoconf automake bc bison build-essential flex libelf-dev \
+            "$COMPILER" "$LIBC" autoconf automake bc bison build-essential flex libelf-dev \
             libssl-dev libtool patch python3 rsync xz-utils
       - name: Read pinned kernel version
         id: source
@@ -100,6 +103,33 @@ jobs:
           make -C "$RUNNER_TEMP/kernel" listnewconfig 2>&1 | tee logs/new-options.log
           make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
           cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config
+      - name: Compile ATM library and PVC tools against Linux headers
+        run: |
+          make -C "$RUNNER_TEMP/kernel" \
+            INSTALL_HDR_PATH="$RUNNER_TEMP/uapi" headers_install
+          curl --fail --location --retry 3 \
+            https://sources.openwrt.org/linux-atm-2.5.2.tar.gz \
+            --output "$RUNNER_TEMP/linux-atm.tar.gz"
+          printf '%s  %s\n' \
+            9645481a2b16476b59220aa2d6bc5bc41043f291326c9b37581018fbd16dd53a \
+            "$RUNNER_TEMP/linux-atm.tar.gz" | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/linux-atm"
+          tar -xzf "$RUNNER_TEMP/linux-atm.tar.gz" --strip-components=1 -C "$RUNNER_TEMP/linux-atm"
+          PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
+            "$RUNNER_TEMP/linux-atm" package/network/utils/linux-atm/patches \
+            2>&1 | tee logs/atm-patches.log
+          (
+            cd "$RUNNER_TEMP/linux-atm"
+            trap 'cp -f config.log "$GITHUB_WORKSPACE/logs/atm-config.log" 2>/dev/null || true' EXIT
+            autoreconf --force --install
+            ac_cv_header_linux_atmsvc_h=no \
+              CC="${CROSS_COMPILE}gcc" CPPFLAGS="-I$RUNNER_TEMP/uapi/include" \
+              ./configure --host="${CROSS_COMPILE%-}" --prefix=/usr
+            make -j"$(nproc)"
+            make DESTDIR="$RUNNER_TEMP/atm-install" install
+            test -f "$RUNNER_TEMP/atm-install/usr/lib/libatm.so"
+            test -x "$RUNNER_TEMP/atm-install/usr/sbin/br2684ctl"
+          ) 2>&1 | tee logs/atm-compile.log
       - name: Compile kernel and built-in drivers
         run: |
           make -C "$RUNNER_TEMP/kernel" -j"$(nproc)" "$IMAGE" modules \
@@ -120,32 +150,6 @@ jobs:
             done
             exit "$build_status"
           ) 2>&1 | tee logs/external-modules.log
-      - name: Compile ATM library and PVC tools against Linux headers
-        run: |
-          make -C "$RUNNER_TEMP/kernel" \
-            INSTALL_HDR_PATH="$RUNNER_TEMP/uapi" headers_install
-          curl --fail --location --retry 3 \
-            https://sources.openwrt.org/linux-atm-2.5.2.tar.gz \
-            --output "$RUNNER_TEMP/linux-atm.tar.gz"
-          printf '%s  %s\n' \
-            9645481a2b16476b59220aa2d6bc5bc41043f291326c9b37581018fbd16dd53a \
-            "$RUNNER_TEMP/linux-atm.tar.gz" | sha256sum --check --strict
-          mkdir "$RUNNER_TEMP/linux-atm"
-          tar -xzf "$RUNNER_TEMP/linux-atm.tar.gz" --strip-components=1 -C "$RUNNER_TEMP/linux-atm"
-          PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
-            "$RUNNER_TEMP/linux-atm" package/network/utils/linux-atm/patches \
-            2>&1 | tee logs/atm-patches.log
-          (
-            cd "$RUNNER_TEMP/linux-atm"
-            autoreconf --force --install
-            ac_cv_header_linux_atmsvc_h=no \
-              CC="${CROSS_COMPILE}gcc" CPPFLAGS="-I$RUNNER_TEMP/uapi/include" \
-              ./configure --host="${CROSS_COMPILE%-}" --prefix=/usr
-            make -j"$(nproc)"
-            make DESTDIR="$RUNNER_TEMP/atm-install" install
-            test -f "$RUNNER_TEMP/atm-install/usr/lib/libatm.so"
-            test -x "$RUNNER_TEMP/atm-install/usr/sbin/br2684ctl"
-          ) 2>&1 | tee logs/atm-compile.log
       - name: Upload kernel diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
