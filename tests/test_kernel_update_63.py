@@ -62,6 +62,20 @@ class Kernel63UpdateTests(unittest.TestCase):
         self.assertEqual((self.root / 'target/linux/generic/kernel-6.18').read_bytes(), before)
         self.assertFalse((self.root / '.kernel-update-backups').exists())
 
+    def test_existing_release_3_installs_only_the_verified_survey_fix(self):
+        updater.apply(self.root, self.plan(), '6.18.63')
+        recipe = self.root / 'package/kernel/mt76/Makefile'
+        recipe.write_bytes(recipe.read_bytes().replace(b'PKG_RELEASE:=4\n', b'PKG_RELEASE:=3\n', 1))
+        patch = 'package/kernel/mt76/patches/962-mt7915-reject-backwards-MT7981-survey-snapshots.patch'
+        (self.root / patch).unlink()
+        changes = self.plan()
+        self.assertEqual({entry['path'] for entry in changes},
+                         {'package/kernel/mt76/Makefile', patch})
+        updater.apply(self.root, changes, '6.18.63')
+        self.assertEqual(self.plan(), [])
+        self.assertIn(b'PKG_RELEASE:=4\n', recipe.read_bytes())
+        self.assertEqual((self.root / patch).read_bytes(), (BUNDLE / 'files' / patch).read_bytes())
+
     def test_failure_after_wireless_writes_rolls_back_changes(self):
         changes = self.plan()
         atomic_write = updater.atomic_write

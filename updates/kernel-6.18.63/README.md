@@ -82,3 +82,11 @@ The 2026-11-12 correction adds both native forward-path prerequisites required
 by the mac80211 backport and updates the legacy flow-offload caller. For an
 already upgraded tree, use `updates/mac80211-forward-path/` to apply only this
 repair before rebuilding the kernel and wireless modules.
+
+The 2026-11-15 correction adds mt76 package release 4 and patch 962. A backwards
+MT7981 channel-survey snapshot is rejected without changing its previous
+baseline or accumulated totals. This prevents unsigned underflow and repeated
+counting when firmware alternates between older and newer snapshots. The ten
+earlier AX3000T audit patches remain included. The updater accepts the previous
+release 3 recipe and adds only these two changes to an otherwise current tree.
+See `docs/AX3000T-WIFI-FIX.md` for source validation and hardware limits.

@@ -11462,7 +11462,7 @@ index 00000000..2f41ad0c
 + 	/*
 + 	 * Assume that HT/VHT transmission on any AC except VO will
 diff --git a/package/kernel/mt76/Makefile b/package/kernel/mt76/Makefile
-index 90271811..614c2ca1 100644
+index 90271811..e5f07e1b 100644
 --- a/package/kernel/mt76/Makefile
 +++ b/package/kernel/mt76/Makefile
 @@ -1,16 +1,16 @@
@@ -11470,7 +11470,7 @@ index 90271811..614c2ca1 100644
  
  PKG_NAME:=mt76
 -PKG_RELEASE=1
-+PKG_RELEASE:=3
++PKG_RELEASE:=4
  
  PKG_LICENSE:=BSD-3-Clause-Clear
  PKG_LICENSE_FILES:=
@@ -14807,3 +14807,47 @@ index 02abf04e..632af841 100644
  +}
  +
  +static void nf_dev_forward_path(struct nf_flow_route *route,
+diff --git a/package/kernel/mt76/patches/962-mt7915-reject-backwards-MT7981-survey-snapshots.patch b/package/kernel/mt76/patches/962-mt7915-reject-backwards-MT7981-survey-snapshots.patch
+new file mode 100644
+--- /dev/null
++++ b/package/kernel/mt76/patches/962-mt7915-reject-backwards-MT7981-survey-snapshots.patch
+@@ -0,0 +1,39 @@
++Subject: [PATCH] wifi: mt76: mt7915: reject backwards MT7981 survey snapshots
++
++MT7981 firmware can return an older channel MIB snapshot even when the
++reply has the expected offsets. Subtracting the previous unsigned
++counters then wraps survey totals. Clamping individual deltas while
++rebasing onto the older sample also counts the same interval again when
++the newer snapshot returns.
++
++Reject the whole backwards MT7981 sample without changing totals or the
++baseline. Keep the existing reply validation and bounded retries. An
++explicit channel switch or counter reset still establishes a new baseline
++through chan_switch, including when the new counters are lower.
++
++This prevents unsigned underflow and duplicate accumulation on a return
++to an earlier snapshot. It cannot identify an incorrect but increasing
++per-band snapshot returned by firmware.
++
++Link: https://github.com/openwrt/mt76/issues/1135
++
++--- a/mt7915/mcu.c
+++++ b/mt7915/mcu.c
++@@ -3343,6 +3343,17 @@
++ 	if (chan_switch)
++ 		goto out;
++ 
+++	/* Do not rebase onto an older MT7981 firmware snapshot. */
+++	if (is_mt7981(&dev->mt76) &&
+++	    (cc_tx < state_ts->cc_tx ||
+++	     __res_u64(2) < state_ts->cc_bss_rx ||
+++	     __res_u64(2) + __res_u64(3) < state_ts->cc_rx ||
+++	     __res_u64(0) + cc_tx + __res_u64(2) + __res_u64(3) <
+++						state_ts->cc_busy)) {
+++		dev_kfree_skb(skb);
+++		return -EINVAL;
+++	}
+++
++ 	state->cc_tx += cc_tx - state_ts->cc_tx;
++ 	state->cc_bss_rx += __res_u64(2) - state_ts->cc_bss_rx;
++ 	state->cc_rx += __res_u64(2) + __res_u64(3) - state_ts->cc_rx;

@@ -15,7 +15,7 @@
     "mirror_sha256": "3a3844097e66021f21f0ec8508cb740ef6536a2243f74c47fd5a898edb26839f"
   },
   "patch": "patches/op-source-6.18.60-to-6.18.63.patch",
-  "patch_sha256": "2ba7ac92002fb67aaaaff8ad6f7eea8b3c8c9f627d7304173926968beef8b9ca",
+  "patch_sha256": "4d3c07f6131aa657c1dc9fe82068cc6e26be4ff43988f066bf457da5d8defb4c",
   "files": [
     {
       "path": "package/kernel/mac80211/Makefile",
@@ -631,9 +631,10 @@
       "path": "package/kernel/mt76/Makefile",
       "before": [
         "c2d06b584484c71f60ad641d2ebd7abd6f2ed4492f994e78bb169c4c59eb9286",
-        "d2922f9d20bcd701cb4361ac482985f23c1009e2ccda601dd57024c9ab24be2e"
+        "d2922f9d20bcd701cb4361ac482985f23c1009e2ccda601dd57024c9ab24be2e",
+        "7d8100fd4f6bec0037be2219c58ced07f71e9dbd5cc1b3ad4080c39064885169"
       ],
-      "after": "7d8100fd4f6bec0037be2219c58ced07f71e9dbd5cc1b3ad4080c39064885169",
+      "after": "2130a236e3fc1afe12eb688fcd773a8601fbdb3b79704a81c4092a45e7813fd1",
       "payload": "files/package/kernel/mt76/Makefile"
     },
     {
@@ -739,6 +740,14 @@
       ],
       "after": "efa86b6e0a6703cf2feb3793780ee0e3cf074209a0744d57926584daa787a1d2",
       "payload": "files/package/kernel/mt76/patches/961-mt76-discard-incomplete-DMA-RX-chains.patch"
+    },
+    {
+      "path": "package/kernel/mt76/patches/962-mt7915-reject-backwards-MT7981-survey-snapshots.patch",
+      "before": [
+        null
+      ],
+      "after": "4e7af90ba97921f083a2ac3a958d21dd60a5c4f00a0bfe61189e6f0e96f19e8a",
+      "payload": "files/package/kernel/mt76/patches/962-mt7915-reject-backwards-MT7981-survey-snapshots.patch"
     },
     {
       "path": "target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch",
