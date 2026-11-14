@@ -50,8 +50,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            "$COMPILER" bc bison build-essential flex libelf-dev libssl-dev \
-            patch python3 xz-utils
+            "$COMPILER" autoconf automake bc bison build-essential flex libelf-dev \
+            libssl-dev libtool patch python3 rsync xz-utils
       - name: Read pinned kernel version
         id: source
         run: |
@@ -86,6 +86,11 @@ jobs:
             PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
               "$RUNNER_TEMP/kernel" "target/linux/$patches" 2>&1 | tee -a logs/patches.log
           done
+      - name: Audit all target-compatible kernel package definitions
+        run: |
+          python3 scripts/kernel-package-audit.py --kernel-tree "$RUNNER_TEMP/kernel" \
+            --arch "$ARCH" --board "$TARGET" --subtarget "$SUBTARGET" \
+            --json logs/package-audit.json 2>&1 | tee logs/package-audit.log
       - name: Resolve target kernel defaults
         run: |
           scripts/kconfig.pl + target/linux/generic/config-7.3 \
@@ -97,6 +102,48 @@ jobs:
         run: |
           make -C "$RUNNER_TEMP/kernel" -j"$(nproc)" "$IMAGE" modules \
             2>&1 | tee logs/compile.log
+      - name: Compile local external kernel modules
+        run: |
+          (
+            modules='button-hotplug gpio-button-hotplug trelay ubootenv-nvram'
+            if [ "$SUBTARGET" = filogic ]; then
+              modules="$modules leds-gca230718 leds-ws2812b"
+            fi
+            build_status=0
+            for module in $modules; do
+              destination="$RUNNER_TEMP/modules/$module"
+              mkdir -p "$destination"
+              cp -a "package/kernel/$module/src/." "$destination/"
+              make -C "$RUNNER_TEMP/kernel" M="$destination" modules || build_status=1
+            done
+            exit "$build_status"
+          ) 2>&1 | tee logs/external-modules.log
+      - name: Compile ATM library and PVC tools against Linux headers
+        run: |
+          make -C "$RUNNER_TEMP/kernel" \
+            INSTALL_HDR_PATH="$RUNNER_TEMP/uapi" headers_install
+          curl --fail --location --retry 3 \
+            https://sources.openwrt.org/linux-atm-2.5.2.tar.gz \
+            --output "$RUNNER_TEMP/linux-atm.tar.gz"
+          printf '%s  %s\n' \
+            9645481a2b16476b59220aa2d6bc5bc41043f291326c9b37581018fbd16dd53a \
+            "$RUNNER_TEMP/linux-atm.tar.gz" | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/linux-atm"
+          tar -xzf "$RUNNER_TEMP/linux-atm.tar.gz" --strip-components=1 -C "$RUNNER_TEMP/linux-atm"
+          PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
+            "$RUNNER_TEMP/linux-atm" package/network/utils/linux-atm/patches \
+            2>&1 | tee logs/atm-patches.log
+          (
+            cd "$RUNNER_TEMP/linux-atm"
+            autoreconf --force --install
+            ac_cv_header_linux_atmsvc_h=no \
+              CC="${CROSS_COMPILE}gcc" CPPFLAGS="-I$RUNNER_TEMP/uapi/include" \
+              ./configure --host="${CROSS_COMPILE%-}" --prefix=/usr
+            make -j"$(nproc)"
+            make DESTDIR="$RUNNER_TEMP/atm-install" install
+            test -f "$RUNNER_TEMP/atm-install/usr/lib/libatm.so"
+            test -x "$RUNNER_TEMP/atm-install/usr/sbin/br2684ctl"
+          ) 2>&1 | tee logs/atm-compile.log
       - name: Upload kernel diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

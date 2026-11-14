@@ -188,10 +188,11 @@ define KernelPackage/libphy
   TITLE:=PHY library
   KCONFIG:=CONFIG_PHYLIB \
 	   CONFIG_PHYLIB_LEDS=y \
-	   CONFIG_MDIO_BUS
+	   CONFIG_MDIO_BUS@lt7.3
   FILES:=$(LINUX_DIR)/drivers/net/phy/libphy.ko \
-    $(LINUX_DIR)/drivers/net/phy/mdio-bus.ko@ge6.18
-  AUTOLOAD:=$(call AutoLoad,15,libphy mdio-bus@ge6.18,1)
+    $(LINUX_DIR)/drivers/net/phy/mdio-bus.ko@eq6.18 \
+    $(LINUX_DIR)/drivers/net/phy/mdio_bus.ko@ge7.3
+  AUTOLOAD:=$(call AutoLoad,15,libphy mdio-bus@eq6.18 mdio_bus@ge7.3,1)
 endef
 
 define KernelPackage/libphy/description
@@ -563,7 +564,7 @@ define KernelPackage/phy-realtek
    TITLE:=Realtek Ethernet PHY driver
    KCONFIG:=CONFIG_REALTEK_PHY \
     CONFIG_REALTEK_PHY_HWMON=y
-   DEPENDS:=+kmod-libphy +kmod-hwmon-core
+   DEPENDS:=+kmod-libphy +kmod-hwmon-core +LINUX_7_3:kmod-phy-package
    FILES:=$(LINUX_DIR)/drivers/net/phy/realtek/realtek.ko
    AUTOLOAD:=$(call AutoLoad,18,realtek,1)
 endef
@@ -646,8 +647,9 @@ define KernelPackage/phy-airoha-en8811h
   DEPENDS:=+airoha-en8811h-firmware +kmod-libphy
   KCONFIG:=CONFIG_AIR_EN8811H_PHY
   FILES:= \
+   $(LINUX_DIR)/drivers/net/phy/air_phy_lib.ko@ge7.3 \
    $(LINUX_DIR)/drivers/net/phy/air_en8811h.ko
-  AUTOLOAD:=$(call AutoLoad,18,air_en8811h,1)
+  AUTOLOAD:=$(call AutoLoad,18,air_phy_lib@ge7.3 air_en8811h,1)
 endef
 
 define KernelPackage/phy-airoha-en8811h/description
@@ -694,8 +696,9 @@ define KernelPackage/dwmac-motorcomm
   TITLE:=Motorcomm PCI DWMAC support
   DEPENDS:=@PCI_SUPPORT +kmod-phy-motorcomm +kmod-stmmac-core
   KCONFIG:=CONFIG_DWMAC_MOTORCOMM
-  FILES:=$(LINUX_DIR)/drivers/net/ethernet/stmicro/stmmac/dwmac-motorcomm.ko
-  AUTOLOAD:=$(call AutoProbe,dwmac-motorcomm,1)
+  FILES:=$(LINUX_DIR)/drivers/net/ethernet/stmicro/stmmac/stmmac_libpci.ko@ge7.3 \
+	$(LINUX_DIR)/drivers/net/ethernet/stmicro/stmmac/dwmac-motorcomm.ko
+  AUTOLOAD:=$(call AutoProbe,stmmac_libpci@ge7.3 dwmac-motorcomm,1)
 endef
 
 define KernelPackage/dwmac-motorcomm/description
@@ -1545,8 +1548,9 @@ define KernelPackage/ice
     CONFIG_ICE_HWMON=y \
     CONFIG_ICE_HWTS=y \
     CONFIG_ICE_SWITCHDEV=y
-  FILES:=$(LINUX_DIR)/drivers/net/ethernet/intel/ice/ice.ko
-  AUTOLOAD:=$(call AutoProbe,ice)
+  FILES:=$(LINUX_DIR)/drivers/net/ethernet/intel/libeth/libeth_xdp.ko@ge7.3 \
+	$(LINUX_DIR)/drivers/net/ethernet/intel/ice/ice.ko
+  AUTOLOAD:=$(call AutoProbe,libeth_xdp@ge7.3 ice)
 endef
 
 define KernelPackage/ice/description
@@ -1580,7 +1584,7 @@ $(eval $(call KernelPackage,iavf))
 define KernelPackage/b44
   TITLE:=Broadcom 44xx driver
   KCONFIG:=CONFIG_B44
-  DEPENDS:=@PCI_SUPPORT @!TARGET_bcm47xx_mips74k +!TARGET_bcm47xx:kmod-ssb +kmod-mii +kmod-libphy
+  DEPENDS:=@PCI_SUPPORT @!TARGET_bcm47xx_mips74k +!TARGET_bcm47xx:kmod-ssb +kmod-mii +kmod-libphy +LINUX_7_3:kmod-fixed-phy
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/broadcom/b44.ko
   AUTOLOAD:=$(call AutoLoad,19,b44,1)
@@ -2312,7 +2316,7 @@ $(eval $(call KernelPackage,hinic))
 define KernelPackage/hinic3
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=Huawei 3rd generation network adapters (HINIC3) support
-  DEPENDS:=@PCI_SUPPORT @(TARGET_armsr_armv8||TARGET_loongarch64||TARGET_x86) @LINUX_6_18
+  DEPENDS:=@PCI_SUPPORT @(TARGET_armsr_armv8||TARGET_loongarch64||TARGET_x86) @!LINUX_6_12
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/huawei/hinic3/hinic3.ko
   KCONFIG:=CONFIG_HINIC3
   AUTOLOAD:=$(call AutoProbe,hinic3)
@@ -2504,7 +2508,7 @@ $(eval $(call KernelPackage,lan743x))
 define KernelPackage/amazon-ena
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=Elastic Network Adapter (for Amazon AWS)
-  DEPENDS:=@TARGET_x86_64||TARGET_armsr +LINUX_6_18:kmod-ptp
+  DEPENDS:=@TARGET_x86_64||TARGET_armsr +!LINUX_6_12:kmod-ptp
   KCONFIG:=CONFIG_ENA_ETHERNET
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/amazon/ena/ena.ko
   AUTOLOAD:=$(call AutoLoad,12,ena)

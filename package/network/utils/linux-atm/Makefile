@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=linux-atm
 PKG_VERSION:=2.5.2
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=@SF/$(PKG_NAME)
@@ -30,6 +30,11 @@ ATM_DEBUG_BINS:=aread awrite atmdiag atmdump atmswitch saaldump \
 ATM_DEBUG_SBINS:=atmaddr atmloop atmtcp esi atmsigd bus \
 		 ilmid ilmidiag lecs les mpcd zeppelin
 ATM_DEBUG_TOOLS:=$(ATM_DEBUG_BINS) $(ATM_DEBUG_SBINS)
+ATM_PVC_BINS:=aread awrite atmdiag atmdump sonetdiag
+ATM_PVC_SBINS:=atmloop esi
+ATM_PVC_TOOLS:=$(ATM_PVC_BINS) $(ATM_PVC_SBINS)
+ATM_INSTALL_BINS=$(if $(call kernel_patchver_ge,7.3),$(ATM_PVC_BINS),$(ATM_DEBUG_BINS))
+ATM_INSTALL_SBINS=$(if $(call kernel_patchver_ge,7.3),$(ATM_PVC_SBINS),$(ATM_DEBUG_SBINS))
 
 define Package/linux-atm
   SECTION:=libs
@@ -52,6 +57,7 @@ endef
 
 define Package/atm-tools
   $(call Package/linux-atm/Default)
+  DEPENDS+=@!LINUX_7_3
   TITLE:=Linux ATM tools
 endef
 
@@ -89,6 +95,7 @@ endef
 define GenAtmPlugin
   define Package/$(1)
      $(call Package/linux-atm/Default)
+     DEPENDS+=$(if $(filter $(2),$(ATM_PVC_TOOLS)),,@!LINUX_7_3)
      TITLE:=Linux ATM tool $(2)
   endef
 
@@ -100,6 +107,10 @@ endef
 $(foreach t,$(ATM_DEBUG_TOOLS),$(eval $(call GenAtmPlugin,atm-$(t),$(t))))
 
 TARGET_CFLAGS += -I$(LINUX_DIR)/user_headers/include
+
+ifneq ($(call kernel_patchver_ge,7.3),)
+  CONFIGURE_VARS += ac_cv_header_linux_atmsvc_h=no
+endif
 
 define Build/Configure
 	$(call Build/Configure/Default)
@@ -148,28 +159,8 @@ endef
 define Package/atm-debug-tools/install
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/atmaddr $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/atmloop $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/atmtcp     $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/esi $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/aread $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/awrite $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/atmdiag $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/atmdump $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/atmsigd $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/bus $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/ilmid $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/ilmidiag $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/lecs $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/les $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/mpcd $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/zeppelin $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/atmswitch $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/saaldump $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sonetdiag $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/svc_recv $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/svc_send $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ttcp_atm $(1)/usr/bin/
+	$(foreach tool,$(ATM_INSTALL_BINS),$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/$(tool) $(1)/usr/bin/;)
+	$(foreach tool,$(ATM_INSTALL_SBINS),$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/$(tool) $(1)/usr/sbin/;)
 endef
 
 define Package/atm-diagnostics/install

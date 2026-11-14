@@ -50,7 +50,8 @@ endef
 
 define KernelPackage/acpi-video/x86
   KCONFIG+=CONFIG_ACPI_WMI
-  FILES+=$(LINUX_DIR)/drivers/platform/x86/wmi.ko
+  FILES+=$(LINUX_DIR)/drivers/platform/x86/wmi.ko@lt7.3 \
+	$(LINUX_DIR)/drivers/platform/wmi/wmi.ko@ge7.3
   AUTOLOAD:=$(call AutoProbe,wmi video)
 endef
 
@@ -366,7 +367,7 @@ $(eval $(call KernelPackage,drm-buddy))
 define KernelPackage/drm-client-lib
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=DRM client library setup helper
-  DEPENDS:=@DISPLAY_SUPPORT @LINUX_6_18 +kmod-drm +kmod-drm-kms-helper
+  DEPENDS:=@DISPLAY_SUPPORT @!LINUX_6_12 +kmod-drm +kmod-drm-kms-helper
   KCONFIG:=CONFIG_DRM_CLIENT_LIB
   FILES:= $(LINUX_DIR)/drivers/gpu/drm/clients/drm_client_lib.ko
   AUTOLOAD:=$(call AutoProbe,drm_client_lib)
@@ -382,7 +383,7 @@ $(eval $(call KernelPackage,drm-client-lib))
 define KernelPackage/drm-display-helper
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=DRM helpers for display adapters drivers
-  DEPENDS:=@DISPLAY_SUPPORT +kmod-drm-kms-helper +LINUX_6_18:kmod-cec-core
+  DEPENDS:=@DISPLAY_SUPPORT +kmod-drm-kms-helper +!LINUX_6_12:kmod-cec-core
   HIDDEN:=1
   KCONFIG:=CONFIG_DRM_DISPLAY_HELPER
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/display/drm_display_helper.ko
@@ -452,7 +453,7 @@ define KernelPackage/drm-mipi-dbi
   HIDDEN:=1
   TITLE:=MIPI DBI helpers
   DEPENDS:=@DISPLAY_SUPPORT +kmod-backlight +kmod-drm-kms-helper \
-    +LINUX_6_18:kmod-drm-client-lib
+    +!LINUX_6_12:kmod-drm-client-lib
   KCONFIG:=CONFIG_DRM_MIPI_DBI
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/drm_mipi_dbi.ko
   AUTOLOAD:=$(call AutoProbe,drm_mipi_dbi)

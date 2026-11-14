@@ -91,7 +91,7 @@ define KernelPackage/fs-cachefiles
 	CONFIG_CACHEFILES \
 	CONFIG_CACHEFILES_DEBUG=n \
 	CONFIG_CACHEFILES_ERROR_INJECTION=n \
-	CONFIG_CACHEFILES_ONDEMAND=n
+	CONFIG_CACHEFILES_ONDEMAND=n@lt7.3
   FILES:= $(LINUX_DIR)/fs/cachefiles/cachefiles.ko
   AUTOLOAD:=$(call AutoLoad,30,cachefiles)
 endef
@@ -108,7 +108,8 @@ define KernelPackage/fs-smbfs-common
 	CONFIG_SMBFS
   FILES:= \
 	$(LINUX_DIR)/fs/smb/common/cifs_arc4.ko@lt6.18 \
-	$(LINUX_DIR)/fs/smb/common/cifs_md4.ko
+	$(LINUX_DIR)/fs/smb/common/cifs_md4.ko \
+	$(LINUX_DIR)/fs/smb/common/smb_compress.ko@ge7.3
 endef
 
 define KernelPackage/fs-smbfs-common/description
@@ -470,11 +471,12 @@ define KernelPackage/fs-nfs-common
 	CONFIG_SUNRPC \
 	CONFIG_GRACE_PERIOD \
 	CONFIG_NFS_V4=y \
-	CONFIG_NFS_V4_1=y \
+	CONFIG_NFS_V4_0=y@ge7.3 \
+	CONFIG_NFS_V4_1=y@lt7.3 \
 	CONFIG_NFS_V4_1_IMPLEMENTATION_ID_DOMAIN="kernel.org" \
 	CONFIG_NFS_V4_1_MIGRATION=n \
 	CONFIG_NFS_V4_2=y \
-	CONFIG_NFSD_V4_DELEG_TIMESTAMPS=n@ge6.18 \
+	CONFIG_NFSD_V4_DELEG_TIMESTAMPS=n@eq6.18 \
 	CONFIG_NFS_V4_2_READ_PLUS=n
   FILES:= \
 	$(LINUX_DIR)/fs/lockd/lockd.ko \
@@ -502,8 +504,13 @@ define KernelPackage/fs-nfs-common-rpcsec
 	+kmod-crypto-cts
   KCONFIG:= \
 	CONFIG_SUNRPC_GSS \
-	CONFIG_RPCSEC_GSS_KRB5
+	CONFIG_RPCSEC_GSS_KRB5 \
+	CONFIG_CRYPTO_KRB5@ge7.3 \
+	CONFIG_CRYPTO_KRB5ENC@ge7.3
   FILES:= \
+	$(LINUX_DIR)/crypto/camellia_generic.ko@ge7.3 \
+	$(LINUX_DIR)/crypto/krb5enc.ko@ge7.3 \
+	$(LINUX_DIR)/crypto/krb5/krb5.ko@ge7.3 \
 	$(LINUX_DIR)/net/sunrpc/auth_gss/auth_rpcgss.ko \
 	$(LINUX_DIR)/net/sunrpc/auth_gss/rpcsec_gss_krb5.ko
   AUTOLOAD:=$(call AutoLoad,31,auth_rpcgss rpcsec_gss_krb5)
@@ -560,6 +567,7 @@ define KernelPackage/fs-nfsd
 	CONFIG_NFSD \
 	CONFIG_NFSD_V4=y \
 	CONFIG_NFSD_V4_SECURITY_LABEL=n \
+	CONFIG_NFSD_V4_POSIX_ACLS=n@ge7.3 \
 	CONFIG_NFSD_BLOCKLAYOUT=n \
 	CONFIG_NFSD_SCSILAYOUT=n \
 	CONFIG_NFSD_FLEXFILELAYOUT=n \
@@ -598,6 +606,7 @@ $(eval $(call KernelPackage,fs-ntfs3))
 define KernelPackage/fs-reiserfs
   SUBMENU:=$(FS_MENU)
   TITLE:=ReiserFS filesystem support
+  DEPENDS:=@LINUX_6_12
   KCONFIG:=CONFIG_REISERFS_FS
   FILES:=$(LINUX_DIR)/fs/reiserfs/reiserfs.ko
   AUTOLOAD:=$(call AutoLoad,30,reiserfs,1)

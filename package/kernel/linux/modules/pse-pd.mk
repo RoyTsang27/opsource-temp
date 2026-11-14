@@ -148,7 +148,7 @@ define KernelPackage/pse-hasivo-hs104
   SUBMENU:=$(PSE_MENU)
   TITLE:=Hasivo HS104 PSE controller support
   KCONFIG:=CONFIG_PSE_HASIVO_HS104
-  DEPENDS:=+kmod-i2c-core
+  DEPENDS:=@TARGET_realtek +kmod-i2c-core
   FILES:=$(LINUX_DIR)/drivers/net/pse-pd/hasivo_hs104.ko
   AUTOLOAD:=$(call AutoProbe,hasivo_hs104)
   $(call AddDepends/pse-pd)

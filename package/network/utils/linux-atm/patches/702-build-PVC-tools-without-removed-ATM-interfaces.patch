@@ -1,0 +1,59 @@
+Subject: [PATCH] Build the ATM library and PVC tools without removed kernel APIs
+
+Linux 7.3 removes SVC signalling, CLIP, LANE, MPOA and ATM-over-TCP.
+Keep libatm, PPPoA support, br2684ctl and PVC diagnostics usable.
+Detect the removed signalling header for older kernels as well.
+
+--- a/configure.in
++++ b/configure.in
+@@ -43,6 +43,10 @@
+ AC_CHECK_HEADER(linux/atmsap.h, ,
+ 	AC_MSG_ERROR([*** Unable to find linux/atmsap.h!!!])
+ )
++
++dnl Linux 7.3 retains PVC ATM but removes SVC, CLIP, LANE and MPOA.
++AC_CHECK_HEADERS([linux/atmsvc.h])
++AM_CONDITIONAL([HAVE_ATMSVC], [test "x$ac_cv_header_linux_atmsvc_h" = xyes])
+ 
+ dnl Check for libraries
+ dnl libresolv is required
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -1,3 +1,7 @@
++if HAVE_ATMSVC
+ SUBDIRS = include lib test debug qgen q2931 saal sigd maint arpd ilmid man led lane \
+ 		mpoad oamd switch config extra br2684
++else
++SUBDIRS = include lib test maint br2684
++endif
+ 
+--- a/src/test/Makefile.am
++++ b/src/test/Makefile.am
+@@ -1,6 +1,11 @@
++if HAVE_ATMSVC
+ USRPGMS = aread awrite ttcp_atm atmswitch svc_recv svc_send @pmp_send@
++PGMS = align aping br bw isp window
++else
++USRPGMS = aread awrite
++PGMS =
++endif
+ EXTRA_PROGRAMS = pmp_send
+-PGMS = align aping br bw isp window
+ bin_PROGRAMS = $(USRPGMS)
+ noinst_PROGRAMS = $(PGMS)
+ 
+--- a/src/maint/Makefile.am
++++ b/src/maint/Makefile.am
+@@ -1,6 +1,12 @@
++if HAVE_ATMSVC
+ BOOTPGMS=atmaddr esi
+ SYSPGMS=atmloop atmtcp enitune zntune hediag # nstune
+ USRPGMS=atmdiag atmdump sonetdiag saaldump
++else
++BOOTPGMS=esi
++SYSPGMS=atmloop enitune zntune hediag
++USRPGMS=atmdiag atmdump sonetdiag
++endif
+ 
+ INCLUDES=-I$(srcdir)/../q2931 -I$(srcdir)/../saal -I.
+ LDADD = $(top_builddir)/src/lib/libatm.la

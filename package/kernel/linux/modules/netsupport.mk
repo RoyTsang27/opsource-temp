@@ -29,7 +29,7 @@ $(eval $(call KernelPackage,atm))
 define KernelPackage/atmtcp
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=ATM over TCP
-  DEPENDS:=kmod-atm
+  DEPENDS:=@!LINUX_7_3 kmod-atm
   KCONFIG:=CONFIG_ATM_TCP CONFIG_ATM_DRIVERS=y
   FILES:=$(LINUX_DIR)/drivers/atm/atmtcp.ko
   AUTOLOAD:=$(call AutoLoad,40,atmtcp)
@@ -45,6 +45,7 @@ $(eval $(call KernelPackage,atmtcp))
 define KernelPackage/appletalk
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Appletalk protocol support
+  DEPENDS:=@!LINUX_7_3
   KCONFIG:= \
         CONFIG_ATALK \
         CONFIG_DEV_APPLETALK \
@@ -164,6 +165,7 @@ $(eval $(call KernelPackage,nsh))
 define KernelPackage/misdn
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=mISDN (ISDN) Support
+  DEPENDS:=@!LINUX_7_3
   KCONFIG:= \
 	CONFIG_ISDN=y \
   	CONFIG_MISDN \
@@ -678,7 +680,7 @@ $(eval $(call KernelPackage,pppol2tp))
 define KernelPackage/ipoa
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=IPoA support
-  DEPENDS:=kmod-atm
+  DEPENDS:=@!LINUX_7_3 kmod-atm
   KCONFIG:=CONFIG_ATM_CLIP
   FILES:=$(LINUX_DIR)/net/atm/clip.ko
   AUTOLOAD:=$(call AutoProbe,clip)
@@ -1295,11 +1297,12 @@ define KernelPackage/rxrpc
 	$(LINUX_DIR)/net/rxrpc/rxrpc.ko
   AUTOLOAD:=$(call AutoLoad,30,rxrpc)
   DEPENDS:= \
-	+kmod-crypto-fcrypt \
+	+!LINUX_7_3:kmod-crypto-fcrypt \
+	+LINUX_7_3:kmod-crypto-des \
 	+kmod-crypto-hmac \
 	+kmod-crypto-manager \
 	+kmod-crypto-md5 \
-	+kmod-crypto-pcbc \
+	+!LINUX_7_3:kmod-crypto-pcbc \
 	+kmod-udptunnel4 \
 	+IPV6:kmod-udptunnel6
 endef

@@ -885,6 +885,13 @@ sub update {
 		push @index_feeds, $name;
 	}
 	foreach my $name (@index_feeds) {
+		if (-d "./config/feeds-patches/$name") {
+			system("python3", "./scripts/apply-feed-patches.py", $name) == 0 or do {
+				warn "Feed compatibility patches failed for $name.\n";
+				$failed=1;
+				next;
+			};
+		}
 		warn "Create index file './feeds/$name.index' \n";
 		update_index($name) == 0 or do {
 			warn "failed.\n";

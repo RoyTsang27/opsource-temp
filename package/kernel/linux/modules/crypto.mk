@@ -82,8 +82,10 @@ define KernelPackage/crypto-blake2b
   TITLE:=Support for BLAKE2b cryptographic hash function (RFC 7693)
   DEPENDS:=+kmod-crypto-hash
   KCONFIG:=CONFIG_CRYPTO_BLAKE2B
-  FILES:=$(LINUX_DIR)/crypto/blake2b_generic.ko
-  AUTOLOAD:=$(call AutoLoad,09,blake2b_generic)
+  FILES:=$(LINUX_DIR)/crypto/blake2b_generic.ko@lt7.3 \
+	$(LINUX_DIR)/crypto/blake2b.ko@ge7.3 \
+	$(LINUX_DIR)/lib/crypto/libblake2b.ko@ge7.3
+  AUTOLOAD:=$(call AutoLoad,09,blake2b_generic@lt7.3 blake2b@ge7.3)
   $(call AddDepends/crypto)
 endef
 
@@ -276,6 +278,7 @@ $(eval $(call KernelPackage,crypto-essiv))
 
 define KernelPackage/crypto-fcrypt
   TITLE:=FCRYPT cipher CryptoAPI module
+  DEPENDS:=@!LINUX_7_3
   KCONFIG:=CONFIG_CRYPTO_FCRYPT
   FILES:=$(LINUX_DIR)/crypto/fcrypt.ko
   AUTOLOAD:=$(call AutoLoad,09,fcrypt)
@@ -326,16 +329,18 @@ define KernelPackage/crypto-ghash
   TITLE:=GHASH digest CryptoAPI module
   DEPENDS:=+kmod-crypto-gf128 +kmod-crypto-hash
   KCONFIG:= \
-	CONFIG_CRYPTO_GHASH \
-	CONFIG_CRYPTO_GHASH_ARM_CE
-  FILES:=$(LINUX_DIR)/crypto/ghash-generic.ko
-  AUTOLOAD:=$(call AutoLoad,09,ghash-generic)
+	CONFIG_CRYPTO_GHASH@lt7.3 \
+	CONFIG_CRYPTO_GHASH_ARM_CE@lt7.3 \
+	CONFIG_CRYPTO_LIB_GF128HASH@ge7.3
+  FILES:=$(LINUX_DIR)/crypto/ghash-generic.ko@lt7.3 \
+	$(LINUX_DIR)/lib/crypto/libgf128hash.ko@ge7.3
+  AUTOLOAD:=$(call AutoLoad,09,ghash-generic@lt7.3 libgf128hash@ge7.3)
   $(call AddDepends/crypto)
 endef
 
 define KernelPackage/crypto-ghash/arm-ce
-  FILES+= $(LINUX_DIR)/arch/arm/crypto/ghash-arm-ce.ko
-  AUTOLOAD+=$(call AutoLoad,09,ghash-arm-ce)
+  FILES+= $(LINUX_DIR)/arch/arm/crypto/ghash-arm-ce.ko@lt7.3
+  AUTOLOAD+=$(call AutoLoad,09,ghash-arm-ce@lt7.3)
 endef
 
 KernelPackage/crypto-ghash/imx/cortexa7=$(KernelPackage/crypto-ghash/arm-ce)
@@ -742,12 +747,12 @@ endef
 
 define KernelPackage/crypto-md5/octeon
   FILES+=$(LINUX_DIR)/arch/mips/cavium-octeon/crypto/octeon-md5.ko@lt6.18
-  AUTOLOAD+=$(call AutoLoad,09,LINUX_6_12:octeon-md5)
+  AUTOLOAD+=$(call AutoLoad,09,octeon-md5@lt6.18)
 endef
 
 define KernelPackage/crypto-md5/powerpc
   FILES+=$(LINUX_DIR)/arch/powerpc/crypto/md5-ppc.ko@lt6.18
-  AUTOLOAD+=$(call AutoLoad,09,LINUX_6_12:md5-ppc)
+  AUTOLOAD+=$(call AutoLoad,09,md5-ppc@lt6.18)
 endef
 
 ifdef KernelPackage/crypto-md5/$(ARCH)
@@ -760,7 +765,7 @@ $(eval $(call KernelPackage,crypto-md5))
 
 define KernelPackage/crypto-michael-mic
   TITLE:=Michael MIC keyed digest CryptoAPI module
-  DEPENDS:=+kmod-crypto-hash
+  DEPENDS:=@!LINUX_7_3 +kmod-crypto-hash
   KCONFIG:=CONFIG_CRYPTO_MICHAEL_MIC
   FILES:=$(LINUX_DIR)/crypto/michael_mic.ko
   AUTOLOAD:=$(call AutoLoad,09,michael_mic)
@@ -783,7 +788,7 @@ $(eval $(call KernelPackage,crypto-null))
 
 define KernelPackage/crypto-pcbc
   TITLE:=Propagating Cipher Block Chaining CryptoAPI module
-  DEPENDS:=+kmod-crypto-manager
+  DEPENDS:=@!LINUX_7_3 +kmod-crypto-manager
   KCONFIG:=CONFIG_CRYPTO_PCBC
   FILES:=$(LINUX_DIR)/crypto/pcbc.ko
   AUTOLOAD:=$(call AutoLoad,09,pcbc)
@@ -801,6 +806,7 @@ define KernelPackage/crypto-rsa
   FILES:= \
 	$(LINUX_DIR)/lib/crypto/mpi/mpi.ko \
 	$(LINUX_DIR)/crypto/akcipher.ko \
+	$(LINUX_DIR)/crypto/sig.ko@ge7.3 \
 	$(LINUX_DIR)/crypto/rsa_generic.ko
   AUTOLOAD:=$(call AutoLoad,10,rsa_generic)
   $(call AddDepends/crypto)
@@ -826,9 +832,9 @@ define KernelPackage/crypto-rng
   DEPENDS:=+kmod-crypto-hash +kmod-crypto-hmac +kmod-crypto-sha512 +kmod-crypto-sha3
   KCONFIG:= \
 	CONFIG_CRYPTO_DRBG \
-	CONFIG_CRYPTO_DRBG_HMAC=y \
-	CONFIG_CRYPTO_DRBG_HASH=n \
-	CONFIG_CRYPTO_DRBG_MENU \
+	CONFIG_CRYPTO_DRBG_HMAC=y@lt7.3 \
+	CONFIG_CRYPTO_DRBG_HASH=n@lt7.3 \
+	CONFIG_CRYPTO_DRBG_MENU@lt7.3 \
 	CONFIG_CRYPTO_JITTERENTROPY \
 	CONFIG_CRYPTO_RNG2
   FILES:= \
@@ -944,8 +950,10 @@ define KernelPackage/crypto-sha3
   TITLE:=SHA3 digest CryptoAPI module
   DEPENDS:=+kmod-crypto-hash
   KCONFIG:= CONFIG_CRYPTO_SHA3
-  FILES:=$(LINUX_DIR)/crypto/sha3_generic.ko
-  AUTOLOAD:=$(call AutoLoad,09,sha3_generic)
+  FILES:=$(LINUX_DIR)/crypto/sha3_generic.ko@lt7.3 \
+	$(LINUX_DIR)/crypto/sha3.ko@ge7.3 \
+	$(LINUX_DIR)/lib/crypto/libsha3.ko@ge7.3
+  AUTOLOAD:=$(call AutoLoad,09,sha3_generic@lt7.3 sha3@ge7.3)
   $(call AddDepends/crypto)
 endef
 
@@ -1039,7 +1047,7 @@ endef
 
 define KernelPackage/crypto-sha512/aarch64
   FILES+=$(LINUX_DIR)/arch/arm64/crypto/sha512-arm64.ko@lt6.18
-  AUTOLOAD+=$(call AutoLoad,09,!LINUX_6_18:sha512-arm64)
+  AUTOLOAD+=$(call AutoLoad,09,sha512-arm64@lt6.18)
 endef
 
 KernelPackage/crypto-sha512/imx/cortexa7=$(KernelPackage/crypto-sha512/arm)
@@ -1072,7 +1080,7 @@ $(eval $(call KernelPackage,crypto-sha512))
 
 define KernelPackage/crypto-test
   TITLE:=Test CryptoAPI module
-  KCONFIG:=CONFIG_CRYPTO_TEST
+  KCONFIG:=CONFIG_CRYPTO_TEST@lt6.18 CONFIG_CRYPTO_BENCHMARK@ge6.18
   FILES:=$(LINUX_DIR)/crypto/tcrypt.ko
   $(call AddDepends/crypto,+kmod-crypto-manager)
 endef
