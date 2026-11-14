@@ -95,6 +95,8 @@ jobs:
         run: |
           scripts/kconfig.pl + target/linux/generic/config-7.3 \
             "target/linux/$TARGET/$SUBTARGET/config-7.3" > "$RUNNER_TEMP/kernel/.config"
+          # button-hotplug's package dependency supplies input-core in OpenWrt.
+          printf '%s\n' CONFIG_INPUT=m >> "$RUNNER_TEMP/kernel/.config"
           make -C "$RUNNER_TEMP/kernel" listnewconfig 2>&1 | tee logs/new-options.log
           make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
           cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config

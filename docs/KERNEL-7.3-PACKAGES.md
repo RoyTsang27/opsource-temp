@@ -27,6 +27,8 @@ packages, userspace dependencies, package installation and image generation.
 | PHY drivers | Update the MDIO bus filename; include Airoha's new shared library and Realtek's PHY package dependency. |
 | Ethernet drivers | Include the PCI stmmac and Intel XDP helper modules; retain fixed-PHY and PTP dependencies. |
 | RAID, polynomial, EEPROM, WMI | Follow their new source directories. |
+| EEPROM configuration | Enable NVMEM sysfs, which now contains the EEPROM driver options. |
+| Device-mapper encryption | Install the MD5 library now used directly by the LMK IV mode. |
 | Cadence USB | Follow the combined `cdns` module; the old common module is absent on 7.3. |
 | SMB and NFS | Include SMB compression and Kerberos crypto modules; update NFSv4 and removed configuration choices. |
 | Firmware and optional graphics | Extend dependencies introduced in 6.18 to 7.3. |

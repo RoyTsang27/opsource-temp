@@ -51,7 +51,7 @@ Detect the removed signalling header for older kernels as well.
  USRPGMS=atmdiag atmdump sonetdiag saaldump
 +else
 +BOOTPGMS=esi
-+SYSPGMS=atmloop enitune zntune hediag
++SYSPGMS=atmloop
 +USRPGMS=atmdiag atmdump sonetdiag
 +endif
  
