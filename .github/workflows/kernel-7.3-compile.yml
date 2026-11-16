@@ -103,15 +103,20 @@ jobs:
             CONFIG_CRYPTO_GCM=m CONFIG_CRC_CCITT=m CONFIG_RELAY=y CONFIG_HWMON=y \
             CONFIG_PPP=m CONFIG_NETFILTER=y CONFIG_NETFILTER_ADVANCED=y \
             CONFIG_NF_CONNTRACK=m CONFIG_NF_NAT=m \
-            CONFIG_USB=m CONFIG_MMC=m CONFIG_DMA_SHARED_BUFFER=y \
+            CONFIG_USB=m CONFIG_MMC=m CONFIG_SYNC_FILE=y \
             CONFIG_KPROBES=y CONFIG_FTRACE=y CONFIG_FTRACE_SYSCALLS=y \
             >> "$RUNNER_TEMP/kernel/.config"
           make -C "$RUNNER_TEMP/kernel" listnewconfig 2>&1 | tee logs/new-options.log
           make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
-          for dependency in PPP NF_CONNTRACK NF_NAT USB MMC DMA_SHARED_BUFFER KPROBES FTRACE_SYSCALLS; do
-            grep -Eq "^CONFIG_${dependency}=[my]$" "$RUNNER_TEMP/kernel/.config"
-          done
           cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config
+          missing=0
+          for dependency in PPP NF_CONNTRACK NF_NAT USB MMC DMA_SHARED_BUFFER KPROBES FTRACE_SYSCALLS; do
+            if ! grep -Eq "^CONFIG_${dependency}=[my]$" "$RUNNER_TEMP/kernel/.config"; then
+              printf 'Required build dependency CONFIG_%s was disabled\n' "$dependency" >&2
+              missing=1
+            fi
+          done
+          test "$missing" = 0
       - name: Compile ATM library and PVC tools against Linux headers
         run: |
           make -C "$RUNNER_TEMP/kernel" \
