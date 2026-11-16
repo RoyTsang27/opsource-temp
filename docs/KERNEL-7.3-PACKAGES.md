@@ -43,6 +43,7 @@ packages, userspace dependencies, package installation and image generation.
 | DAHDI PPP and NAPI | Use the PPP error callback without its removed error-code argument; include kernel NAPI declarations before defining the legacy compatibility alias. |
 | LTTng tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. Match the const packet-drop socket and Btrfs transaction-handle arguments. |
 | PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
+| Kernel string copies | Replace removed `strncpy` calls in LTTng, Xtables addons (including kernel Lua), OpenAppFilter and Netatop. Preserve bounded-copy padding and truncation; use `memmove` for overlapping trim buffers. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
 | Hasivo PSE | Restrict this driver to Realtek, which supplies its kernel patch. |
@@ -149,6 +150,13 @@ The trace prototype review compared 486 LTTng event interfaces against the
 common kernel trace headers. It found the packet-drop and Btrfs transaction
 changes. The compile configuration enables Btrfs and checks that its LTTng
 probe is built, alongside the DMA-fence probe.
+
+The string API review distinguishes module code from userspace libc callers.
+LTTng's cleared syscall-event record uses `strscpy`; fixed-width and substring
+copies use `memcpy_and_pad` with a bounded source length to retain their original
+byte contents. The compile workflow builds all enabled Xtables addon extensions,
+OpenAppFilter and Netatop, with Xtables and text-search dependencies enabled.
+The old DAHDI Blackfin-only mmap drivers are outside the supported targets.
 
 The image warning-option change was tested with the actual DTC sources from
 Linux 7.3.4 and the pinned 6.18.56. Both DTB and overlay generation work; the

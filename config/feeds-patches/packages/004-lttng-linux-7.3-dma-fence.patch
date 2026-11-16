@@ -11,7 +11,7 @@ The trace caller protects the name access with RCU.
  PKG_NAME:=lttng-modules
  PKG_VERSION:=2.15.2
 -PKG_RELEASE:=1
-+PKG_RELEASE:=4
++PKG_RELEASE:=5
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
  PKG_SOURCE_URL:=https://lttng.org/files/$(PKG_NAME)/
@@ -128,3 +128,41 @@ The trace caller protects the name access with RCU.
 + LTTNG_TRACEPOINT_EVENT(btrfs_transaction_commit,
 + 
 + 	TP_PROTO(const struct btrfs_fs_info *fs_info),
+
+--- /dev/null
++++ b/devel/lttng-modules/patches/102-linux-7.3-syscall-event-name-copy.patch
+@@ -0,0 +1,34 @@
++Subject: [PATCH] LTTng: use bounded terminated syscall event names
++
++The ABI event structure is already zeroed. strscpy preserves termination
++and the existing padding without relying on the removed strncpy API.
++--- a/src/lttng-syscalls.c
+++++ b/src/lttng-syscalls.c
++@@ -9,6 +9,7 @@
++ 
++ #include <linux/module.h>
++ #include <linux/slab.h>
+++#include <linux/string.h>
++ #include <linux/compat.h>
++ #include <linux/err.h>
++ #include <linux/bitmap.h>
++@@ -609,8 +610,7 @@
++ 			ev.u.syscall.abi = LTTNG_KERNEL_ABI_SYSCALL_ABI_COMPAT;
++ 			break;
++ 		}
++-		strncpy(ev.name, desc->event_name, LTTNG_KERNEL_ABI_SYM_NAME_LEN - 1);
++-		ev.name[LTTNG_KERNEL_ABI_SYM_NAME_LEN - 1] = '\0';
+++		strscpy(ev.name, desc->event_name, sizeof(ev.name));
++ 		ev.instrumentation = LTTNG_KERNEL_ABI_SYSCALL;
++ 		ev.token = syscall_event_enabler->user_token;
++ 		event_recorder_enabler = lttng_event_recorder_enabler_create(LTTNG_ENABLER_FORMAT_NAME, &ev,
++@@ -701,8 +701,7 @@
++ 			ev.u.syscall.abi = LTTNG_KERNEL_ABI_SYSCALL_ABI_COMPAT;
++ 			break;
++ 		}
++-		strncpy(ev.name, desc->event_name, LTTNG_KERNEL_ABI_SYM_NAME_LEN - 1);
++-		ev.name[LTTNG_KERNEL_ABI_SYM_NAME_LEN - 1] = '\0';
+++		strscpy(ev.name, desc->event_name, sizeof(ev.name));
++ 		ev.instrumentation = LTTNG_KERNEL_ABI_SYSCALL;
++ 		ev.token = syscall_event_enabler->user_token;
++ 		event_counter_enabler = lttng_event_counter_enabler_create(LTTNG_ENABLER_FORMAT_NAME, &ev,

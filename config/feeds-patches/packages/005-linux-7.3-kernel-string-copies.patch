@@ -1,0 +1,304 @@
+Subject: [PATCH] kernel modules: replace the removed strncpy API
+
+Use explicit bounded byte copies with zero padding to retain the legacy
+fixed-width and substring semantics. The trim operation uses memmove because
+its source and destination overlap. Userspace libc copies are unchanged.
+--- a/net/open-app-filter/Makefile
++++ b/net/open-app-filter/Makefile
+@@ -2,7 +2,7 @@
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=open-app-filter
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE_URL:=https://github.com/destan19/OpenAppFilter.git
+ PKG_SOURCE_PROTO:=git
+--- /dev/null
++++ b/net/open-app-filter/patches/950-linux-7.3-bounded-kernel-copies.patch
+@@ -0,0 +1,246 @@
++Subject: [PATCH] kernel modules: replace the removed strncpy API
++
++Use explicit bounded byte copies with zero padding to retain the legacy
++fixed-width and substring semantics. The trim operation uses memmove because
++its source and destination overlap. Userspace libc copies are unchanged.
++--- a/oaf/src/af_client_fs.c
+++++ b/oaf/src/af_client_fs.c
++@@ -1,4 +1,5 @@
++ #include <linux/init.h>
+++#include <linux/string.h>
++ #include <linux/fs.h>
++ #include <linux/netlink.h>
++ #include <linux/module.h>
++@@ -205,7 +206,8 @@
++ 		visiting_app = node->visiting.visiting_app;
++ 	}
++ 	if ( af_get_timestamp_sec()  - node->visiting.url_time < 120 ){
++-		strncpy(visiting_url, node->visiting.visiting_url, sizeof(visiting_url));
+++		memcpy_and_pad(visiting_url, sizeof(visiting_url), node->visiting.visiting_url,
+++			       strnlen(node->visiting.visiting_url, sizeof(visiting_url)), 0);
++ 	}
++ 	else{
++ 		strcpy(visiting_url, "none");
++--- a/oaf/src/app_filter.c
+++++ b/oaf/src/app_filter.c
++@@ -3,6 +3,7 @@
++ 	date:2019/1/10
++ */
++ #include <linux/init.h>
+++#include <linux/string.h>
++ #include <linux/module.h>
++ #include <linux/version.h>
++ #include <net/tcp.h>
++@@ -120,7 +121,8 @@
++ 			if (*p == '|')
++ 			{
++ 				memset(pos, 0x0, sizeof(pos));
++-				strncpy(pos, begin, p - begin);
+++				memcpy_and_pad(pos, p - begin, begin,
+++					       strnlen(begin, p - begin), 0);
++ 				k_sscanf(pos, "%d:%x", &index, &value);
++ 				begin = p + 1;
++ 				node->pos_info[node->pos_num].pos = index;
++@@ -132,7 +134,8 @@
++ 		}
++ 
++ 		if (begin != dict)
++-			strncpy(pos, begin, p - begin);
+++			memcpy_and_pad(pos, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 		else
++ 			strcpy(pos, dict);
++ 
++@@ -222,7 +225,8 @@
++ 		if (*p != '|')
++ 			continue;
++ 		memset(one_port_buf, 0x0, sizeof(one_port_buf));
++-		strncpy(one_port_buf, begin, p - begin);
+++		memcpy_and_pad(one_port_buf, p - begin, begin,
+++			       strnlen(begin, p - begin), 0);
++ 		if (0 == parse_range_value(one_port_buf, &info->range_list[info->num]))
++ 		{
++ 			info->num++;
++@@ -231,7 +235,8 @@
++ 		begin = p + 1;
++ 	}
++ 	memset(one_port_buf, 0x0, sizeof(one_port_buf));
++-	strncpy(one_port_buf, begin, p - begin);
+++	memcpy_and_pad(one_port_buf, p - begin, begin,
+++		       strnlen(begin, p - begin), 0);
++ 	if (0 == parse_range_value(one_port_buf, &info->range_list[info->num]))
++ 	{
++ 		info->num++;
++@@ -315,30 +320,38 @@
++ 		{
++ 
++ 		case AF_PROTO_PARAM_INDEX:
++-			strncpy(proto_str, begin, p - begin);
+++			memcpy_and_pad(proto_str, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 		case AF_SRC_PORT_PARAM_INDEX:
++-			strncpy(src_port_str, begin, p - begin);
+++			memcpy_and_pad(src_port_str, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 		case AF_DST_PORT_PARAM_INDEX:
++-			strncpy(dst_port_str, begin, p - begin);
+++			memcpy_and_pad(dst_port_str, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 
++ 		case AF_HOST_URL_PARAM_INDEX:
++-			strncpy(host_url, begin, p - begin);
+++			memcpy_and_pad(host_url, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 
++ 		case AF_REQUEST_URL_PARAM_INDEX:
++-			strncpy(request_url, begin, p - begin);
+++			memcpy_and_pad(request_url, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 		case AF_DICT_PARAM_INDEX:
++-			strncpy(dict, begin, p - begin);
+++			memcpy_and_pad(dict, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 		case AF_STR_PARAM_INDEX:
++-			strncpy(search_str, begin, p - begin);
+++			memcpy_and_pad(search_str, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			break;
++ 		case AF_IGNORE_PARAM_INDEX:
++-			strncpy(tmp_buf, begin, p - begin);
+++			memcpy_and_pad(tmp_buf, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			ignore = k_atoi(tmp_buf);
++ 			break;
++ 		}
++@@ -348,11 +361,13 @@
++ 
++ 	// old version
++ 	if (param_num == AF_DICT_PARAM_INDEX){
++-		strncpy(dict, begin, p - begin);
+++		memcpy_and_pad(dict, p - begin, begin,
+++			       strnlen(begin, p - begin), 0);
++ 	}
++ 	// new version
++ 	if (param_num == AF_IGNORE_PARAM_INDEX){
++-		strncpy(tmp_buf, begin, p - begin);
+++		memcpy_and_pad(tmp_buf, p - begin, begin,
+++			       strnlen(begin, p - begin), 0);
++ 		ignore = k_atoi(tmp_buf);
++ 	}
++ 
++@@ -411,7 +426,8 @@
++ 	}
++ 
++ 	if (pos && len)
++-		strncpy(feature_buf, pos, len);
+++		memcpy_and_pad(feature_buf, len, pos,
+++			       strnlen(pos, len), 0);
++ 	p = feature_buf;
++ 	begin = feature_buf;
++ 
++@@ -517,7 +533,8 @@
++ 				continue;
++ 			}
++ 			memset(line, 0x0, sizeof(line));
++-			strncpy(line, begin, p - begin);
+++			memcpy_and_pad(line, p - begin, begin,
+++				       strnlen(begin, p - begin), 0);
++ 			af_init_feature(line);
++ 			begin = p + 1;
++ 		}
++@@ -528,7 +545,8 @@
++ 		if (p - begin < MIN_FEATURE_LINE_LEN || p - begin > MAX_FEATURE_LINE_LEN)
++ 			return 0;
++ 		memset(line, 0x0, sizeof(line));
++-		strncpy(line, begin, p - begin);
+++		memcpy_and_pad(line, p - begin, begin,
+++			       strnlen(begin, p - begin), 0);
++ 		af_init_feature(line);
++ 		begin = p + 1;
++ 	}
++@@ -560,7 +578,8 @@
++ 		printk("warn, feature data len = %d\n", len);
++ 		return;
++ 	}
++-	strncpy(feature, data, len);
+++	memcpy_and_pad(feature, len, data,
+++		       strnlen(data, len), 0);
++ 	AF_INFO("add feature %s\n", feature);
++ 	af_init_feature(feature);
++ }
++@@ -937,16 +956,20 @@
++ 	if (flow->https.match == AF_TRUE && flow->https.url_pos)
++ 	{
++ 		if (flow->https.url_len >= MAX_URL_MATCH_LEN)
++-			strncpy(reg_url_buf, flow->https.url_pos, MAX_URL_MATCH_LEN - 1);
+++			memcpy_and_pad(reg_url_buf, MAX_URL_MATCH_LEN - 1, flow->https.url_pos,
+++				       strnlen(flow->https.url_pos, MAX_URL_MATCH_LEN - 1), 0);
++ 		else
++-			strncpy(reg_url_buf, flow->https.url_pos, flow->https.url_len);
+++			memcpy_and_pad(reg_url_buf, flow->https.url_len, flow->https.url_pos,
+++				       strnlen(flow->https.url_pos, flow->https.url_len), 0);
++ 	}
++ 	else if (flow->http.match == AF_TRUE && flow->http.host_pos)
++ 	{
++ 		if (flow->http.host_len >= MAX_URL_MATCH_LEN)
++-			strncpy(reg_url_buf, flow->http.host_pos, MAX_URL_MATCH_LEN - 1);
+++			memcpy_and_pad(reg_url_buf, MAX_URL_MATCH_LEN - 1, flow->http.host_pos,
+++				       strnlen(flow->http.host_pos, MAX_URL_MATCH_LEN - 1), 0);
++ 		else
++-			strncpy(reg_url_buf, flow->http.host_pos, flow->http.host_len);
+++			memcpy_and_pad(reg_url_buf, flow->http.host_len, flow->http.host_pos,
+++				       strnlen(flow->http.host_pos, flow->http.host_len), 0);
++ 	}
++ 	if (strlen(reg_url_buf) > 0 && strlen(node->host_url) > 0 && regexp_match(node->host_url, reg_url_buf))
++ 	{
++@@ -960,9 +983,11 @@
++ 	{
++ 		memset(reg_url_buf, 0x0, sizeof(reg_url_buf));
++ 		if (flow->http.url_len >= MAX_URL_MATCH_LEN)
++-			strncpy(reg_url_buf, flow->http.url_pos, MAX_URL_MATCH_LEN - 1);
+++			memcpy_and_pad(reg_url_buf, MAX_URL_MATCH_LEN - 1, flow->http.url_pos,
+++				       strnlen(flow->http.url_pos, MAX_URL_MATCH_LEN - 1), 0);
++ 		else
++-			strncpy(reg_url_buf, flow->http.url_pos, flow->http.url_len);
+++			memcpy_and_pad(reg_url_buf, flow->http.url_len, flow->http.url_pos,
+++				       strnlen(flow->http.url_pos, flow->http.url_len), 0);
++ 		if (strlen(reg_url_buf) > 0 && strlen(node->request_url) && regexp_match(node->request_url, reg_url_buf))
++ 		{
++ 			AF_DEBUG("match request:%s   reg:%s appid=%d\n",
++@@ -1069,7 +1094,8 @@
++ 				AF_LMT_INFO("match feature, appid=%d, feature = %s\n", node->app_id, node->feature);
++ 				flow->app_id = node->app_id;
++ 				flow->feature = node;
++-				strncpy(flow->app_name, node->app_name, sizeof(flow->app_name) - 1);
+++				memcpy_and_pad(flow->app_name, sizeof(flow->app_name) - 1, node->app_name,
+++					       strnlen(node->app_name, sizeof(flow->app_name) - 1), 0);
++ 				feature_list_read_unlock();
++ 				return AF_TRUE;
++ 			}
++--- a/oaf/src/af_utils.c
+++++ b/oaf/src/af_utils.c
++@@ -55,7 +55,7 @@
++ 	if ((s != start) || (bk != last))
++ 	{
++ 		len = last - start + 1;
++-		strncpy(s, start, len);
+++		memmove(s, start, len);
++ 		s[len] = '\0';
++ 	}
++ 	return s;
++@@ -80,7 +80,8 @@
++ 		len = MAX_DUMP_STR_LEN - 1;
++ 	}
++ 	printk("%s: ",name);
++-	strncpy(buf, p, len);
+++	memcpy_and_pad(buf, len, p,
+++		       strnlen(p, len), 0);
++ 	printk("[%s]\n", buf);
++ }
++ int isprint_char(unsigned char c)
+--- a/admin/netatop/Makefile
++++ b/admin/netatop/Makefile
+@@ -5,7 +5,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=netatop
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ PKG_VERSION:=3.1
+ PKG_LICENSE:=GPL-2.0
+ PKG_SOURCE_URL:=https://www.atoptool.nl/download/
+--- /dev/null
++++ b/admin/netatop/patches/950-linux-7.3-bounded-kernel-copies.patch
+@@ -0,0 +1,25 @@
++Subject: [PATCH] kernel modules: replace the removed strncpy API
++
++Use explicit bounded byte copies with zero padding to retain the legacy
++fixed-width and substring semantics. The trim operation uses memmove because
++its source and destination overlap. Userspace libc copies are unchanged.
++--- a/module/netatop.c
+++++ b/module/netatop.c
++@@ -82,6 +82,7 @@
++ ** published by the Free Software Foundation.
++ */
++ #include <linux/init.h>
+++#include <linux/string.h>
++ #include <linux/kernel.h>
++ #include <linux/module.h>
++ #include <linux/netfilter.h>
++@@ -994,7 +995,8 @@
++ 		tip->btime++;
++ #endif
++ 
++-	strncpy(tip->command, current->comm, COMLEN);
+++	memcpy_and_pad(tip->command, COMLEN, current->comm,
+++		       strnlen(current->comm, COMLEN), 0);
++ 
++ 	return tip;
++ }

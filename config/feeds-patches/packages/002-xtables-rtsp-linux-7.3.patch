@@ -10,7 +10,7 @@ The kernel releases them through its helper reference-counting API.
  PKG_NAME:=xtables-addons
  PKG_VERSION:=3.30
 -PKG_RELEASE:=1
-+PKG_RELEASE:=3
++PKG_RELEASE:=4
  PKG_HASH:=d43400322980390180bef05eb6f798af49285987c217b7f1c6332da74920d9a4
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.zst
@@ -94,3 +94,108 @@ The kernel releases them through its helper reference-counting API.
 + 
 + 		tmpname = &rtsp_names[i][0];
 + 		if (ports[i] == RTSP_PORT) {
+
+--- /dev/null
++++ b/net/xtables-addons/patches/202-linux-7.3-bounded-kernel-copies.patch
+@@ -0,0 +1,101 @@
++Subject: [PATCH] kernel modules: replace the removed strncpy API
++
++Use explicit bounded byte copies with zero padding to retain the legacy
++fixed-width and substring semantics. The trim operation uses memmove because
++its source and destination overlap. Userspace libc copies are unchanged.
++--- a/extensions/xt_quota2.c
+++++ b/extensions/xt_quota2.c
++@@ -12,6 +12,7 @@
++  *	version 2, as published by the Free Software Foundation.
++  */
++ #include <linux/list.h>
+++#include <linux/string.h>
++ #include <linux/module.h>
++ #include <linux/nsproxy.h>
++ #include <linux/proc_fs.h>
++@@ -142,7 +143,8 @@
++ 	if (!anon) {
++ 		INIT_LIST_HEAD(&e->list);
++ 		atomic_set(&e->ref, 1);
++-		strncpy(e->name, q->name, sizeof(e->name));
+++		memcpy_and_pad(e->name, sizeof(e->name), q->name,
+++			       strnlen(q->name, sizeof(e->name)), 0);
++ 	}
++ 	return e;
++ }
++--- a/extensions/ACCOUNT/xt_ACCOUNT.c
+++++ b/extensions/ACCOUNT/xt_ACCOUNT.c
++@@ -221,7 +221,8 @@
++ 			int j;  /* needs to be signed, otherwise we risk endless loop */
++ 
++ 			pr_debug("ACCOUNT: Found free slot: %d\n", i);
++-			strncpy(ipt_acc_tables[i].name, name, ACCOUNT_TABLE_NAME_LEN-1);
+++			memcpy_and_pad(ipt_acc_tables[i].name, ACCOUNT_TABLE_NAME_LEN-1, name,
+++				       strnlen(name, ACCOUNT_TABLE_NAME_LEN-1), 0);
++ 
++ 			ipt_acc_tables[i].ip = ip;
++ 			ipt_acc_tables[i].netmask = netmask;
++--- a/extensions/pknock/xt_pknock.c
+++++ b/extensions/pknock/xt_pknock.c
++@@ -8,6 +8,7 @@
++  */
++ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++ #include <linux/module.h>
+++#include <linux/string.h>
++ #include <linux/version.h>
++ #include <linux/skbuff.h>
++ #include <linux/ip.h>
++@@ -457,7 +458,8 @@
++ 		return false;
++ 
++ 	INIT_LIST_HEAD(&rule->head);
++-	strncpy(rule->rule_name, info->rule_name, info->rule_name_len);
+++	memcpy_and_pad(rule->rule_name, info->rule_name_len, info->rule_name,
+++		       strnlen(info->rule_name, info->rule_name_len), 0);
++ 	rule->rule_name_len = info->rule_name_len;
++ 	rule->ref_count      = 1;
++ 	rule->max_time       = info->max_time;
++--- a/extensions/LUA/xt_LUA_target.c
+++++ b/extensions/LUA/xt_LUA_target.c
++@@ -17,6 +17,7 @@
++  */
++ 
++ #include <linux/kernel.h>
+++#include <linux/string.h>
++ #include <linux/slab.h>
++ #include <linux/module.h>
++ #include <linux/uaccess.h>
++@@ -150,7 +151,8 @@
++ 	lua_setfield(env->L, -2, "STATE_ID");
++ 	lua_pop(env->L, 1); /* pop _G */
++ 
++-	strncpy(buf, script_buf, script_size);
+++	memcpy_and_pad(buf, script_size, script_buf,
+++		       strnlen(script_buf, script_size), 0);
++ 	ret = luaL_loadbuffer(env->L, buf, script_size, "PacketScript, loadbuffer") ||
++ 	      lua_pcall(env->L, 0, 1, 0);
++ 
++--- a/extensions/LUA/lua/lobject.c
+++++ b/extensions/LUA/lua/lobject.c
++@@ -180,7 +180,8 @@
++ 
++ void luaO_chunkid (char *out, const char *source, size_t bufflen) {
++   if (*source == '=') {
++-    strncpy(out, source+1, bufflen);  /* remove first char */
+++    memcpy_and_pad(out, bufflen, source+1,
+++    	       strnlen(source+1, bufflen), 0);  /* remove first char */
++     out[bufflen-1] = '\0';  /* ensures null termination */
++   }
++   else {  /* out = "source", or "...source" */
++--- a/extensions/LUA/lua/lstrlib.c
+++++ b/extensions/LUA/lua/lstrlib.c
++@@ -754,7 +754,8 @@
++   if (isdigit(uchar(*p)))
++     luaL_error(L, "invalid format (width or precision too long)");
++   *(form++) = '%';
++-  strncpy(form, strfrmt, p - strfrmt + 1);
+++  memcpy_and_pad(form, p - strfrmt + 1, strfrmt,
+++  	       strnlen(strfrmt, p - strfrmt + 1), 0);
++   form += p - strfrmt + 1;
++   *form = '\0';
++   return p;

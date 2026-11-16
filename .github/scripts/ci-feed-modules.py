@@ -57,17 +57,25 @@ packages = (
     ('telephony', 'libs/dahdi-linux', 'dahdi-linux', '.tar.gz'),
     ('packages', 'libs/libpfring', 'libpfring', '.tar.gz'),
     ('packages', 'devel/lttng-modules', 'lttng-modules', '.tar.bz2'),
+    ('packages', 'net/open-app-filter', 'open-app-filter', '.tar.zst'),
+    ('packages', 'admin/netatop', 'netatop', '.tar.gz'),
 )
 
 
 def compile_package(feed, relative, name, extension):
     package = temporary / feed / relative
     recipe = (package / 'Makefile').read_text()
-    version = re.search(r'^PKG_VERSION:=(\S+)$', recipe, re.M)[1]
-    digest = re.search(r'^PKG_HASH:=(\S+)$', recipe, re.M)[1]
-    filename = re.search(r'^PKG_SOURCE:=(\S+)$', recipe, re.M)[1]
-    filename = filename.replace('$(PKG_NAME)', name).replace('$(PKG_VERSION)', version)
+    values = dict(re.findall(r'^(PKG_\w+):=(\S+)$', recipe, re.M))
+    if values.get('PKG_SOURCE_PROTO') == 'git':
+        version = values['PKG_SOURCE_DATE'].replace('-', '.') + '~' + values['PKG_SOURCE_VERSION'][:8]
+        digest = values['PKG_MIRROR_HASH']
+        filename = f'{name}-{version}.tar.zst'
+    else:
+        version = values['PKG_VERSION']
+        digest = values['PKG_HASH']
+        filename = values['PKG_SOURCE'].replace('$(PKG_NAME)', name).replace('$(PKG_VERSION)', version)
     assert '$(' not in filename
+    assert re.fullmatch('[0-9a-f]{64}', digest)
     archive = temporary / filename
     urls = [mirror.rstrip('/') + '/' + archive.name for mirror in mirrors]
     if name == 'dahdi-linux':
@@ -76,8 +84,10 @@ def compile_package(feed, relative, name, extension):
         urls.append('https://inai.de/files/xtables-addons/' + archive.name)
     elif name == 'libpfring':
         urls.append(f'https://codeload.github.com/ntop/PF_RING/tar.gz/{version}')
-    else:
+    elif name == 'lttng-modules':
         urls.append(f'https://lttng.org/files/lttng-modules/{archive.name}')
+    elif name == 'netatop':
+        urls.append('https://www.atoptool.nl/download/' + archive.name)
     download(urls, archive, digest)
     source = temporary / name
     source.mkdir()
@@ -86,9 +96,12 @@ def compile_package(feed, relative, name, extension):
     environment = {**os.environ, 'PATCH': 'patch --fuzz=0'}
     run('scripts/patch-kernel.sh', source, package / 'patches', env=environment)
     if name == 'xtables-addons':
-        run('make', '-C', kernel, 'M=' + str(source / 'extensions/rtsp'), 'modules')
-        assert (source / 'extensions/rtsp/nf_conntrack_rtsp.ko').is_file()
-        assert (source / 'extensions/rtsp/nf_nat_rtsp.ko').is_file()
+        run('make', '-C', kernel, 'M=' + str(source / 'extensions'),
+            'XA_ABSTOPSRCDIR=' + str(source), '-k',
+            '-j' + str(os.cpu_count() or 2), 'modules')
+        for module in ('rtsp/nf_conntrack_rtsp', 'rtsp/nf_nat_rtsp', 'xt_quota2',
+                       'ACCOUNT/xt_ACCOUNT', 'pknock/xt_pknock', 'LUA/xt_LUA'):
+            assert (source / 'extensions' / (module + '.ko')).is_file(), module
     elif name == 'dahdi-linux':
         # Also exercise the optional PPP code, which the package leaves disabled.
         run('make', '-C', source, 'KSRC=' + str(kernel), 'DAHDI_BUILD_ALL=',
@@ -98,12 +111,18 @@ def compile_package(feed, relative, name, extension):
         run('make', '-C', kernel, 'M=' + str(source / 'kernel'),
             'EXTRA_CFLAGS=-I' + str(source / 'kernel'), 'modules')
         assert (source / 'kernel/pf_ring.ko').is_file()
-    else:
+    elif name == 'lttng-modules':
         run('make', '-C', kernel, 'M=' + str(source), 'CONFIG_LTTNG=m', '-k',
             '-j' + str(os.cpu_count() or 2), 'modules')
         assert (source / 'src/lttng-tracer.ko').is_file()
         assert (source / 'src/probes/lttng-probe-dma-fence.ko').is_file()
         assert (source / 'src/probes/lttng-probe-btrfs.ko').is_file()
+    else:
+        relative = 'oaf/src' if name == 'open-app-filter' else 'module'
+        module = 'oaf' if name == 'open-app-filter' else 'netatop'
+        run('make', '-C', kernel, 'M=' + str(source / relative), '-k',
+            '-j' + str(os.cpu_count() or 2), 'modules')
+        assert (source / relative / (module + '.ko')).is_file()
 
 
 failures = []
