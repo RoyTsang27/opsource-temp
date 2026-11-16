@@ -106,7 +106,16 @@ Do not select removed CryptoAPI PCBC or AppleTalk support on 7.3.
  	  +kmod-crypto-sha512 \
 --- a/net/netatalk/Makefile
 +++ b/net/netatalk/Makefile
-@@ -44,7 +44,7 @@
+@@ -9,7 +9,7 @@
+ 
+ PKG_NAME:=netatalk
+ PKG_VERSION:=4.4.3
+-PKG_RELEASE:=2
++PKG_RELEASE:=3
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+ PKG_SOURCE_URL:=@SF/netatalk
+@@ -44,15 +44,15 @@
    $(call Package/netatalk/Default)
    TITLE+= with AppleTalk support
    VARIANT:=appletalk
@@ -115,13 +124,23 @@ Do not select removed CryptoAPI PCBC or AppleTalk support on 7.3.
  endef
  
  define Package/netatalk-full
+   $(call Package/netatalk/Default)
+   TITLE+= (configurable)
+   VARIANT:=full
++  EXTRA_DEPENDS:=$(if $(CONFIG_PACKAGE_NETATALK_APPLETALK),kmod-appletalk)
+   DEPENDS+= \
+-    +PACKAGE_NETATALK_APPLETALK:kmod-appletalk \
+     +PACKAGE_NETATALK_ZEROCONF:libavahi-client \
+     +PACKAGE_NETATALK_ACLS:libacl \
+     +PACKAGE_NETATALK_PAM:libpam \
 --- a/net/netatalk/Config.in
 +++ b/net/netatalk/Config.in
-@@ -2,6 +2,7 @@
+@@ -2,6 +2,8 @@
  
  	config PACKAGE_NETATALK_APPLETALK
  		bool "Enable AppleTalk support."
 +		depends on !LINUX_7_3
++		select PACKAGE_kmod-appletalk
  		default y
  
  	config PACKAGE_NETATALK_ZEROCONF

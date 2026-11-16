@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libbpf
 PKG_VERSION:=1.7.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_URL:=https://github.com/libbpf/libbpf
 PKG_MIRROR_HASH:=30fbb65adcb4ce7e5eac797edbb81ede5e00969f8eb6a871b9e7913eda4e8ba4

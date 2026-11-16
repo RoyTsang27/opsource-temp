@@ -1,0 +1,22 @@
+From: Device Build maintainers
+Subject: [PATCH] types: provide the 128-bit integers used by current UAPI
+
+The bundled linux/types.h shadows the toolchain's Linux header. New ARM64
+ptrace headers use __u128, which the bundled copy did not define. Match the
+kernel's integer definitions and alignment when the compiler supports int128.
+Leave targets without int128, including 32-bit MIPS, unchanged.
+
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -12,6 +12,11 @@
+ #include <asm/types.h>
+ #include <asm/posix_types.h>
+ 
++#ifdef __SIZEOF_INT128__
++typedef __signed__ __int128 __s128 __attribute__((aligned(16)));
++typedef unsigned __int128 __u128 __attribute__((aligned(16)));
++#endif
++
+ #define __bitwise__
+ #define __bitwise __bitwise__
+ 
