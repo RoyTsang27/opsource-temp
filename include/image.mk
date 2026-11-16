@@ -200,8 +200,11 @@ DTC_WARN_FLAGS := \
   -Wno-unit_address_vs_reg \
   -Wno-avoid_unnecessary_addr_size \
   -Wno-alias_paths \
-  -Wno-graph_child_address \
   -Wno-simple_bus_reg
+
+# Newer kernel DTC versions have removed this legacy check.
+DTC_WARN_FLAGS += $(shell $(LINUX_DIR)/scripts/dtc/dtc \
+  -Wno-graph_child_address -v >/dev/null 2>&1 && echo -Wno-graph_child_address)
 
 DTC_FLAGS += $(DTC_WARN_FLAGS)
 DTCO_FLAGS += $(DTC_WARN_FLAGS)

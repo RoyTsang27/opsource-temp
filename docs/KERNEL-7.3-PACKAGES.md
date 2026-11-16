@@ -32,6 +32,7 @@ packages, userspace dependencies, package installation and image generation.
 | Cadence USB | Follow the combined `cdns` module; the old common module is absent on 7.3. |
 | SMB and NFS | Include SMB compression and Kerberos crypto modules; update NFSv4 and removed configuration choices. |
 | Firmware and optional graphics | Extend dependencies introduced in 6.18 to 7.3. |
+| Firmware device trees | Pass the legacy `graph_child_address` warning option only when the kernel device-tree compiler supports it. |
 | Autoload | Replace literal `LINUX_6_18:module` strings with actual version filters. |
 | Removed kernel subsystems | Hide obsolete AppleTalk, mISDN, IPoA, ATM-over-TCP and CryptoAPI FCRYPT/PCBC/Michael packages on 7.3. |
 | Wireless backports | Remove 7.3 dependencies on the old Michael CryptoAPI module; the pinned backports contain the replacement implementation. |
@@ -40,7 +41,7 @@ packages, userspace dependencies, package installation and image generation.
 | MediaTek WED integration | Match the pinned mt76 driver with the upstream mac80211 SCS/MSCS series and kernel flow-priority, flush and idle interfaces. Keep matching flow-layout assertions on both sides. |
 | RTSP connection tracking | Use the kernel initializer for the protocol fields and inline expectation policy; retain allocated helper copies and unregister only successful registrations. |
 | DAHDI PPP and NAPI | Use the PPP error callback without its removed error-code argument; include kernel NAPI declarations before defining the legacy compatibility alias. |
-| LTTng fence tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. |
+| LTTng tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. Match the const packet-drop socket and Btrfs transaction-handle arguments. |
 | PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
@@ -143,3 +144,13 @@ matches in 6.18 and 441 in 7.3. RTSP now guards the removed tuple and changed
 expectation policy. LTTng already guards the inode layout changes; its DMA fence
 probe needed the accessor update above. The compile workflow also builds LTTng
 with kernel tracing and DMA-buffer support enabled, and checks its fence probe.
+
+The trace prototype review compared 486 LTTng event interfaces against the
+common kernel trace headers. It found the packet-drop and Btrfs transaction
+changes. The compile configuration enables Btrfs and checks that its LTTng
+probe is built, alongside the DMA-fence probe.
+
+The image warning-option change was tested with the actual DTC sources from
+Linux 7.3.4 and the pinned 6.18.56. Both DTB and overlay generation work; the
+legacy option remains enabled on the older compiler. All six repository device
+trees also compile with the prepared 7.3 bindings and the new flags.

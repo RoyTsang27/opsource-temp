@@ -99,10 +99,11 @@ def compile_package(feed, relative, name, extension):
             'EXTRA_CFLAGS=-I' + str(source / 'kernel'), 'modules')
         assert (source / 'kernel/pf_ring.ko').is_file()
     else:
-        run('make', '-C', kernel, 'M=' + str(source), 'CONFIG_LTTNG=m',
+        run('make', '-C', kernel, 'M=' + str(source), 'CONFIG_LTTNG=m', '-k',
             '-j' + str(os.cpu_count() or 2), 'modules')
         assert (source / 'src/lttng-tracer.ko').is_file()
         assert (source / 'src/probes/lttng-probe-dma-fence.ko').is_file()
+        assert (source / 'src/probes/lttng-probe-btrfs.ko').is_file()
 
 
 failures = []
