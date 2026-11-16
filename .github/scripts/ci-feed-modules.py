@@ -51,20 +51,29 @@ for feed, upstream, commit, digest in feeds:
 
 mirrors = ['https://sources.openwrt.org']
 mirrors += json.loads((repo / 'scripts/projectsmirrors.json').read_text())['@IMMORTALWRT']
-for feed, relative, name, extension in (
+packages = (
     ('packages', 'net/xtables-addons', 'xtables-addons', '.tar.zst'),
     ('telephony', 'libs/dahdi-linux', 'dahdi-linux', '.tar.gz'),
-):
+    ('packages', 'libs/libpfring', 'libpfring', '.tar.gz'),
+)
+
+
+def compile_package(feed, relative, name, extension):
     package = temporary / feed / relative
     recipe = (package / 'Makefile').read_text()
     version = re.search(r'^PKG_VERSION:=(\S+)$', recipe, re.M)[1]
     digest = re.search(r'^PKG_HASH:=(\S+)$', recipe, re.M)[1]
-    archive = temporary / (name + '-' + version + extension)
+    filename = re.search(r'^PKG_SOURCE:=(\S+)$', recipe, re.M)[1]
+    filename = filename.replace('$(PKG_NAME)', name).replace('$(PKG_VERSION)', version)
+    assert '$(' not in filename
+    archive = temporary / filename
     urls = [mirror.rstrip('/') + '/' + archive.name for mirror in mirrors]
     if name == 'dahdi-linux':
         urls.append(f'https://github.com/asterisk/dahdi-linux/releases/download/v{version}/{archive.name}')
-    else:
+    elif name == 'xtables-addons':
         urls.append('https://inai.de/files/xtables-addons/' + archive.name)
+    else:
+        urls.append(f'https://codeload.github.com/ntop/PF_RING/tar.gz/{version}')
     download(urls, archive, digest)
     source = temporary / name
     source.mkdir()
@@ -76,8 +85,24 @@ for feed, relative, name, extension in (
         run('make', '-C', kernel, 'M=' + str(source / 'extensions/rtsp'), 'modules')
         assert (source / 'extensions/rtsp/nf_conntrack_rtsp.ko').is_file()
         assert (source / 'extensions/rtsp/nf_nat_rtsp.ko').is_file()
-    else:
+    elif name == 'dahdi-linux':
         # Also exercise the optional PPP code, which the package leaves disabled.
         run('make', '-C', source, 'KSRC=' + str(kernel), 'DAHDI_BUILD_ALL=',
             'CONFIG_DAHDI=m', 'KCFLAGS=-DCONFIG_DAHDI_PPP', 'modules')
         assert (source / 'drivers/dahdi/dahdi.ko').is_file()
+    else:
+        run('make', '-C', kernel, 'M=' + str(source / 'kernel'),
+            'EXTRA_CFLAGS=-I' + str(source / 'kernel'), 'modules')
+        assert (source / 'kernel/pf_ring.ko').is_file()
+
+
+failures = []
+for package in packages:
+    print('Compiling optional module: ' + package[2], flush=True)
+    try:
+        compile_package(*package)
+    except (subprocess.CalledProcessError, RuntimeError, AssertionError) as error:
+        failures.append(package[2])
+        print(f'Optional module failed: {package[2]}: {error}', flush=True)
+if failures:
+    raise RuntimeError('Optional module checks failed: ' + ', '.join(failures))

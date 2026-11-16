@@ -72,7 +72,18 @@ PATCH='patch --fuzz=0' scripts/patch-kernel.sh "$mt76" package/kernel/mt76/patch
 compiler_includes="$("${CROSS_COMPILE}gcc" -print-file-name=include)"
 includes="-nostdinc -isystem $compiler_includes -I$mt76 -I$backports/backport-include -I$backports/backport-include/uapi -I$backports/include -I$backports/include/uapi"
 includes+=" -include backport/autoconf.h -include backport/backport.h -DCONFIG_MAC80211_MESH -DCONFIG_NL80211_TESTMODE"
-drivers=(CONFIG_MT7603E=m CONFIG_MT7615_COMMON=m CONFIG_MT7615E=m CONFIG_MT76_CONNAC_LIB=m)
+drivers=(
+  CONFIG_MT76_USB=m CONFIG_MT76_SDIO=m
+  CONFIG_MT76x02_LIB=m CONFIG_MT76x02_USB=m
+  CONFIG_MT76x0_COMMON=m CONFIG_MT76x0E=m CONFIG_MT76x0U=m
+  CONFIG_MT76x2_COMMON=m CONFIG_MT76x2E=m CONFIG_MT76x2U=m
+  CONFIG_MT7603E=m CONFIG_MT76_CONNAC_LIB=m
+  CONFIG_MT7615_COMMON=m CONFIG_MT7615E=m
+  CONFIG_MT7663_USB_SDIO_COMMON=m CONFIG_MT7663U=m CONFIG_MT7663S=m
+  CONFIG_MT792x_LIB=m CONFIG_MT792x_USB=m
+  CONFIG_MT7921_COMMON=m CONFIG_MT7921E=m CONFIG_MT7921U=m CONFIG_MT7921S=m
+  CONFIG_MT7925_COMMON=m CONFIG_MT7925E=m CONFIG_MT7925U=m
+)
 if [ "$SUBTARGET" = filogic ]; then
   drivers+=(CONFIG_MT7915E=m CONFIG_MT798X_WMAC=y CONFIG_MT7996E=m)
   includes+=" -DCONFIG_MT798X_WMAC"
@@ -82,6 +93,14 @@ make -C "$kernel" M="$mt76" -j"$(nproc)" \
   CONFIG_NL80211_TESTMODE=y "${drivers[@]}" modules
 test -f "$mt76/mt7603/mt7603e.ko"
 test -f "$mt76/mt7615/mt7615e.ko"
+for module in mt76-usb mt76-sdio mt76x02-lib mt76x02-usb \
+  mt76x0/mt76x0-common mt76x0/mt76x0e mt76x0/mt76x0u \
+  mt76x2/mt76x2-common mt76x2/mt76x2e mt76x2/mt76x2u \
+  mt7615/mt7663-usb-sdio-common mt7615/mt7663u mt7615/mt7663s \
+  mt792x-lib mt792x-usb mt7921/mt7921-common mt7921/mt7921e mt7921/mt7921u mt7921/mt7921s \
+  mt7925/mt7925-common mt7925/mt7925e mt7925/mt7925u; do
+  test -f "$mt76/$module.ko"
+done
 if [ "$SUBTARGET" = filogic ]; then
   test -f "$mt76/mt7915/mt7915e.ko"
   test -f "$mt76/mt7996/mt7996e.ko"

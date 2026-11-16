@@ -40,6 +40,7 @@ packages, userspace dependencies, package installation and image generation.
 | MediaTek WED integration | Match the pinned mt76 driver with the upstream mac80211 SCS/MSCS series and kernel flow-priority, flush and idle interfaces. Keep matching flow-layout assertions on both sides. |
 | RTSP connection tracking | Retain the helper copies allocated by the new registration API, unregister only successful registrations and let the kernel release them. |
 | DAHDI PPP | Use the PPP error callback without its removed error-code argument on 7.3. |
+| PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
 | Hasivo PSE | Restrict this driver to Realtek, which supplies its kernel patch. |
@@ -119,5 +120,14 @@ The explicit MAC-address parser include and existing mt76 safety patches remain.
 
 The compile workflow additionally builds the pinned mac80211 backports and
 MT7603/MT7615 drivers on both architectures, plus MT7915 and MT7996 with WED on
-Filogic. It also builds both RTSP helper modules and the DAHDI core with its
-optional PPP code enabled, using the pinned feed recipes and patched sources.
+Filogic. The PCIe, USB and SDIO variants of MT76x0/MT76x2, MT7663, MT7921 and
+MT7925 are compiled as well. It also builds both RTSP helper modules and the
+DAHDI core with its optional PPP code enabled, using the pinned feed recipes
+and patched sources.
+It additionally compiles PF_RING's kernel module. Reviewing initialized kernel
+callback tables found its bind signature mismatch; V4L2's changed callback
+parameter names do not change their types.
+
+The standalone test configuration enables the Netfilter, NAT, PPP, USB and MMC
+dependencies normally selected by these packages, and checks that configuration
+resolution retained them before compiling.
