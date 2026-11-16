@@ -10,7 +10,7 @@ its source and destination overlap. Userspace libc copies are unchanged.
  
  PKG_NAME:=open-app-filter
 -PKG_RELEASE:=1
-+PKG_RELEASE:=2
++PKG_RELEASE:=3
  
  PKG_SOURCE_URL:=https://github.com/destan19/OpenAppFilter.git
  PKG_SOURCE_PROTO:=git
@@ -302,3 +302,20 @@ its source and destination overlap. Userspace libc copies are unchanged.
 + 
 + 	return tip;
 + }
+
+--- /dev/null
++++ b/net/open-app-filter/patches/951-linux-7.3-ipv4-hook-priorities.patch
+@@ -0,0 +1,13 @@
++Subject: [PATCH] OAF: include IPv4 hook priorities explicitly
++
++The IPv4 priorities are no longer supplied by indirect includes.
++--- a/oaf/src/af_client.c
+++++ b/oaf/src/af_client.c
++@@ -7,6 +7,7 @@
++ #include <linux/version.h>
++ #include <net/tcp.h>
++ #include <linux/netfilter.h>
+++#include <linux/netfilter_ipv4.h>
++ #include <net/netfilter/nf_conntrack.h>
++ #include <net/netfilter/nf_conntrack_acct.h>
++ #include <linux/skbuff.h>

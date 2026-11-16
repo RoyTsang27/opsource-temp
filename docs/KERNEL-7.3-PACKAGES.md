@@ -158,6 +158,14 @@ byte contents. The compile workflow builds all enabled Xtables addon extensions,
 OpenAppFilter and Netatop, with Xtables and text-search dependencies enabled.
 The old DAHDI Blackfin-only mmap drivers are outside the supported targets.
 
+The feed compile checks also cover B.A.T.M.A.N. Advanced (including its optional
+algorithm, bridge, multicast and trace code), CoovaChilli's module, Jool's three
+modules, RTPengine, DMX USB, Quectel and Fibocom QMI, V4L2 loopback, MDIO netlink,
+MTD write enablement and OpenVPN backports. Feed-local SIIT and OSLEC are built
+too. Open vSwitch uses the in-tree datapath on 7.3; its old external datapath is
+outside this matrix. These checks build module code, rather than every associated
+userspace daemon or every possible package configuration.
+
 The image warning-option change was tested with the actual DTC sources from
 Linux 7.3.4 and the pinned 6.18.56. Both DTB and overlay generation work; the
 legacy option remains enabled on the older compiler. All six repository device

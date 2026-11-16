@@ -105,6 +105,11 @@ jobs:
             CONFIG_NF_CONNTRACK=m CONFIG_NF_NAT=m \
             CONFIG_NETFILTER_XTABLES=m CONFIG_IP_NF_IPTABLES=m CONFIG_IP6_NF_IPTABLES=m \
             CONFIG_TEXTSEARCH=y CONFIG_TEXTSEARCH_BM=m CONFIG_TEXTSEARCH_KMP=m \
+            CONFIG_NF_CONNTRACK_EVENTS=y CONFIG_NF_CONNTRACK_MARK=y \
+            CONFIG_USB_USBNET=m CONFIG_USB_WDM=m CONFIG_USB_SERIAL=m \
+            CONFIG_MEDIA_SUPPORT=m CONFIG_MEDIA_CAMERA_SUPPORT=y CONFIG_VIDEO_DEV=m \
+            CONFIG_EXT4_FS=m \
+            CONFIG_NET_FOU=m CONFIG_AF_KCM=m \
             CONFIG_USB=m CONFIG_MMC=m CONFIG_SYNC_FILE=y CONFIG_BTRFS_FS=m \
             CONFIG_KPROBES=y CONFIG_FTRACE=y CONFIG_FTRACE_SYSCALLS=y \
             >> "$RUNNER_TEMP/kernel/.config"
@@ -112,7 +117,7 @@ jobs:
           make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
           cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config
           missing=0
-          for dependency in PPP NF_CONNTRACK NF_NAT NETFILTER_XTABLES IP_NF_IPTABLES TEXTSEARCH_KMP USB MMC DMA_SHARED_BUFFER KPROBES FTRACE_SYSCALLS BTRFS_FS; do
+          for dependency in PPP NF_CONNTRACK NF_CONNTRACK_MARK NF_NAT NETFILTER_XTABLES IP_NF_IPTABLES TEXTSEARCH_KMP USB MMC USB_USBNET USB_WDM USB_SERIAL VIDEO_DEV CRC16 CRYPTO_AEAD CRYPTO_HASH NET_UDP_TUNNEL STREAM_PARSER DMA_SHARED_BUFFER KPROBES FTRACE_SYSCALLS BTRFS_FS; do
             if ! grep -Eq "^CONFIG_${dependency}=[my]$" "$RUNNER_TEMP/kernel/.config"; then
               printf 'Required build dependency CONFIG_%s was disabled\n' "$dependency" >&2
               missing=1

@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import urllib.error
 import urllib.request
@@ -59,15 +60,28 @@ packages = (
     ('packages', 'devel/lttng-modules', 'lttng-modules', '.tar.bz2'),
     ('packages', 'net/open-app-filter', 'open-app-filter', '.tar.zst'),
     ('packages', 'admin/netatop', 'netatop', '.tar.gz'),
+    ('packages', 'net/batman-adv', 'batman-adv', '.tar.gz'),
+    ('packages', 'net/coova-chilli', 'coova-chilli', '.tar.bz2'),
+    ('packages', 'net/jool', 'jool', '.tar.zst'),
+    ('telephony', 'net/rtpengine', 'rtpengine', '.tar.gz'),
+    ('packages', 'libs/dmx_usb_module', 'dmx_usb_module', '.tar.gz'),
+    ('packages', 'kernel/quectel-qmi-wwan', 'quectel-qmi-wwan', '.tar.gz'),
+    ('packages', 'kernel/fibocom-qmi-wwan', 'fibocom-qmi-wwan', '.tar.gz'),
+    ('packages', 'kernel/v4l2loopback', 'v4l2loopback', '.tar.zst'),
+    ('packages', 'kernel/mdio-netlink', 'mdio-netlink', '.tar.zst'),
+    ('packages', 'kernel/mtd-rw', 'mtd-rw', '.tar.zst'),
+    ('packages', 'kernel/ovpn-dco', 'ovpn-backports', '.tar.gz'),
 )
 
 
 def compile_package(feed, relative, name, extension):
     package = temporary / feed / relative
     recipe = (package / 'Makefile').read_text()
-    values = dict(re.findall(r'^(PKG_\w+):=(\S+)$', recipe, re.M))
+    values = dict(re.findall(r'^(PKG_\w+):=\s*([^\n]+)$', recipe.replace('\\\n', ''), re.M))
     if values.get('PKG_SOURCE_PROTO') == 'git':
-        version = values['PKG_SOURCE_DATE'].replace('-', '.') + '~' + values['PKG_SOURCE_VERSION'][:8]
+        version = values.get('PKG_VERSION')
+        if not version:
+            version = values['PKG_SOURCE_DATE'].replace('-', '.') + '~' + values['PKG_SOURCE_VERSION'][:8]
         digest = values['PKG_MIRROR_HASH']
         filename = f'{name}-{version}.tar.zst'
     else:
@@ -88,11 +102,18 @@ def compile_package(feed, relative, name, extension):
         urls.append(f'https://lttng.org/files/lttng-modules/{archive.name}')
     elif name == 'netatop':
         urls.append('https://www.atoptool.nl/download/' + archive.name)
+    if values.get('PKG_SOURCE_PROTO') != 'git':
+        for upstream in values.get('PKG_SOURCE_URL', '').split():
+            upstream = upstream.replace('$(PKG_NAME)', name).replace('$(PKG_VERSION)', version)
+            if upstream.startswith('https://') and '$(' not in upstream:
+                urls.append(upstream.rstrip('/') + '/' + archive.name)
     download(urls, archive, digest)
     source = temporary / name
     source.mkdir()
     compression = '--zstd' if extension.endswith('.zst') else ('-j' if extension.endswith('.bz2') else '-z')
     run('tar', compression, '-xf', archive, '--strip-components=1', '-C', source)
+    if (package / 'src').is_dir():
+        shutil.copytree(package / 'src', source, dirs_exist_ok=True)
     environment = {**os.environ, 'PATCH': 'patch --fuzz=0'}
     run('scripts/patch-kernel.sh', source, package / 'patches', env=environment)
     if name == 'xtables-addons':
@@ -117,11 +138,57 @@ def compile_package(feed, relative, name, extension):
         assert (source / 'src/lttng-tracer.ko').is_file()
         assert (source / 'src/probes/lttng-probe-dma-fence.ko').is_file()
         assert (source / 'src/probes/lttng-probe-btrfs.ko').is_file()
-    else:
+    elif name in ('open-app-filter', 'netatop'):
         relative = 'oaf/src' if name == 'open-app-filter' else 'module'
         module = 'oaf' if name == 'open-app-filter' else 'netatop'
         run('make', '-C', kernel, 'M=' + str(source / relative), '-k',
             '-j' + str(os.cpu_count() or 2), 'modules')
+        assert (source / relative / (module + '.ko')).is_file()
+    elif name == 'jool':
+        for relative, module in (('common', 'jool_common'), ('nat64', 'jool'), ('siit', 'jool_siit')):
+            destination = source / 'src/mod' / relative
+            run('make', '-C', kernel, 'M=' + str(destination), 'CFLAGS_MODULE=-DXTABLES_DISABLED',
+                '-k', '-j' + str(os.cpu_count() or 2), 'modules')
+            assert (destination / (module + '.ko')).is_file()
+    elif name == 'batman-adv':
+        backports = temporary / 'backports'
+        flags = ['-I' + str(source / 'include')]
+        flags += ['-I' + str(backports / relative) for relative in
+                  ('backport-include', 'backport-include/uapi', 'include', 'include/uapi')]
+        flags += ['-include backport/autoconf.h', '-include backport/backport.h',
+                  '-include ' + str(source / 'compat-hacks.h'),
+                  '-DBATADV_SOURCE_VERSION=\\"' + version + '\\"']
+        options = ['CONFIG_BATMAN_ADV=m']
+        for feature in ('BLA', 'DAT', 'MCAST', 'BATMAN_V', 'DEBUG', 'TRACING'):
+            options.append('CONFIG_BATMAN_ADV_' + feature + '=y')
+            flags.append('-DCONFIG_BATMAN_ADV_' + feature + '=1')
+        run('make', '-C', kernel, 'M=' + str(source / 'net/batman-adv'),
+            'NOSTDINC_FLAGS=' + ' '.join(flags),
+            'KBUILD_EXTRA_SYMBOLS=' + str(backports / 'Module.symvers'), *options,
+            '-k', '-j' + str(os.cpu_count() or 2), 'modules')
+        assert (source / 'net/batman-adv/batman-adv.ko').is_file()
+    else:
+        layouts = {
+            'coova-chilli': ('src/linux', 'xt_coova'),
+            'rtpengine': ('kernel-module', 'xt_RTPENGINE'),
+            'dmx_usb_module': ('', 'dmx_usb'),
+            'quectel-qmi-wwan': ('', 'qmi_wwan_q'),
+            'fibocom-qmi-wwan': ('', 'qmi_wwan_f'),
+            'v4l2loopback': ('', 'v4l2loopback'),
+            'mdio-netlink': ('kernel', 'mdio-netlink'),
+            'mtd-rw': ('', 'mtd-rw'),
+            'ovpn-backports': ('drivers/net/ovpn', 'ovpn'),
+        }
+        relative, module = layouts[name]
+        options = []
+        if name == 'rtpengine':
+            options.append('RTPENGINE_VERSION=' + version)
+        elif name == 'ovpn-backports':
+            options += ['CONFIG_OVPN=m', 'NOSTDINC_FLAGS=' + ' '.join((
+                '-I' + str(source / 'include'), '-I' + str(source / 'compat-include'),
+                '-include ' + str(source / 'linux-compat.h')))]
+        run('make', '-C', kernel, 'M=' + str(source / relative), *options,
+            '-k', '-j' + str(os.cpu_count() or 2), 'modules')
         assert (source / relative / (module + '.ko')).is_file()
 
 
@@ -133,5 +200,16 @@ for package in packages:
     except (subprocess.CalledProcessError, RuntimeError, AssertionError) as error:
         failures.append(package[2])
         print(f'Optional module failed: {package[2]}: {error}', flush=True)
+for feed, relative, module in (('packages', 'net/siit', 'siit'),
+                               ('telephony', 'libs/oslec', 'echo')):
+    print('Compiling feed-local module: ' + relative, flush=True)
+    source = temporary / (module + '-local')
+    shutil.copytree(temporary / feed / relative / 'src', source)
+    try:
+        run('make', '-C', kernel, 'M=' + str(source), 'modules')
+        assert (source / (module + '.ko')).is_file()
+    except (subprocess.CalledProcessError, AssertionError) as error:
+        failures.append(relative)
+        print(f'Feed-local module failed: {relative}: {error}', flush=True)
 if failures:
     raise RuntimeError('Optional module checks failed: ' + ', '.join(failures))
