@@ -35,6 +35,7 @@ packages, userspace dependencies, package installation and image generation.
 | Autoload | Replace literal `LINUX_6_18:module` strings with actual version filters. |
 | Removed kernel subsystems | Hide obsolete AppleTalk, mISDN, IPoA, ATM-over-TCP and CryptoAPI FCRYPT/PCBC/Michael packages on 7.3. |
 | Wireless backports | Remove 7.3 dependencies on the old Michael CryptoAPI module; the pinned backports contain the replacement implementation. |
+| Wireless configuration | Recognize numeric kernel versions beyond 6.x when generating backport compatibility symbols. |
 | Wireless MAC parsing | Include `linux/hex.h` explicitly for the downstream sysfs setter and MT7615 debug controls after the kernel stopped including it indirectly. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |

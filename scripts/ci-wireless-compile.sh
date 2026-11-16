@@ -31,7 +31,10 @@ printf '%s  %s\n' "${pins[1]}" "$RUNNER_TEMP/backports.tar.zst" | sha256sum --ch
 mkdir "$backports"
 tar --zstd -xf "$RUNNER_TEMP/backports.tar.zst" --strip-components=1 -C "$backports"
 for series in build subsys ath ath5k ath9k ath10k ath11k ath12k rt2x00 mt7601u mwl brcm rtl; do
-  PATCH='patch --fuzz=0' scripts/patch-kernel.sh "$backports" "package/kernel/mac80211/patches/$series"
+  patch_dir="package/kernel/mac80211/patches/$series"
+  if [ -d "$patch_dir" ]; then
+    PATCH='patch --fuzz=0' scripts/patch-kernel.sh "$backports" "$patch_dir"
+  fi
 done
 # Match the package's preparation: use these headers from the target kernel.
 rm -rf "$backports/include/linux/ssb" "$backports/include/linux/bcma" "$backports/include/net/bluetooth"
