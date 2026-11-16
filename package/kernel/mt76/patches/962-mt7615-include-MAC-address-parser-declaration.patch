@@ -1,0 +1,14 @@
+Subject: [PATCH] wifi: mt76: mt7615: include the MAC address parser header
+
+The firmware debug control calls mac_pton(). Include its declaring header
+explicitly after newer kernels stopped providing it through kernel.h.
+
+--- a/mt7615/debugfs.c
++++ b/mt7615/debugfs.c
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ 
++#include <linux/hex.h>
+ #include "mt7615.h"
+ 
+ static int

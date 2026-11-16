@@ -35,7 +35,7 @@ packages, userspace dependencies, package installation and image generation.
 | Autoload | Replace literal `LINUX_6_18:module` strings with actual version filters. |
 | Removed kernel subsystems | Hide obsolete AppleTalk, mISDN, IPoA, ATM-over-TCP and CryptoAPI FCRYPT/PCBC/Michael packages on 7.3. |
 | Wireless backports | Remove 7.3 dependencies on the old Michael CryptoAPI module; the pinned backports contain the replacement implementation. |
-| Wireless sysfs | Include `linux/hex.h` explicitly for the downstream MAC address setter after the kernel stopped including it indirectly. |
+| Wireless MAC parsing | Include `linux/hex.h` explicitly for the downstream sysfs setter and MT7615 debug controls after the kernel stopped including it indirectly. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
 | Hasivo PSE | Restrict this driver to Realtek, which supplies its kernel patch. |
@@ -91,3 +91,15 @@ existing source, kernel configuration, signing and build regression suite also
 passes. Firmware build outcomes are tracked in the repository's Device Build
 workflow. Optional packages beyond those built by CI and hardware boot still
 require their own compilation and runtime testing.
+
+The source review also fetched all 18 external-module archives referenced by
+the pinned feeds, verified their declared hashes and applied their package
+patches without fuzz. Alongside the two feed-local modules, their code was
+checked for header and function removals since 6.18. The remaining trace event
+reference to `page_is_file_lru` is guarded to kernels before 5.18. PF_RING's
+unbuilt vendor driver trees and Open vSwitch's source datapath capped at 5.5
+were excluded from the 7.3 module review. This remains a source audit of those
+optional modules, not a successful compilation claim.
+
+The compile workflow additionally builds the pinned mac80211 backports and
+MT7603/MT7615 drivers on both architectures, plus MT7915 with WED on Filogic.
