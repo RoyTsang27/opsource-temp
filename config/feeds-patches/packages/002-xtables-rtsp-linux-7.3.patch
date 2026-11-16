@@ -10,7 +10,7 @@ The kernel releases them through its helper reference-counting API.
  PKG_NAME:=xtables-addons
  PKG_VERSION:=3.30
 -PKG_RELEASE:=1
-+PKG_RELEASE:=2
++PKG_RELEASE:=3
  PKG_HASH:=d43400322980390180bef05eb6f798af49285987c217b7f1c6332da74920d9a4
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.zst
@@ -62,3 +62,35 @@ The kernel releases them through its helper reference-counting API.
 + 
 + 		if (ret) {
 + 			printk("nf_conntrack_rtsp: ERROR registering port %d\n", ports[i]);
+
+--- /dev/null
++++ b/net/xtables-addons/patches/201-rtsp-linux-7.3-helper-initialization.patch
+@@ -0,0 +1,28 @@
++Subject: [PATCH] RTSP: initialize the current conntrack helper structure
++
++Linux 7.3 replaces the tuple with protocol fields and stores expectation
++policies inline. Use the kernel initializer to copy the policy, set the
++protocol and callback, and retain the common NAT helper name. Keep the
++port-specific helper names for explicit firewall assignment.
++--- a/extensions/rtsp/nf_conntrack_rtsp.c
+++++ b/extensions/rtsp/nf_conntrack_rtsp.c
++@@ -730,6 +730,11 @@
++ 
++ 	for (i = 0; (i < MAX_PORTS) && ports[i]; i++) {
++ 		hlpr = &rtsp_helpers[i];
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7,3,0)
+++		/* Port matching is done by the firewall's helper assignment rule. */
+++		nf_ct_helper_init(hlpr, NFPROTO_IPV4, IPPROTO_TCP, "rtsp",
+++				  &rtsp_exp_policy, 0, help, NULL, THIS_MODULE);
+++#else
++ 		memset(hlpr, 0, sizeof(struct nf_conntrack_helper));
++ 		hlpr->tuple.src.l3num = AF_INET;
++ 		hlpr->tuple.src.u.tcp.port = htons(ports[i]);
++@@ -737,6 +742,7 @@
++ 		hlpr->expect_policy = &rtsp_exp_policy;
++ 		hlpr->me = THIS_MODULE;
++ 		hlpr->help = help;
+++#endif
++ 
++ 		tmpname = &rtsp_names[i][0];
++ 		if (ports[i] == RTSP_PORT) {

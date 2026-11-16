@@ -38,8 +38,8 @@ packages, userspace dependencies, package installation and image generation.
 | Wireless configuration | Recognize numeric kernel versions beyond 6.x when generating backport compatibility symbols. |
 | Wireless MAC parsing | Include `linux/hex.h` explicitly for the downstream sysfs setter and MT7615 debug controls after the kernel stopped including it indirectly. |
 | MediaTek WED integration | Match the pinned mt76 driver with the upstream mac80211 SCS/MSCS series and kernel flow-priority, flush and idle interfaces. Keep matching flow-layout assertions on both sides. |
-| RTSP connection tracking | Retain the helper copies allocated by the new registration API, unregister only successful registrations and let the kernel release them. |
-| DAHDI PPP | Use the PPP error callback without its removed error-code argument on 7.3. |
+| RTSP connection tracking | Use the kernel initializer for the protocol fields and inline expectation policy; retain allocated helper copies and unregister only successful registrations. |
+| DAHDI PPP and NAPI | Use the PPP error callback without its removed error-code argument; include kernel NAPI declarations before defining the legacy compatibility alias. |
 | PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
@@ -131,3 +131,8 @@ parameter names do not change their types.
 The standalone test configuration enables the Netfilter, NAT, PPP, USB and MMC
 dependencies normally selected by these packages, and checks that configuration
 resolution retained them before compiling.
+
+RTSP retains its named helpers for explicit firewall assignment; the kernel
+initializer copies the expectation policy and sets the protocol and callbacks.
+DAHDI also supports enabling PPP without its separate HDLC networking option: its
+NAPI compatibility alias no longer rewrites declarations in a later include.

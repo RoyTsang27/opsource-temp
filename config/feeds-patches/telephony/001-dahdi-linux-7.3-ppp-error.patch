@@ -9,7 +9,7 @@ older kernels supported by this source.
  PKG_NAME:=dahdi-linux
  PKG_VERSION:=3.4.0
 -PKG_RELEASE:=3
-+PKG_RELEASE:=4
++PKG_RELEASE:=5
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
  PKG_SOURCE_URL:=https://github.com/asterisk/$(PKG_NAME)/releases/download/v$(PKG_VERSION)
@@ -34,3 +34,23 @@ older kernels supported by this source.
 + 	}
 + }
 + #endif
+
+--- /dev/null
++++ b/libs/dahdi-linux/patches/221-napi-include-before-compatibility-alias.patch
+@@ -0,0 +1,16 @@
++Subject: [PATCH] DAHDI: include NAPI declarations before the compatibility alias
++
++The alias otherwise rewrites netdevice.h declarations when PPP is enabled
++without HDLC networking. Include the header first so its inline functions
++retain their original names and signatures.
++--- a/include/dahdi/kernel.h
+++++ b/include/dahdi/kernel.h
++@@ -68,6 +68,8 @@
++ #endif
++ 
++ #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+++/* Parse kernel declarations before applying the legacy four-argument alias. */
+++#include <linux/netdevice.h>
++ #define netif_napi_add netif_napi_add_weight
++ #endif
++ 
