@@ -11,7 +11,7 @@ The trace caller protects the name access with RCU.
  PKG_NAME:=lttng-modules
  PKG_VERSION:=2.15.2
 -PKG_RELEASE:=1
-+PKG_RELEASE:=2
++PKG_RELEASE:=3
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
  PKG_SOURCE_URL:=https://lttng.org/files/$(PKG_NAME)/
@@ -37,8 +37,8 @@ The trace caller protects the name access with RCU.
 ++
 ++	TP_FIELDS(
 ++#if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(7,3,0))
-++		ctf_string(driver, rcu_dereference(dma_fence_driver_name(fence)))
-++		ctf_string(timeline, rcu_dereference(dma_fence_timeline_name(fence)))
+++		ctf_string(driver, dma_fence_driver_name(fence))
+++		ctf_string(timeline, dma_fence_timeline_name(fence))
 ++#else
 ++		ctf_string(driver, fence->ops->get_driver_name(fence))
 ++		ctf_string(timeline, fence->ops->get_timeline_name(fence))
