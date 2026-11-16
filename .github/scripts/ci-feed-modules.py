@@ -55,6 +55,7 @@ packages = (
     ('packages', 'net/xtables-addons', 'xtables-addons', '.tar.zst'),
     ('telephony', 'libs/dahdi-linux', 'dahdi-linux', '.tar.gz'),
     ('packages', 'libs/libpfring', 'libpfring', '.tar.gz'),
+    ('packages', 'devel/lttng-modules', 'lttng-modules', '.tar.bz2'),
 )
 
 
@@ -72,13 +73,15 @@ def compile_package(feed, relative, name, extension):
         urls.append(f'https://github.com/asterisk/dahdi-linux/releases/download/v{version}/{archive.name}')
     elif name == 'xtables-addons':
         urls.append('https://inai.de/files/xtables-addons/' + archive.name)
-    else:
+    elif name == 'libpfring':
         urls.append(f'https://codeload.github.com/ntop/PF_RING/tar.gz/{version}')
+    else:
+        urls.append(f'https://lttng.org/files/lttng-modules/{archive.name}')
     download(urls, archive, digest)
     source = temporary / name
     source.mkdir()
-    run('tar', '--zstd' if extension.endswith('.zst') else '-z', '-xf', archive,
-        '--strip-components=1', '-C', source)
+    compression = '--zstd' if extension.endswith('.zst') else ('-j' if extension.endswith('.bz2') else '-z')
+    run('tar', compression, '-xf', archive, '--strip-components=1', '-C', source)
     environment = {**os.environ, 'PATCH': 'patch --fuzz=0'}
     run('scripts/patch-kernel.sh', source, package / 'patches', env=environment)
     if name == 'xtables-addons':
@@ -90,10 +93,15 @@ def compile_package(feed, relative, name, extension):
         run('make', '-C', source, 'KSRC=' + str(kernel), 'DAHDI_BUILD_ALL=',
             'CONFIG_DAHDI=m', 'KCFLAGS=-DCONFIG_DAHDI_PPP', 'modules')
         assert (source / 'drivers/dahdi/dahdi.ko').is_file()
-    else:
+    elif name == 'libpfring':
         run('make', '-C', kernel, 'M=' + str(source / 'kernel'),
             'EXTRA_CFLAGS=-I' + str(source / 'kernel'), 'modules')
         assert (source / 'kernel/pf_ring.ko').is_file()
+    else:
+        run('make', '-C', kernel, 'M=' + str(source), 'CONFIG_LTTNG=m',
+            '-j' + str(os.cpu_count() or 2), 'modules')
+        assert (source / 'src/lttng-tracer.ko').is_file()
+        assert (source / 'src/probes/lttng-probe-dma-fence.ko').is_file()
 
 
 failures = []

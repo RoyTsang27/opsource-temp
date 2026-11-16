@@ -1,0 +1,82 @@
+Subject: [PATCH] LTTng: trace detached DMA fences safely on Linux 7.3
+
+The callback table can be cleared after signaling. Follow the kernel trace
+events: query detached-safe names for emit, destroy and wait, and retain the
+ops class for initialization, enable-signaling and signaling call sites.
+The trace caller protects the name access with RCU.
+--- a/devel/lttng-modules/Makefile
++++ b/devel/lttng-modules/Makefile
+@@ -9,7 +9,7 @@
+ 
+ PKG_NAME:=lttng-modules
+ PKG_VERSION:=2.15.2
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://lttng.org/files/$(PKG_NAME)/
+--- /dev/null
++++ b/devel/lttng-modules/patches/100-linux-7.3-detached-dma-fences.patch
+@@ -0,0 +1,62 @@
++Subject: [PATCH] LTTng: trace detached DMA fences safely on Linux 7.3
++
++The callback table can be cleared after signaling. Follow the kernel trace
++events: query detached-safe names for emit, destroy and wait, and retain the
++ops class for initialization, enable-signaling and signaling call sites.
++The trace caller protects the name access with RCU.
++--- a/include/instrumentation/events/dma_fence.h
+++++ b/include/instrumentation/events/dma_fence.h
++@@ -11,6 +11,26 @@
++ #include <lttng/tracepoint-event.h>
++ 
++ LTTNG_TRACEPOINT_EVENT_CLASS(dma_fence_class,
+++
+++	TP_PROTO(struct dma_fence *fence),
+++
+++	TP_ARGS(fence),
+++
+++	TP_FIELDS(
+++#if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(7,3,0))
+++		ctf_string(driver, rcu_dereference(dma_fence_driver_name(fence)))
+++		ctf_string(timeline, rcu_dereference(dma_fence_timeline_name(fence)))
+++#else
+++		ctf_string(driver, fence->ops->get_driver_name(fence))
+++		ctf_string(timeline, fence->ops->get_timeline_name(fence))
+++#endif
+++		ctf_integer(unsigned int, context, fence->context)
+++		ctf_integer(unsigned int, seqno, fence->seqno)
+++	)
+++)
+++
+++/* These call sites run before detachment, just like the kernel's ops class. */
+++LTTNG_TRACEPOINT_EVENT_CLASS(dma_fence_ops_class,
++ 
++ 	TP_PROTO(struct dma_fence *fence),
++ 
++@@ -32,7 +52,7 @@
++ 	TP_ARGS(fence)
++ )
++ 
++-LTTNG_TRACEPOINT_EVENT_INSTANCE(dma_fence_class,
+++LTTNG_TRACEPOINT_EVENT_INSTANCE(dma_fence_ops_class,
++ 	dma_fence_init,
++ 
++ 	TP_PROTO(struct dma_fence *fence),
++@@ -48,7 +68,7 @@
++ 	TP_ARGS(fence)
++ )
++ 
++-LTTNG_TRACEPOINT_EVENT_INSTANCE(dma_fence_class,
+++LTTNG_TRACEPOINT_EVENT_INSTANCE(dma_fence_ops_class,
++ 	dma_fence_enable_signal,
++ 
++ 	TP_PROTO(struct dma_fence *fence),
++@@ -56,7 +76,7 @@
++ 	TP_ARGS(fence)
++ )
++ 
++-LTTNG_TRACEPOINT_EVENT_INSTANCE(dma_fence_class,
+++LTTNG_TRACEPOINT_EVENT_INSTANCE(dma_fence_ops_class,
++ 	dma_fence_signaled,
++ 
++ 	TP_PROTO(struct dma_fence *fence),

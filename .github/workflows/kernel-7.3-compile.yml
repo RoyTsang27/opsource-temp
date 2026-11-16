@@ -103,11 +103,12 @@ jobs:
             CONFIG_CRYPTO_GCM=m CONFIG_CRC_CCITT=m CONFIG_RELAY=y CONFIG_HWMON=y \
             CONFIG_PPP=m CONFIG_NETFILTER=y CONFIG_NETFILTER_ADVANCED=y \
             CONFIG_NF_CONNTRACK=m CONFIG_NF_NAT=m \
-            CONFIG_USB=m CONFIG_MMC=m \
+            CONFIG_USB=m CONFIG_MMC=m CONFIG_DMA_SHARED_BUFFER=y \
+            CONFIG_KPROBES=y CONFIG_FTRACE=y CONFIG_FTRACE_SYSCALLS=y \
             >> "$RUNNER_TEMP/kernel/.config"
           make -C "$RUNNER_TEMP/kernel" listnewconfig 2>&1 | tee logs/new-options.log
           make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
-          for dependency in PPP NF_CONNTRACK NF_NAT USB MMC; do
+          for dependency in PPP NF_CONNTRACK NF_NAT USB MMC DMA_SHARED_BUFFER KPROBES FTRACE_SYSCALLS; do
             grep -Eq "^CONFIG_${dependency}=[my]$" "$RUNNER_TEMP/kernel/.config"
           done
           cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config
@@ -198,7 +199,7 @@ jobs:
           ) 2>&1 | tee logs/external-modules.log
       - name: Compile pinned mac80211 and MediaTek wireless drivers
         run: bash scripts/ci-wireless-compile.sh 2>&1 | tee logs/wireless-compile.log
-      - name: Compile optional RTSP helpers, DAHDI with PPP and PF_RING
+      - name: Compile optional feed kernel modules
         run: python3 .github/scripts/ci-feed-modules.py 2>&1 | tee logs/feed-modules.log
       - name: Upload kernel diagnostics
         if: always()

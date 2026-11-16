@@ -40,6 +40,7 @@ packages, userspace dependencies, package installation and image generation.
 | MediaTek WED integration | Match the pinned mt76 driver with the upstream mac80211 SCS/MSCS series and kernel flow-priority, flush and idle interfaces. Keep matching flow-layout assertions on both sides. |
 | RTSP connection tracking | Use the kernel initializer for the protocol fields and inline expectation policy; retain allocated helper copies and unregister only successful registrations. |
 | DAHDI PPP and NAPI | Use the PPP error callback without its removed error-code argument; include kernel NAPI declarations before defining the legacy compatibility alias. |
+| LTTng fence tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. |
 | PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
@@ -136,3 +137,9 @@ RTSP retains its named helpers for explicit firewall assignment; the kernel
 initializer copies the expectation policy and sets the protocol and callbacks.
 DAHDI also supports enabling PPP without its separate HDLC networking option: its
 NAPI compatibility alias no longer rewrites declarations in a later include.
+
+Direct-member review covered 2,046 referenced structure types, with 443 header
+matches in 6.18 and 441 in 7.3. RTSP now guards the removed tuple and changed
+expectation policy. LTTng already guards the inode layout changes; its DMA fence
+probe needed the accessor update above. The compile workflow also builds LTTng
+with kernel tracing and DMA-buffer support enabled, and checks its fence probe.
