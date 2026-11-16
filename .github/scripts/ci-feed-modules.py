@@ -27,7 +27,8 @@ def download(urls, target, digest):
         except (urllib.error.URLError, TimeoutError):
             continue
         if hashlib.sha256(data).hexdigest() != digest:
-            raise RuntimeError('Checksum mismatch: ' + target.name)
+            print('Rejected checksum from mirror: ' + url, flush=True)
+            continue
         target.write_bytes(data)
         return
     raise RuntimeError('Cannot download ' + target.name)
