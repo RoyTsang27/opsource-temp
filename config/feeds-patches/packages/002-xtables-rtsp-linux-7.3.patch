@@ -1,0 +1,64 @@
+Subject: [PATCH] RTSP: retain and unregister the Linux 7.3 helper copies
+
+The new registration API allocates a helper and returns it through an output
+parameter. Keep those pointers and only unregister successful registrations.
+The kernel releases them through its helper reference-counting API.
+--- a/net/xtables-addons/Makefile
++++ b/net/xtables-addons/Makefile
+@@ -8,7 +8,7 @@
+ 
+ PKG_NAME:=xtables-addons
+ PKG_VERSION:=3.30
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ PKG_HASH:=d43400322980390180bef05eb6f798af49285987c217b7f1c6332da74920d9a4
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.zst
+--- /dev/null
++++ b/net/xtables-addons/patches/200-rtsp-linux-7.3-helper-allocation.patch
+@@ -0,0 +1,45 @@
++Subject: [PATCH] RTSP: retain and unregister the Linux 7.3 helper copies
++
++The new registration API allocates a helper and returns it through an output
++parameter. Keep those pointers and only unregister successful registrations.
++The kernel releases them through its helper reference-counting API.
++--- a/extensions/rtsp/nf_conntrack_rtsp.c
+++++ b/extensions/rtsp/nf_conntrack_rtsp.c
++@@ -677,6 +677,10 @@
++ 
++ static struct nf_conntrack_helper rtsp_helpers[MAX_PORTS];
++ static char rtsp_names[MAX_PORTS][10];
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7,3,0)
+++/* The kernel owns a dynamically allocated copy of each registered helper. */
+++static struct nf_conntrack_helper *rtsp_registered[MAX_PORTS];
+++#endif
++ 
++ /* This function is intentionally _NOT_ defined as __exit */
++ static void
++@@ -685,7 +689,14 @@
++ 	int i;
++ 	for (i = 0; i < num_ports; i++) {
++ 		pr_debug("unregistering port %d\n", ports[i]);
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7,3,0)
+++		if (rtsp_registered[i]) {
+++			nf_conntrack_helper_unregister(rtsp_registered[i]);
+++			rtsp_registered[i] = NULL;
+++		}
+++#else
++ 		nf_conntrack_helper_unregister(&rtsp_helpers[i]);
+++#endif
++ 	}
++ 	kfree(rtsp_buffer);
++ }
++@@ -743,7 +754,11 @@
++ #endif
++ 		pr_debug("port #%d: %d\n", i, ports[i]);
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7,3,0)
+++		ret = nf_conntrack_helper_register(hlpr, &rtsp_registered[i]);
+++#else
++ 		ret = nf_conntrack_helper_register(hlpr);
+++#endif
++ 
++ 		if (ret) {
++ 			printk("nf_conntrack_rtsp: ERROR registering port %d\n", ports[i]);

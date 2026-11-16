@@ -74,7 +74,7 @@ includes="-nostdinc -isystem $compiler_includes -I$mt76 -I$backports/backport-in
 includes+=" -include backport/autoconf.h -include backport/backport.h -DCONFIG_MAC80211_MESH -DCONFIG_NL80211_TESTMODE"
 drivers=(CONFIG_MT7603E=m CONFIG_MT7615_COMMON=m CONFIG_MT7615E=m CONFIG_MT76_CONNAC_LIB=m)
 if [ "$SUBTARGET" = filogic ]; then
-  drivers+=(CONFIG_MT7915E=m CONFIG_MT798X_WMAC=y)
+  drivers+=(CONFIG_MT7915E=m CONFIG_MT798X_WMAC=y CONFIG_MT7996E=m)
   includes+=" -DCONFIG_MT798X_WMAC"
 fi
 make -C "$kernel" M="$mt76" -j"$(nproc)" \
@@ -84,4 +84,5 @@ test -f "$mt76/mt7603/mt7603e.ko"
 test -f "$mt76/mt7615/mt7615e.ko"
 if [ "$SUBTARGET" = filogic ]; then
   test -f "$mt76/mt7915/mt7915e.ko"
+  test -f "$mt76/mt7996/mt7996e.ko"
 fi

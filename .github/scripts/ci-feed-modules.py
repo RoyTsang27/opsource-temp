@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Cross-compile optional feed modules affected by Linux 7.3 API changes."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import urllib.error
+import urllib.request
+
+
+repo = Path.cwd()
+temporary = Path(os.environ['RUNNER_TEMP'])
+kernel = temporary / 'kernel'
+
+
+def run(*args, **kwargs):
+    subprocess.run([str(arg) for arg in args], check=True, **kwargs)
+
+
+def download(urls, target, digest):
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=60) as response:
+                data = response.read()
+        except (urllib.error.URLError, TimeoutError):
+            continue
+        if hashlib.sha256(data).hexdigest() != digest:
+            raise RuntimeError('Checksum mismatch: ' + target.name)
+        target.write_bytes(data)
+        return
+    raise RuntimeError('Cannot download ' + target.name)
+
+
+# Verify the snapshots used to read recipes and apply the repository feed fixes.
+feeds = (
+    ('packages', 'immortalwrt/packages', 'e731ba76764082d9db71de60f1ddac43f4114101',
+     '6fe6f3834c8087e4b2f89285ee86fef9c991a4182a5c3cf83210002f786a8932'),
+    ('telephony', 'openwrt/telephony', '5d68d53c160a325ea9d03fce393e051573bcc736',
+     'ce2c1b6eaa1a14d3e9fa40ff676a7dc7647de82cc966d8b9c55b1ef209e85c95'),
+)
+for feed, upstream, commit, digest in feeds:
+    assert f'https://github.com/{upstream}.git^{commit}' in (repo / 'feeds.conf.release').read_text()
+    archive = temporary / (feed + '.tar.gz')
+    download([f'https://codeload.github.com/{upstream}/tar.gz/{commit}'], archive, digest)
+    destination = temporary / feed
+    destination.mkdir()
+    run('tar', '-xzf', archive, '--strip-components=1', '-C', destination)
+    run('python3', 'scripts/apply-feed-patches.py', feed, '--feed-dir', destination)
+
+mirrors = ['https://sources.openwrt.org']
+mirrors += json.loads((repo / 'scripts/projectsmirrors.json').read_text())['@IMMORTALWRT']
+for feed, relative, name, extension in (
+    ('packages', 'net/xtables-addons', 'xtables-addons', '.tar.zst'),
+    ('telephony', 'libs/dahdi-linux', 'dahdi-linux', '.tar.gz'),
+):
+    package = temporary / feed / relative
+    recipe = (package / 'Makefile').read_text()
+    version = re.search(r'^PKG_VERSION:=(\S+)$', recipe, re.M)[1]
+    digest = re.search(r'^PKG_HASH:=(\S+)$', recipe, re.M)[1]
+    archive = temporary / (name + '-' + version + extension)
+    urls = [mirror.rstrip('/') + '/' + archive.name for mirror in mirrors]
+    if name == 'dahdi-linux':
+        urls.append(f'https://github.com/asterisk/dahdi-linux/releases/download/v{version}/{archive.name}')
+    else:
+        urls.append('https://inai.de/files/xtables-addons/' + archive.name)
+    download(urls, archive, digest)
+    source = temporary / name
+    source.mkdir()
+    run('tar', '--zstd' if extension.endswith('.zst') else '-z', '-xf', archive,
+        '--strip-components=1', '-C', source)
+    environment = {**os.environ, 'PATCH': 'patch --fuzz=0'}
+    run('scripts/patch-kernel.sh', source, package / 'patches', env=environment)
+    if name == 'xtables-addons':
+        run('make', '-C', kernel, 'M=' + str(source / 'extensions/rtsp'), 'modules')
+        assert (source / 'extensions/rtsp/nf_conntrack_rtsp.ko').is_file()
+        assert (source / 'extensions/rtsp/nf_nat_rtsp.ko').is_file()
+    else:
+        # Also exercise the optional PPP code, which the package leaves disabled.
+        run('make', '-C', source, 'KSRC=' + str(kernel), 'DAHDI_BUILD_ALL=',
+            'CONFIG_DAHDI=m', 'KCFLAGS=-DCONFIG_DAHDI_PPP', 'modules')
+        assert (source / 'drivers/dahdi/dahdi.ko').is_file()

@@ -37,6 +37,9 @@ packages, userspace dependencies, package installation and image generation.
 | Wireless backports | Remove 7.3 dependencies on the old Michael CryptoAPI module; the pinned backports contain the replacement implementation. |
 | Wireless configuration | Recognize numeric kernel versions beyond 6.x when generating backport compatibility symbols. |
 | Wireless MAC parsing | Include `linux/hex.h` explicitly for the downstream sysfs setter and MT7615 debug controls after the kernel stopped including it indirectly. |
+| MediaTek WED integration | Match the pinned mt76 driver with the upstream mac80211 SCS/MSCS series and kernel flow-priority, flush and idle interfaces. Keep matching flow-layout assertions on both sides. |
+| RTSP connection tracking | Retain the helper copies allocated by the new registration API, unregister only successful registrations and let the kernel release them. |
+| DAHDI PPP | Use the PPP error callback without its removed error-code argument on 7.3. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
 | Hasivo PSE | Restrict this driver to Realtek, which supplies its kernel patch. |
@@ -102,5 +105,19 @@ unbuilt vendor driver trees and Open vSwitch's source datapath capped at 5.5
 were excluded from the 7.3 module review. This remains a source audit of those
 optional modules, not a successful compilation claim.
 
+The signature review compares 1,330 called header functions in 6.18 with 1,318
+in 7.3, including parameter types and argument counts. It found the RTSP helper
+and DAHDI PPP changes above. OpenVPN backports already guard the UDP tunnel
+socket-type change; parameter-name edits and compatible integer-to-boolean
+changes need no source change.
+
+The matching wireless integration comes from OpenWrt commit
+`d068e4608f83361fb4a6ae8a8cc4b46d81219bbe`; its downloaded patch files were
+checked against their official Git blob hashes. The MediaTek flow API patches
+are carried on 6.18 as well as 7.3, since the same mt76 source is shared by both.
+The explicit MAC-address parser include and existing mt76 safety patches remain.
+
 The compile workflow additionally builds the pinned mac80211 backports and
-MT7603/MT7615 drivers on both architectures, plus MT7915 with WED on Filogic.
+MT7603/MT7615 drivers on both architectures, plus MT7915 and MT7996 with WED on
+Filogic. It also builds both RTSP helper modules and the DAHDI core with its
+optional PPP code enabled, using the pinned feed recipes and patched sources.
