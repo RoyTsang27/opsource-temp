@@ -36,7 +36,7 @@ packages, userspace dependencies, package installation and image generation.
 | Removed kernel subsystems | Hide obsolete AppleTalk, mISDN, IPoA, ATM-over-TCP and CryptoAPI FCRYPT/PCBC/Michael packages on 7.3. |
 | Wireless backports | Remove 7.3 dependencies on the old Michael CryptoAPI module; the pinned backports contain the replacement implementation. |
 | Wireless sysfs | Include `linux/hex.h` explicitly for the downstream MAC address setter after the kernel stopped including it indirectly. |
-| libbpf | Add the aligned 128-bit integer types to its bundled header for current ARM64 ptrace UAPI. |
+| libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
 | Old vendor Wi-Fi | Keep the already unsupported rtl8812au-ct driver restricted to its supported 6.12 selection. |
 | Hasivo PSE | Restrict this driver to Realtek, which supplies its kernel patch. |
 
@@ -82,7 +82,7 @@ It also rejects unresolved autoload conditions. The Linux compile workflow runs
 this audit for both architectures and cross-compiles the local button, GPIO,
 relay, U-Boot NVRAM and applicable LED modules, plus the patched ATM library and
 PVC tools against exported 7.3 headers.
-It also compiles libbpf's bundled types with the exported BPF/ptrace headers,
+It also compiles libbpf's and bpftool's bundled types with the exported BPF/ptrace headers,
 including a check of the 128-bit integer size and alignment where supported.
 
 Local tests cover actual package expansion on 6.12, 6.18 and 7.3, dependency

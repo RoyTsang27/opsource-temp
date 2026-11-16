@@ -1,0 +1,33 @@
+Subject: [PATCH] types: match the current Linux 128-bit UAPI integers
+
+Both bpftool and its embedded libbpf shadow linux/types.h. Keep their copies
+compatible with the ARM64 ptrace header, preserving the kernel's alignment.
+
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -10,6 +10,11 @@
+ #include <asm/types.h>
+ #include <asm/posix_types.h>
+ 
++#ifdef __SIZEOF_INT128__
++typedef __signed__ __int128 __s128 __attribute__((aligned(16)));
++typedef unsigned __int128 __u128 __attribute__((aligned(16)));
++#endif
++
+ typedef uint64_t u64;
+ typedef __u32 u32;
+ typedef __u16 u16;
+--- a/libbpf/include/linux/types.h
++++ b/libbpf/include/linux/types.h
+@@ -12,6 +12,11 @@
+ #include <asm/types.h>
+ #include <asm/posix_types.h>
+ 
++#ifdef __SIZEOF_INT128__
++typedef __signed__ __int128 __s128 __attribute__((aligned(16)));
++typedef unsigned __int128 __u128 __attribute__((aligned(16)));
++#endif
++
+ #define __bitwise__
+ #define __bitwise __bitwise__
+ 

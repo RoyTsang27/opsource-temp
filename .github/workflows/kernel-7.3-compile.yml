@@ -130,7 +130,7 @@ jobs:
             test -f "$RUNNER_TEMP/atm-install/usr/lib/libatm.so"
             test -x "$RUNNER_TEMP/atm-install/usr/sbin/br2684ctl"
           ) 2>&1 | tee logs/atm-compile.log
-      - name: Check libbpf types against exported kernel headers
+      - name: Check libbpf and bpftool against exported kernel headers
         run: |
           curl --fail --location --retry 3 \
             https://sources.openwrt.org/libbpf-1.7.0.tar.zst \
@@ -151,6 +151,23 @@ jobs:
             -I"$RUNNER_TEMP/libbpf/include" -I"$RUNNER_TEMP/libbpf/include/uapi" \
             -I"$RUNNER_TEMP/uapi/include" "$RUNNER_TEMP/libbpf-uapi.c" \
             2>&1 | tee logs/libbpf-uapi.log
+          curl --fail --location --retry 3 \
+            https://sources.openwrt.org/bpftool-7.7.0.tar.zst \
+            --output "$RUNNER_TEMP/bpftool.tar.zst"
+          printf '%s  %s\n' \
+            67402950366f03853edb9a8702e1701b206f5f6685d887e9873264b14894f062 \
+            "$RUNNER_TEMP/bpftool.tar.zst" | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/bpftool"
+          tar --zstd -xf "$RUNNER_TEMP/bpftool.tar.zst" --strip-components=1 -C "$RUNNER_TEMP/bpftool"
+          PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
+            "$RUNNER_TEMP/bpftool" package/network/utils/bpftool/patches \
+            2>&1 | tee logs/bpftool-patches.log
+          for includes in include libbpf/include; do
+            "${CROSS_COMPILE}gcc" -std=gnu11 -Wall -Werror -fsyntax-only \
+              -I"$RUNNER_TEMP/bpftool/$includes" -I"$RUNNER_TEMP/bpftool/$includes/uapi" \
+              -I"$RUNNER_TEMP/uapi/include" "$RUNNER_TEMP/libbpf-uapi.c" \
+              2>&1 | tee -a logs/bpftool-uapi.log
+          done
       - name: Compile kernel and built-in drivers
         run: |
           make -C "$RUNNER_TEMP/kernel" -j"$(nproc)" "$IMAGE" modules \
