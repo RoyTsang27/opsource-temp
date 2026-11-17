@@ -76,11 +76,12 @@ def resolve(repo, kernel, arch, board, subtarget, version, config):
             if match:
                 values[match[1]] = 'n'
     helpers = (repo / 'include/kernel.mk').read_text().split('version_filter_perl=', 1)[1]
+    build_arch = {'arm64': 'aarch64', 'arm': 'arm', 'mips': 'mipsel'}[arch]
     text = f'''TOPDIR:={repo}
 INCLUDE_DIR:=$(TOPDIR)/include
 SCRIPT_DIR:=$(TOPDIR)/scripts
 LINUX_DIR:={kernel}
-ARCH:={'aarch64' if arch == 'arm64' else 'mipsel'}
+ARCH:={build_arch}
 BOARD:={board}
 SUBTARGET:={subtarget}
 LINUX_KARCH:={arch}
@@ -173,7 +174,7 @@ def audit(repo, kernel, arch, board, subtarget, version, config=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kernel-tree', type=Path, required=True)
-    parser.add_argument('--arch', choices=['arm64', 'mips'], required=True)
+    parser.add_argument('--arch', choices=['arm64', 'arm', 'mips'], required=True)
     parser.add_argument('--board', required=True)
     parser.add_argument('--subtarget', required=True)
     parser.add_argument('--version', default='7.3')

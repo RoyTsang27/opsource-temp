@@ -27,7 +27,7 @@ class KernelDefaultsTests(unittest.TestCase):
     def resolve(self, architecture, series, preset=''):
         directory = Path(tempfile.mkdtemp(dir=self.directory))
         kconfig = 'mainmenu "Kernel defaults test"\n'
-        for symbol in ['aarch64', 'mips', 'LINUX_7_3', 'LINUX_6_18']:
+        for symbol in ['aarch64', 'arm', 'mips', 'LINUX_7_3', 'LINUX_6_18']:
             enabled = symbol in (architecture, 'LINUX_' + series)
             kconfig += 'config ' + symbol + '\n\tbool\n\tdefault ' + ('y' if enabled else 'n') + '\n'
         kconfig += 'source "' + str(ROOT / 'config/Config-kernel.in') + '"\n'
@@ -51,13 +51,19 @@ class KernelDefaultsTests(unittest.TestCase):
         self.assertNotIn('CONFIG_KERNEL_PREEMPT_NONE=y', resolved)
         self.assertNotIn('CONFIG_KERNEL_PREEMPT_LAZY=y', resolved)
 
+    def test_linux_7_arm32_uses_supported_voluntary_preemption(self):
+        resolved = self.resolve('arm', '7_3')
+        self.assertIn('CONFIG_KERNEL_PREEMPT_VOLUNTARY=y', resolved)
+        self.assertNotIn('CONFIG_KERNEL_PREEMPT_NONE=y', resolved)
+        self.assertNotIn('CONFIG_KERNEL_PREEMPT_LAZY=y', resolved)
+
     def test_linux_6_defaults_stay_available(self):
-        for architecture in ['aarch64', 'mips']:
+        for architecture in ['aarch64', 'arm', 'mips']:
             with self.subTest(architecture=architecture):
                 self.assertIn('CONFIG_KERNEL_PREEMPT_NONE=y', self.resolve(architecture, '6_18'))
 
     def test_old_linux_7_preset_migrates_to_a_supported_choice(self):
-        for architecture, expected in [('aarch64', 'LAZY'), ('mips', 'VOLUNTARY')]:
+        for architecture, expected in [('aarch64', 'LAZY'), ('arm', 'VOLUNTARY'), ('mips', 'VOLUNTARY')]:
             with self.subTest(architecture=architecture):
                 resolved = self.resolve(architecture, '7_3', 'CONFIG_KERNEL_PREEMPT_NONE=y\n')
                 self.assertIn('CONFIG_KERNEL_PREEMPT_' + expected + '=y', resolved)

@@ -42,6 +42,7 @@ packages, userspace dependencies, package installation and image generation.
 | RTSP connection tracking | Use the kernel initializer for the protocol fields and inline expectation policy; retain allocated helper copies and unregister only successful registrations. |
 | DAHDI PPP and NAPI | Use the PPP error callback without its removed error-code argument; include kernel NAPI declarations before defining the legacy compatibility alias. |
 | LTTng tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. Match the const packet-drop socket and Btrfs transaction-handle arguments. |
+| RTPengine build flags | Preserve external module definitions through current Kbuild `ccflags-y`. |
 | PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
 | Kernel string copies | Replace removed `strncpy` calls in LTTng, Xtables addons (including kernel Lua), OpenAppFilter and Netatop. Preserve bounded-copy padding and truncation; use `memmove` for overlapping trim buffers. |
 | libbpf and bpftool | Add the aligned 128-bit integer types to their bundled headers for current ARM64 ptrace UAPI. |
@@ -87,7 +88,7 @@ The packages feed fixes cover:
 It evaluates package make definitions, applies version filters, follows target
 restrictions through kmod dependencies, and checks Kconfig/Kbuild references.
 It also rejects unresolved autoload conditions. The Linux compile workflow runs
-this audit for both architectures and cross-compiles the local button, GPIO,
+this audit for MediaTek ARM64/MIPS and Airoha ARM64/ARM32 and cross-compiles the local button, GPIO,
 relay, U-Boot NVRAM and applicable LED modules, plus the patched ATM library and
 PVC tools against exported 7.3 headers.
 It also compiles libbpf's and bpftool's bundled types with the exported BPF/ptrace headers,
@@ -170,3 +171,33 @@ The image warning-option change was tested with the actual DTC sources from
 Linux 7.3.4 and the pinned 6.18.56. Both DTB and overlay generation work; the
 legacy option remains enabled on the older compiler. All six repository device
 trees also compile with the prepared 7.3 bindings and the new flags.
+
+
+## Airoha Linux 7.3 port
+
+The Airoha target now selects Linux 7.3.4 for AN7581, AN7583 and EN7523.
+The target series contains 61 rebased patches. Backports already included in
+7.3 are omitted; the native QDMA migration, BQL flushing and typed DMA mapping
+implementations are retained. The AN7583 FE port ordering correction is carried
+explicitly. The moved PCIe PHY source was compared with the native 7.3 source.
+
+The port retains the custom clock/reset, USB/PCIe PHY, PCS line modes, NAND,
+Ethernet PON control/data paths and PPE metadata needed by the integrated PON
+packages. It preserves the compatible-gated ESMT NAND override and current
+SPI-NAND declarations. Clock changes retain the native active-low PCIe reset
+handling and EN751221 implementation while adding AN7583 support.
+
+ARM64 uses scheduler-controlled lazy preemption and Cortex-A53 errata handling;
+ARM32 uses voluntary preemption. Standard software GRO remains available. The
+experimental downstream hardware GRO patch is omitted because it depended on
+the superseded QDMA user-count and receive-buffer model. This avoids replacing
+the native migration and buffer lifetime fixes.
+
+Local verification applied all 61 patches with zero fuzz to the pinned generic
+7.3.4 tree and compiled all 25 Airoha board device trees. The Linux compile
+workflow now checks all three Airoha subtargets and builds the frontend and
+XPON modules on AN7581 and AN7583. EN7523 remains a source-only target and gets
+a kernel build rather than an installable firmware claim. The full Airoha
+workflow additionally builds the OpenWrt toolchain, PON userspace and signed
+AN7581 tcboot images. Successful hardware boot, optical registration and
+line-rate forwarding require testing on the actual devices.

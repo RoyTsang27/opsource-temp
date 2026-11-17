@@ -1,0 +1,36 @@
+From a3cd6eb3259282a68b608fc923121460c0d3d2f7 Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Fri, 17 Jan 2025 10:35:41 +0100
+Subject: [PATCH 6/9] net: airoha: add initial fixup for GDM3/4 port support
+
+GDM3 and GDM4 require different configuration for max long frame
+definition, needs the QDMA to strip CRC on RX and require the SPORT to
+be enabled to correctly be identified.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -558,8 +558,10 @@
+ 		      FIELD_PREP(IP_ASSEMBLE_PORT_MASK, 0) |
+ 		      FIELD_PREP(IP_ASSEMBLE_NBQ_MASK, 22));
+ 
+-	airoha_fe_set(eth, REG_GDM_FWD_CFG(AIROHA_GDM3_IDX), GDM_PAD_EN_MASK);
+-	airoha_fe_set(eth, REG_GDM_FWD_CFG(AIROHA_GDM4_IDX), GDM_PAD_EN_MASK);
++	airoha_fe_set(eth, REG_GDM_FWD_CFG(AIROHA_GDM3_IDX),
++		      GDM_PAD_EN_MASK | GDM_STRIP_CRC_MASK);
++	airoha_fe_set(eth, REG_GDM_FWD_CFG(AIROHA_GDM4_IDX),
++		      GDM_PAD_EN_MASK | GDM_STRIP_CRC_MASK);
+ 
+ 	/* Enable split for MIB counters for GDM3 and GDM4 */
+ 	airoha_fe_set(eth, REG_FE_GDM_MIB_CFG(AIROHA_GDM3_IDX),
+@@ -1925,7 +1927,8 @@
+ 		return err;
+ 
+ 	qdma = airoha_qdma_deref(dev);
+-	if (netdev_uses_dsa(netdev))
++	/* GDM3 and GDM4 require SPORT for the CPU forwarding path. */
++	if (netdev_uses_dsa(netdev) || port->id > 2)
+ 		airoha_fe_set(qdma->eth, REG_GDM_INGRESS_CFG(port->id),
+ 			      GDM_STAG_EN_MASK);
+ 	else

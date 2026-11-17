@@ -37,6 +37,27 @@ jobs:
             compiler: gcc-mipsel-linux-gnu
             libc: libc6-dev-mipsel-cross
             image: vmlinux
+          - target: airoha
+            subtarget: an7581
+            arch: arm64
+            cross: aarch64-linux-gnu-
+            compiler: gcc-aarch64-linux-gnu
+            libc: libc6-dev-arm64-cross
+            image: Image
+          - target: airoha
+            subtarget: an7583
+            arch: arm64
+            cross: aarch64-linux-gnu-
+            compiler: gcc-aarch64-linux-gnu
+            libc: libc6-dev-arm64-cross
+            image: Image
+          - target: airoha
+            subtarget: en7523
+            arch: arm
+            cross: arm-linux-gnueabihf-
+            compiler: gcc-arm-linux-gnueabihf
+            libc: libc6-dev-armhf-cross
+            image: zImage
     env:
       TARGET: ${{ matrix.target }}
       SUBTARGET: ${{ matrix.subtarget }}
@@ -102,7 +123,7 @@ jobs:
           printf '%s\n' CONFIG_INPUT=m CONFIG_CRYPTO_CCM=m CONFIG_CRYPTO_CMAC=m \
             CONFIG_CRYPTO_GCM=m CONFIG_CRC_CCITT=m CONFIG_RELAY=y CONFIG_HWMON=y \
             CONFIG_PPP=m CONFIG_NETFILTER=y CONFIG_NETFILTER_ADVANCED=y \
-            CONFIG_NF_CONNTRACK=m CONFIG_NF_NAT=m CONFIG_NF_REJECT_IPV4=m CONFIG_IPV6=m \
+            CONFIG_NF_CONNTRACK=m CONFIG_NF_NAT=m CONFIG_NF_REJECT_IPV4=m CONFIG_IPV6=y \
             CONFIG_NETFILTER_XTABLES=m CONFIG_IP_NF_IPTABLES=m CONFIG_IP6_NF_IPTABLES=m \
             CONFIG_TEXTSEARCH=y CONFIG_TEXTSEARCH_BM=m CONFIG_TEXTSEARCH_KMP=m \
             CONFIG_NF_CONNTRACK_EVENTS=y CONFIG_NF_CONNTRACK_MARK=y \
@@ -193,6 +214,9 @@ jobs:
         run: |
           make -C "$RUNNER_TEMP/kernel" -j"$(nproc)" "$IMAGE" modules \
             2>&1 | tee logs/compile.log
+      - name: Compile Airoha board trees and integrated PON modules
+        if: matrix.target == 'airoha'
+        run: bash scripts/ci-airoha-compile.sh 2>&1 | tee logs/airoha-compile.log
       - name: Compile local external kernel modules
         run: |
           (
@@ -210,8 +234,10 @@ jobs:
             exit "$build_status"
           ) 2>&1 | tee logs/external-modules.log
       - name: Compile pinned mac80211 and MediaTek wireless drivers
+        if: matrix.arch != 'arm'
         run: bash scripts/ci-wireless-compile.sh 2>&1 | tee logs/wireless-compile.log
       - name: Compile optional feed kernel modules
+        if: matrix.arch != 'arm'
         run: python3 .github/scripts/ci-feed-modules.py 2>&1 | tee logs/feed-modules.log
       - name: Upload kernel diagnostics
         if: always()

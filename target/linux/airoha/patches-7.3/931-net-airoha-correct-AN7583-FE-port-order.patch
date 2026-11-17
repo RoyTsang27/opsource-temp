@@ -1,0 +1,30 @@
+From: Christian Marangi <ansuelsmth@gmail.com>
+Subject: [PATCH] net: airoha: retain the AN7583 FE port numbering fix
+
+AN7583 follows the same FE port ordering as AN7581. Apply the existing
+board-tested correction to the Linux 7.3 driver.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -2515,17 +2515,8 @@
+ int airoha_get_fe_port(struct airoha_gdm_dev *dev)
+ {
+ 	struct airoha_gdm_port *port = dev->port;
+-	struct airoha_eth *eth = dev->eth;
+-
+-	switch (eth->soc->version) {
+-	case 0x7583:
+-		return port->id == AIROHA_GDM3_IDX ? FE_PSE_PORT_GDM3
+-						   : port->id;
+-	case 0x7581:
+-	default:
+-		return port->id == AIROHA_GDM4_IDX ? FE_PSE_PORT_GDM4
+-						   : port->id;
+-	}
++
++	return port->id == AIROHA_GDM4_IDX ? FE_PSE_PORT_GDM4 : port->id;
+ }
+ 
+ static void airoha_pon_skb_vlan(struct sk_buff *skb, u16 *vlan_id,

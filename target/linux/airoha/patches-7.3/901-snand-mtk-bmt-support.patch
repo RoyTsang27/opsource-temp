@@ -1,0 +1,36 @@
+
+
+--- a/drivers/mtd/nand/spi/core.c
++++ b/drivers/mtd/nand/spi/core.c
+@@ -20,6 +20,7 @@
+ #include <linux/string.h>
+ #include <linux/spi/spi.h>
+ #include <linux/spi/spi-mem.h>
++#include <linux/mtd/mtk_bmt.h>
+ 
+ static struct spi_mem_op
+ spinand_fill_reset_op(struct spinand_device *spinand)
+@@ -2079,6 +2080,7 @@
+ 	if (ret)
+ 		return ret;
+ 
++	mtk_bmt_attach(mtd);
+ 	ret = mtd_device_register(mtd, NULL, 0);
+ 	if (ret)
+ 		goto err_spinand_cleanup;
+@@ -2086,6 +2088,7 @@
+ 	return 0;
+ 
+ err_spinand_cleanup:
++	mtk_bmt_detach(mtd);
+ 	spinand_cleanup(spinand);
+ 
+ 	return ret;
+@@ -2104,6 +2107,7 @@
+ 	if (ret)
+ 		return ret;
+ 
++	mtk_bmt_detach(mtd);
+ 	spinand_cleanup(spinand);
+ 
+ 	return 0;

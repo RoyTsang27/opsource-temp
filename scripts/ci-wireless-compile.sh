@@ -84,7 +84,7 @@ drivers=(
   CONFIG_MT7921_COMMON=m CONFIG_MT7921E=m CONFIG_MT7921U=m CONFIG_MT7921S=m
   CONFIG_MT7925_COMMON=m CONFIG_MT7925E=m CONFIG_MT7925U=m
 )
-if [ "$SUBTARGET" = filogic ]; then
+if [ "$ARCH" = arm64 ]; then
   drivers+=(CONFIG_MT7915E=m CONFIG_MT798X_WMAC=y CONFIG_MT7996E=m)
   includes+=" -DCONFIG_MT798X_WMAC"
 fi
@@ -101,7 +101,7 @@ for module in mt76-usb mt76-sdio mt76x02-lib mt76x02-usb \
   mt7925/mt7925-common mt7925/mt7925e mt7925/mt7925u; do
   test -f "$mt76/$module.ko"
 done
-if [ "$SUBTARGET" = filogic ]; then
+if [ "$ARCH" = arm64 ]; then
   test -f "$mt76/mt7915/mt7915e.ko"
   test -f "$mt76/mt7996/mt7996e.ko"
 fi
