@@ -167,6 +167,12 @@ too. Open vSwitch uses the in-tree datapath on 7.3; its old external datapath is
 outside this matrix. These checks build module code, rather than every associated
 userspace daemon or every possible package configuration.
 
+Jool folds its own per-CPU counters rather than depending on the unexported
+`snmp_fold_field` helper, preserving possible-CPU iteration and machine-word
+accumulation. Additional module checks cover Cryptodev, NAT46, external NTFS
+and the Filogic-only RTL837x DSA driver. NTFS uses the 7.3 inode-create callback
+signature, and the switch driver uses the ethtool statistic-name helper.
+
 The image warning-option change was tested with the actual DTC sources from
 Linux 7.3.4 and the pinned 6.18.56. Both DTB and overlay generation work; the
 legacy option remains enabled on the older compiler. All six repository device
@@ -186,6 +192,8 @@ Ethernet PON control/data paths and PPE metadata needed by the integrated PON
 packages. It preserves the compatible-gated ESMT NAND override and current
 SPI-NAND declarations. Clock changes retain the native active-low PCIe reset
 handling and EN751221 implementation while adding AN7583 support.
+The programmable clocks use the 7.3 `determine_rate` callback while retaining
+their exact-rate validation.
 
 ARM64 uses scheduler-controlled lazy preemption and Cortex-A53 errata handling;
 ARM32 uses voluntary preemption. Standard software GRO remains available. The

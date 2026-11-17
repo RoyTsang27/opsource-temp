@@ -71,11 +71,17 @@ packages = (
     ('packages', 'kernel/mdio-netlink', 'mdio-netlink', '.tar.zst'),
     ('packages', 'kernel/mtd-rw', 'mtd-rw', '.tar.zst'),
     ('packages', 'kernel/ovpn-dco', 'ovpn-backports', '.tar.gz'),
+    ('core', 'package/kernel/cryptodev-linux', 'cryptodev-linux', '.tar.gz'),
+    ('core', 'package/kernel/nat46', 'nat46', '.tar.zst'),
+    ('core', 'package/kernel/ntfs', 'linux-ntfs', '.tar.zst'),
+    ('core', 'package/kernel/rtl837x-dsa', 'dsa-rtl837x', '.tar.zst'),
 )
 
 
 def compile_package(feed, relative, name, extension):
-    package = temporary / feed / relative
+    if name == 'dsa-rtl837x' and os.environ['SUBTARGET'] != 'filogic':
+        return  # The package is restricted to Filogic in its recipe.
+    package = repo / relative if feed == 'core' else temporary / feed / relative
     recipe = (package / 'Makefile').read_text()
     values = dict(re.findall(r'^(PKG_\w+):=\s*([^\n]+)$', recipe.replace('\\\n', ''), re.M))
     if values.get('PKG_SOURCE_PROTO') == 'git':
@@ -139,6 +145,10 @@ def compile_package(feed, relative, name, extension):
         assert (source / 'src/lttng-tracer.ko').is_file()
         assert (source / 'src/probes/lttng-probe-dma-fence.ko').is_file()
         assert (source / 'src/probes/lttng-probe-btrfs.ko').is_file()
+    elif name == 'cryptodev-linux':
+        run('make', '-C', source, 'KERNEL_DIR=' + str(kernel),
+            '-j' + str(os.cpu_count() or 2))
+        assert (source / 'cryptodev.ko').is_file()
     elif name in ('open-app-filter', 'netatop'):
         relative = 'oaf/src' if name == 'open-app-filter' else 'module'
         module = 'oaf' if name == 'open-app-filter' else 'netatop'
@@ -186,11 +196,21 @@ def compile_package(feed, relative, name, extension):
             'mdio-netlink': ('kernel', 'mdio-netlink'),
             'mtd-rw': ('', 'mtd-rw'),
             'ovpn-backports': ('drivers/net/ovpn', 'ovpn'),
+            'nat46': ('nat46/modules', 'nat46'),
+            'linux-ntfs': ('', 'ntfs'),
+            'dsa-rtl837x': ('src', 'rtl8372n_dsa'),
         }
         relative, module = layouts[name]
         options = []
         if name == 'rtpengine':
             options.append('RTPENGINE_VERSION=' + version)
+        elif name == 'linux-ntfs':
+            options.append('CONFIG_NTFS_FS=m')
+        elif name == 'nat46':
+            options.append('CFLAGS_MODULE=-DNAT46_VERSION=\\\"' + values['PKG_SOURCE_VERSION'] + '\\\"')
+        elif name == 'dsa-rtl837x':
+            options += ['CONFIG_RTL8372N_DSA=m', 'CONFIG_RTL837X_PHY_PATCH=y',
+                        'CONFIG_RTL8372N_DSA_DEBUG=n']
         elif name == 'ovpn-backports':
             options += ['CONFIG_OVPN=m', 'NOSTDINC_FLAGS=' + ' '.join((
                 '-I' + str(source / 'include'), '-I' + str(source / 'compat-include'),

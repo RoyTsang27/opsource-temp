@@ -1,0 +1,62 @@
+Subject: [PATCH] Jool: fold private per-CPU counters without an unexported helper
+
+Keep the possible-CPU iteration and unsigned-long accumulation used by the
+kernel helper. This works on both 32-bit and 64-bit targets and older kernels.
+
+--- a/net/jool/Makefile
++++ b/net/jool/Makefile
+@@ -9,7 +9,7 @@
+ 
+ PKG_NAME:=jool
+ PKG_VERSION:=4.1.15
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_LICENSE:=GPL-2.0-only
+ PKG_LICENSE_FILES:=COPYING
+--- /dev/null
++++ b/net/jool/patches/101-private-snmp-counter-fold.patch
+@@ -0,0 +1,43 @@
++Subject: [PATCH] Jool: fold private per-CPU counters without an unexported helper
++
++Keep the possible-CPU iteration and unsigned-long accumulation used by the
++kernel helper. This works on both 32-bit and 64-bit targets and older kernels.
++
++--- a/src/mod/common/stats.c
+++++ b/src/mod/common/stats.c
++@@ -1,6 +1,8 @@
++ #include "mod/common/stats.h"
++ 
+++#include <linux/cpu.h>
++ #include <linux/kref.h>
+++#include <linux/percpu.h>
++ #include <net/ip.h>
++ #include <net/snmp.h>
++ #include "mod/common/wkmalloc.h"
++@@ -66,6 +68,17 @@
++ 	SNMP_ADD_STATS(stats->mib, stat, addend);
++ }
++ 
+++static unsigned long jstat_fold_field(struct jool_stats *stats, int field)
+++{
+++	unsigned long result = 0;
+++	int cpu;
+++
+++	for_each_possible_cpu(cpu)
+++		result += per_cpu_ptr(stats->mib, cpu)->mibs[field];
+++
+++	return result;
+++}
+++
++ /**
++  * Returns the list of stats as an array. You will have to free it.
++  * The array length will be JSTAT_COUNT.
++@@ -80,7 +93,7 @@
++ 		return NULL;
++ 
++ 	for (i = 0; i < JSTAT_COUNT; i++)
++-		result[i] = snmp_fold_field(stats->mib, i);
+++		result[i] = jstat_fold_field(stats, i);
++ 
++ 	return result;
++ }

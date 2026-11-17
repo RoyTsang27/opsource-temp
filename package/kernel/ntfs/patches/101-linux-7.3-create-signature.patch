@@ -1,0 +1,16 @@
+Subject: [PATCH] NTFS: match the Linux 7.3 inode create callback
+
+--- a/namei.c
++++ b/namei.c
+@@ -771,7 +771,10 @@
+ 	return ERR_PTR(err);
+ }
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
++static int ntfs_create(struct mnt_idmap *idmap, struct inode *dir,
++		struct dentry *dentry, umode_t mode)
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+ static int ntfs_create(struct mnt_idmap *idmap, struct inode *dir,
+ 		struct dentry *dentry, umode_t mode, bool excl)
+ #else

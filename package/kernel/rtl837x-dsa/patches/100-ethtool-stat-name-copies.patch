@@ -1,0 +1,14 @@
+Subject: [PATCH] DSA: copy statistic names through the ethtool string helper
+
+--- a/src/rtl8372n.c
++++ b/src/rtl8372n.c
+@@ -1182,8 +1182,7 @@
+ 
+ 	for (i = 0; i < priv->num_mib_counters; i++) {
+ 		mib = &priv->mib_counters[i];
+-		strncpy(data + i * ETH_GSTRING_LEN,
+-			mib->name, ETH_GSTRING_LEN);
++		ethtool_puts(&data, mib->name);
+ 	}
+ }
+ 
