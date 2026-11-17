@@ -110,6 +110,9 @@ jobs:
             PATCH='patch --fuzz=0' scripts/patch-kernel.sh \
               "$RUNNER_TEMP/kernel" "target/linux/$patches" 2>&1 | tee -a logs/patches.log
           done
+          if [ "$TARGET" = airoha ]; then
+            python3 scripts/check-kernel-patches.py "$RUNNER_TEMP/kernel"
+          fi
       - name: Audit all target-compatible kernel package definitions
         run: |
           python3 scripts/kernel-package-audit.py --kernel-tree "$RUNNER_TEMP/kernel" \

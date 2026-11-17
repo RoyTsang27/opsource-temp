@@ -1,0 +1,14 @@
+Subject: [PATCH] nat46: include the DS field accessor declarations explicitly
+
+Linux 7.3 no longer supplies these helpers through the routing headers.
+
+--- a/nat46/modules/nat46-core.c
++++ b/nat46/modules/nat46-core.c
+@@ -17,6 +17,7 @@
+  */
+ 
+ #include <linux/version.h>
++#include <net/dsfield.h>
+ #include <net/route.h>
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0)
+ #include <net/ipv6.h>

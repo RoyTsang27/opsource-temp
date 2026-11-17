@@ -2,6 +2,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=nat46
+PKG_RELEASE:=2
 
 PKG_MIRROR_HASH:=5d5c14bbb700490a9357c2c8baffd52615f3b572f82eb2fcbfc530bd23f2cdc3
 PKG_SOURCE_URL:=https://github.com/ayourtch/nat46.git

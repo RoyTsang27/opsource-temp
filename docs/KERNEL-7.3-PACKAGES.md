@@ -171,7 +171,8 @@ Jool folds its own per-CPU counters rather than depending on the unexported
 `snmp_fold_field` helper, preserving possible-CPU iteration and machine-word
 accumulation. Additional module checks cover Cryptodev, NAT46, external NTFS
 and the Filogic-only RTL837x DSA driver. NTFS uses the 7.3 inode-create callback
-signature, and the switch driver uses the ethtool statistic-name helper.
+signature, NAT46 includes its DS-field helpers explicitly, and the switch
+driver uses the ethtool statistic-name helper.
 
 The image warning-option change was tested with the actual DTC sources from
 Linux 7.3.4 and the pinned 6.18.56. Both DTB and overlay generation work; the
@@ -182,7 +183,7 @@ trees also compile with the prepared 7.3 bindings and the new flags.
 ## Airoha Linux 7.3 port
 
 The Airoha target now selects Linux 7.3.4 for AN7581, AN7583 and EN7523.
-The target series contains 61 rebased patches. Backports already included in
+The target series contains 60 rebased patches. Backports already included in
 7.3 are omitted; the native QDMA migration, BQL flushing and typed DMA mapping
 implementations are retained. The AN7583 FE port ordering correction is carried
 explicitly. The moved PCIe PHY source was compared with the native 7.3 source.
@@ -194,6 +195,8 @@ SPI-NAND declarations. Clock changes retain the native active-low PCIe reset
 handling and EN751221 implementation while adding AN7583 support.
 The programmable clocks use the 7.3 `determine_rate` callback while retaining
 their exact-rate validation.
+PHY shutdown remains in device stop and open-error unwinding. A source check
+rejects shutdown calls in unrelated functions before starting compilation.
 
 ARM64 uses scheduler-controlled lazy preemption and Cortex-A53 errata handling;
 ARM32 uses voluntary preemption. Standard software GRO remains available. The
@@ -201,8 +204,10 @@ experimental downstream hardware GRO patch is omitted because it depended on
 the superseded QDMA user-count and receive-buffer model. This avoids replacing
 the native migration and buffer lifetime fixes.
 
-Local verification applied all 61 patches with zero fuzz to the pinned generic
-7.3.4 tree and compiled all 25 Airoha board device trees. The Linux compile
+Local verification applied all 60 patches with zero fuzz to the pinned generic
+7.3.4 tree and compiled all 25 Airoha board device trees. Function placement
+was compared in 96 C/header patch sections against the reference port.
+The Linux compile
 workflow now checks all three Airoha subtargets and builds the frontend and
 XPON modules on AN7581 and AN7583. EN7523 remains a source-only target and gets
 a kernel build rather than an installable firmware claim. The full Airoha

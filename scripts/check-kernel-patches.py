@@ -14,6 +14,9 @@ def check(kernel):
     mtk = (kernel / 'drivers/net/ethernet/mediatek/mtk_eth_soc.c').read_text()
     add_mac = function(mtk, 'static int mtk_add_mac(')
     airoha = (kernel / 'drivers/net/ethernet/airoha/airoha_eth.c').read_text()
+    airoha_open = function(airoha, 'static int airoha_dev_open(')
+    airoha_stop = function(airoha, 'static int airoha_dev_stop(')
+    airoha_other = airoha.replace(airoha_open, '').replace(airoha_stop, '')
     exit_flow = function((kernel / 'net/netfilter/nf_flow_table_core.c').read_text(),
                          'static void __exit nf_flow_table_module_exit(')
     realtek = (kernel / 'drivers/net/dsa/realtek/rtl8365mb_main.c').read_text()
@@ -31,8 +34,16 @@ def check(kernel):
         ('unregister_netdevice_notifier' in exit_flow and 'rcu_barrier()' in exit_flow and
          exit_flow.index('unregister_netdevice_notifier') < exit_flow.index('rcu_barrier()'),
          'Flowtable notifier removal must precede the RCU barrier'),
-        ('phylink_stop(dev->phylink)' in function(airoha, 'static int airoha_dev_stop('),
+        ('phylink_stop(dev->phylink)' in airoha_stop,
          'Airoha device shutdown must stop phylink'),
+        (airoha_stop.count('phylink_disconnect_phy(dev->phylink)') == 1 and
+         'phylink_stop(dev->phylink)' in airoha_stop and
+         airoha_stop.index('phylink_stop(dev->phylink)') <
+         airoha_stop.index('phylink_disconnect_phy(dev->phylink)'),
+         'Airoha device shutdown must disconnect its PHY after stopping phylink'),
+        ('phylink_stop(' not in airoha_other and
+         'phylink_disconnect_phy(' not in airoha_other,
+         'Airoha PHY shutdown must stay within device open/unwind and stop'),
         ('phylink_stop' not in function(airoha, 'static int airoha_dev_set_macaddr('),
          'Airoha MAC address changes must not contain the shutdown hunk'),
     )
