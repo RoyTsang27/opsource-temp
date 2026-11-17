@@ -22,10 +22,10 @@ xpon="$RUNNER_TEMP/airoha-xpon"
 mkdir -p "$frontend" "$xpon"
 cp -a package/pon/drivers/airoha-pon-frontends/src/. "$frontend/"
 cp -a package/pon/drivers/airoha-xpon/src/. "$xpon/"
-make -C "$kernel" M="$frontend" -j"$(nproc)" modules
+make -C "$kernel" M="$frontend" -k -j"$(nproc)" modules
 for module in airoha-pon-frontend-core airoha-en7572 airoha-paged-bosa; do
   test -s "$frontend/$module.ko"
 done
 make -C "$kernel" M="$xpon" AIROHA_PON_FRONTEND_INCLUDE="$frontend" \
-  KBUILD_EXTRA_SYMBOLS="$frontend/Module.symvers" -j"$(nproc)" modules
+  KBUILD_EXTRA_SYMBOLS="$frontend/Module.symvers" -k -j"$(nproc)" modules
 test -s "$xpon/airoha-xpon.ko"

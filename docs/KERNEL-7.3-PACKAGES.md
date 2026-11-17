@@ -197,6 +197,8 @@ The programmable clocks use the 7.3 `determine_rate` callback while retaining
 their exact-rate validation.
 PHY shutdown remains in device stop and open-error unwinding. A source check
 rejects shutdown calls in unrelated functions before starting compilation.
+The PON identity parser includes `linux/hex.h` explicitly; its hex conversion
+API remains the same on the supported 6.18 and 7.3 kernels.
 
 ARM64 uses scheduler-controlled lazy preemption and Cortex-A53 errata handling;
 ARM32 uses voluntary preemption. Standard software GRO remains available. The
