@@ -115,7 +115,8 @@ def compile_package(feed, relative, name, extension):
     if (package / 'src').is_dir():
         shutil.copytree(package / 'src', source, dirs_exist_ok=True)
     environment = {**os.environ, 'PATCH': 'patch --fuzz=0'}
-    run('scripts/patch-kernel.sh', source, package / 'patches', env=environment)
+    if (package / 'patches').is_dir():
+        run('scripts/patch-kernel.sh', source, package / 'patches', env=environment)
     if name == 'xtables-addons':
         run('make', '-C', kernel, 'M=' + str(source / 'extensions'),
             'XA_ABSTOPSRCDIR=' + str(source), '-k',
@@ -158,6 +159,13 @@ def compile_package(feed, relative, name, extension):
         flags += ['-include backport/autoconf.h', '-include backport/backport.h',
                   '-include ' + str(source / 'compat-hacks.h'),
                   '-DBATADV_SOURCE_VERSION=\\"' + version + '\\"']
+        # mac80211 supplies these definitions to its external dependents.
+        versions = dict(re.findall(r'^(\w+)="([^"]+)"$',
+                                   (backports / 'versions').read_text(), re.M))
+        for symbol, key in (('CPTCFG_VERSION', 'BACKPORTS_VERSION'),
+                            ('CPTCFG_KERNEL_VERSION', 'BACKPORTED_KERNEL_VERSION'),
+                            ('CPTCFG_KERNEL_NAME', 'BACKPORTED_KERNEL_NAME')):
+            flags.append('-D' + symbol + '=\\"' + versions[key] + '\\"')
         options = ['CONFIG_BATMAN_ADV=m']
         for feature in ('BLA', 'DAT', 'MCAST', 'BATMAN_V', 'DEBUG', 'TRACING'):
             options.append('CONFIG_BATMAN_ADV_' + feature + '=y')
