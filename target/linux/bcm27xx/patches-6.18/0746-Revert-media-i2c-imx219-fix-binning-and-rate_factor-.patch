@@ -60,7 +60,7 @@ This reverts commit 002310f6bf7b5d44a81f5f66aba194176462d87c.
  		/* 2x2 binned 60fps mode */
  		.width = 1640,
  		.height = 1232,
- 		.fll_def = 1707,
+ 		.fll_def = 1706,
 -		.vts_def = 1763,
 -		.binning = {
 -			[BINNING_IDX_8_BIT] = IMX219_BINNING_X2_ANALOG,
@@ -71,7 +71,7 @@ This reverts commit 002310f6bf7b5d44a81f5f66aba194176462d87c.
  		/* 640x480 60fps mode */
  		.width = 640,
  		.height = 480,
- 		.fll_def = 1707,
+ 		.fll_def = 1706,
 -		.vts_def = 1763,
 -		.binning = {
 -			[BINNING_IDX_8_BIT] = IMX219_BINNING_X2_ANALOG,

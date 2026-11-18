@@ -10,8 +10,8 @@
 | Customization reference | `tdsafgen1888asd/Device-Build`, branch `main` |
 | Reference commit | `db96277fbc98282751cb1d70b83bc1cd8156eb4d` |
 | Import date | 2026-10-13, Asia/Shanghai |
-| Kernel | Linux 6.18.63 |
-| Kernel archive SHA256 | `81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71` |
+| Kernel | Linux 6.18.64 |
+| Kernel archive SHA256 | `020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562` |
 
 The source is an independent snapshot of the official OpenWrt tree with the
 listed customizations. Upstream history is available at the recorded base
@@ -19,8 +19,10 @@ commit. All source copyright notices and licenses are retained.
 
 The [2026-11-06 upstream security audit](UPSTREAM-SECURITY-2026-11-06.md)
 records the earlier kernel updates and selected package fixes. The
-[Linux 6.18.63 migration kit](../updates/kernel-6.18.63/) covers the current
-kernel, latest mt76 and an existing op-source 6.18.60 build directory.
+[Linux 6.18.63 migration kit](../updates/kernel-6.18.63/) covers the earlier
+6.18.63 kernel and mt76 update from an op-source 6.18.60 build directory.
+The current [6.18.64 preflight record](validation/kernel-6.18.64-preflight.json)
+records patch compatibility and local regression checks for this source.
 
 ## Device-Build customizations
 
@@ -320,3 +322,44 @@ suite passed with one platform-specific skip. The extracted delivery kit was
 applied to the actual historical 6.18.60 and 6.18.62 source files. Full Linux
 firmware compilation and hardware boot have not been verified. The detailed
 check record is [kernel-6.18.63-preflight.json](validation/kernel-6.18.63-preflight.json).
+
+## Linux 6.18.64, 2026-11-18
+
+Update the latest `RoyTsang27/opsource-temp` main branch, including its
+MT7981 survey fix, to Linux 6.18.64. The release is dated 2026-11-17 in the
+[official changelog](https://cdn.kernel.org/pub/linux/kernel/v6.x/ChangeLog-6.18.64).
+The source archive SHA256 matches the
+[kernel.org checksum list](https://cdn.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc).
+Both the kernel selector and device/image validation manifest select 6.18.64.
+
+Four carried patches are already implemented by the new stable kernel and
+are removed: the Macronix MX25L12805D fallback parameters, the two Microchip
+QSPI initialization callback prerequisites, and the BCM2712 HDMI PHY disable
+implementation. Their native kernel implementations remain in place.
+
+Refresh the Rockchip OTP word-size patch around the new read mutex, retaining
+the unlock path after clock-enable errors and the clock/mutex cleanup after
+allocation or read errors. Refresh the Raspberry Pi HDMI clock-release patch
+around the new scrambling shutdown order. Refresh both the IMX219 binning
+patch and its later revert to retain the stable kernel's 1706-line defaults.
+
+All 42 generic/platform patch stacks applied to the verified 6.18.64 archive
+with zero fuzz and no rejects. The actual mac80211 forward-path guard compiled
+against the prepared MediaTek, Ralink and Airoha kernel declarations, passed
+host execution, and passed AArch64/MIPS syntax checks. The fully patched
+Rockchip OTP read function passed host checks for byte/16-bit/32-bit reads and
+clock-enable, allocation and read failures, with locks and clocks released.
+The 93-test regression suite passed with two skips: Linux `/dev/full` and the
+optional current-version migration-kit comparison (there is no 6.18.64 kit).
+Full Linux firmware compilation and device boot remain unverified.
+
+After updating an existing checkout, rebuild its kernel and wireless modules:
+
+```sh
+make defconfig
+make target/linux/clean
+make package/kernel/mac80211/clean
+make package/kernel/mt76/clean
+make target/linux/prepare -j1 V=s
+make -j2 V=s
+```

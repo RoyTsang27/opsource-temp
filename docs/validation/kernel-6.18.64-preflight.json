@@ -1,0 +1,227 @@
+{
+  "version": "6.18.64",
+  "sha256": "020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562",
+  "targets": {
+    "generic": {
+      "patches": 452,
+      "failure": null
+    },
+    "airoha": {
+      "patches": 594,
+      "failure": null
+    },
+    "apm821xx": {
+      "patches": 458,
+      "failure": null
+    },
+    "armsr": {
+      "patches": 455,
+      "failure": null
+    },
+    "ath79": {
+      "patches": 489,
+      "failure": null
+    },
+    "bcm27xx": {
+      "patches": 1357,
+      "failure": null
+    },
+    "bcm47xx": {
+      "patches": 467,
+      "failure": null
+    },
+    "bcm53xx": {
+      "patches": 490,
+      "failure": null
+    },
+    "bmips": {
+      "patches": 466,
+      "failure": null
+    },
+    "d1": {
+      "patches": 454,
+      "failure": null
+    },
+    "econet": {
+      "patches": 513,
+      "failure": null
+    },
+    "gemini": {
+      "patches": 470,
+      "failure": null
+    },
+    "ipq40xx": {
+      "patches": 475,
+      "failure": null
+    },
+    "ixp4xx": {
+      "patches": 455,
+      "failure": null
+    },
+    "kirkwood": {
+      "patches": 475,
+      "failure": null
+    },
+    "lantiq": {
+      "patches": 473,
+      "failure": null
+    },
+    "layerscape": {
+      "patches": 461,
+      "failure": null
+    },
+    "loongarch64": {
+      "patches": 452,
+      "failure": null
+    },
+    "malta": {
+      "patches": 452,
+      "failure": null
+    },
+    "mediatek": {
+      "patches": 591,
+      "failure": null
+    },
+    "microchipsw": {
+      "patches": 477,
+      "failure": null
+    },
+    "mpc85xx": {
+      "patches": 470,
+      "failure": null
+    },
+    "mvebu": {
+      "patches": 496,
+      "failure": null
+    },
+    "mxs": {
+      "patches": 452,
+      "failure": null
+    },
+    "octeon": {
+      "patches": 464,
+      "failure": null
+    },
+    "omap": {
+      "patches": 453,
+      "failure": null
+    },
+    "pistachio": {
+      "patches": 465,
+      "failure": null
+    },
+    "qoriq": {
+      "patches": 452,
+      "failure": null
+    },
+    "qualcommax": {
+      "patches": 545,
+      "failure": null
+    },
+    "qualcommbe": {
+      "patches": 519,
+      "failure": null
+    },
+    "ramips": {
+      "patches": 498,
+      "failure": null
+    },
+    "realtek": {
+      "patches": 562,
+      "failure": null
+    },
+    "rockchip": {
+      "patches": 594,
+      "failure": null
+    },
+    "sifiveu": {
+      "patches": 453,
+      "failure": null
+    },
+    "siflower": {
+      "patches": 468,
+      "failure": null
+    },
+    "starfive": {
+      "patches": 508,
+      "failure": null
+    },
+    "stm32": {
+      "patches": 455,
+      "failure": null
+    },
+    "sunxi": {
+      "patches": 475,
+      "failure": null
+    },
+    "tegra": {
+      "patches": 453,
+      "failure": null
+    },
+    "uml": {
+      "patches": 453,
+      "failure": null
+    },
+    "x86": {
+      "patches": 454,
+      "failure": null
+    },
+    "zynq": {
+      "patches": 454,
+      "failure": null
+    }
+  },
+  "checked_on": "2026-11-18",
+  "host": "macOS arm64",
+  "baseline_repository": "https://github.com/RoyTsang27/opsource-temp",
+  "baseline_commit": "0f7a54ba80406ebb09f7eb750d7b1a336fcecbfa",
+  "kernel_release_commit": "fd7cfd39c88596fec816639ad83cbf3e9d316372",
+  "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.64.tar.xz",
+  "archive_bytes": 155382076,
+  "archive_sha256_verified": true,
+  "changelog_sha256": "2358aeeeb759706a1a6552584ea6c97dc2f57bf769226dd8c11b83d4ab1e1efb",
+  "checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc",
+  "fuzz": 0,
+  "rejects": 0,
+  "regression_tests": {
+    "run": 93,
+    "passed": 91,
+    "failed": 0,
+    "skipped": 2,
+    "skip_reasons": [
+      "Linux /dev/full is required",
+      "No migration bundle for the current kernel"
+    ]
+  },
+  "device_profiles": 8,
+  "compiler_probes": {
+    "mediatek": {
+      "native_header": "6.18.64 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "ramips": {
+      "native_header": "6.18.64 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "mipsel-linux-gnu"
+    },
+    "airoha": {
+      "native_header": "6.18.64 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "rockchip": {
+      "driver": "6.18.64 after complete rockchip patch stack",
+      "otp_execution": "passed byte/16-bit/32-bit reads and clock/allocation/read failures; locks and clocks released"
+    }
+  },
+  "bcm27xx_final_source": {
+    "native_bcm2712_phy_disable_retained": true,
+    "scrambling_disabled_after_phy_and_before_clocks": true,
+    "stable_imx219_1706_line_defaults_retained": true
+  },
+  "limitations": [
+    "Full Linux kernel/firmware compilation not performed",
+    "Device boot and hardware runtime not tested"
+  ]
+}

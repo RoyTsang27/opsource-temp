@@ -26,6 +26,9 @@ Tested-by: Heiko Stuebner <heiko@sntech.de>
 Signed-off-by: Srinivas Kandagatla <srini@kernel.org>
 Link: https://patch.msgid.link/20260327131751.3026030-7-srini@kernel.org
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+Adapted for Linux 6.18.64: retain the mutex unlock path added by
+9fc6a1592d84 ("nvmem: rockchip-otp: Serialize reads").
 ---
  drivers/nvmem/rockchip-otp.c | 72 ++++++++++++++++++++----------------
  1 file changed, 40 insertions(+), 32 deletions(-)
@@ -114,8 +117,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  
  	if (!otp->data || !otp->data->reg_read)
  		return -EINVAL;
-@@ -245,8 +225,34 @@ static int rockchip_otp_read(void *conte
- 		return ret;
+@@ -250,8 +230,34 @@ static int rockchip_otp_read(void *conte
+ 		goto unlock;
  	}
  
 -	ret = otp->data->reg_read(context, offset, val, bytes);
@@ -149,7 +152,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +err:
  	clk_bulk_disable_unprepare(otp->data->num_clks, otp->clks);
  
- 	return ret;
+ unlock:
 @@ -259,7 +265,7 @@ static struct nvmem_config otp_config =
  	.type = NVMEM_TYPE_OTP,
  	.read_only = true,

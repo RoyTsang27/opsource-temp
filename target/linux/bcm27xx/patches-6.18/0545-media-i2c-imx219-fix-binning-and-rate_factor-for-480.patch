@@ -72,7 +72,7 @@ Reworked due to upstream changes
  		/* 2x2 binned 60fps mode */
  		.width = 1640,
  		.height = 1232,
- 		.fll_def = 1707,
+ 		.fll_def = 1706,
 +		.vts_def = 1763,
 +		.binning = {
 +			[BINNING_IDX_8_BIT] = IMX219_BINNING_X2_ANALOG,
@@ -83,7 +83,7 @@ Reworked due to upstream changes
  		/* 640x480 60fps mode */
  		.width = 640,
  		.height = 480,
- 		.fll_def = 1707,
+ 		.fll_def = 1706,
 +		.vts_def = 1763,
 +		.binning = {
 +			[BINNING_IDX_8_BIT] = IMX219_BINNING_X2_ANALOG,

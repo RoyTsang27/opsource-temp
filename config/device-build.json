@@ -1,8 +1,8 @@
 {
   "name": "op-source",
   "repository": "RoyTsang27/opsource-temp",
-  "kernel": "6.18.63",
-  "kernel_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "kernel": "6.18.64",
+  "kernel_sha256": "020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562",
   "source": {
     "url": "https://github.com/openwrt/openwrt",
     "branch": "main",
