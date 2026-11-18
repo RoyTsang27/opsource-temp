@@ -15,6 +15,8 @@ nokia_tcboot_check_image()
 	local image="$2"
 	local entries
 
+	nand_do_platform_check "$1" "$image" || return 1
+
 	# The NAND helper also accepts raw FIT and UBI images. Restrict this
 	# layout to the board's own upgrade archive, even with sysupgrade -F.
 	entries="$(tar tf "$image" 2>/dev/null)" &&
@@ -76,6 +78,9 @@ platform_do_upgrade() {
 		nokia,xg-140g-tf-tcboot)
 			nokia_tcboot_check_image "$board" "$1" &&
 				nokia_tcboot_check_layout || return 1
+			CI_UBIPART=ubi
+			CI_KERNPART=kernel
+			CI_ROOTPART=rootfs
 			CI_SKIP_KERNEL_MTD=1
 			nand_do_upgrade "$1"
 			;;

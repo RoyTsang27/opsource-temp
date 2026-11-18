@@ -75,8 +75,10 @@ TF uses its 2.5 GbE port (`lan1`) as WAN and the other three as LAN. These
 profiles cover the firmware layout and Ethernet. Optical PON support needs
 the separate PON integration.
 
-The factory layout follows the [XG-040G-MD tcboot image recipe](https://github.com/xiangtailiang/openwrt/blob/main/target/linux/airoha/image/an7581.mk)
-and the [XG-140G-TF hardware report](https://jishuzhan.net/article/2047862673983995906).
+The [2026-11-18 tcboot remake](TCBOOT-REMAKE.md) follows the active source used
+by the owner's [XG-040G-MD reference project](https://github.com/xiangtailiang/OpenWrt-for-XG-040G-MD).
+It records the exact source revisions, TF adaptation, preserved stock/UBI
+menuconfig entries and local validation for the owner's six main devices.
 
 ## Linux 6.18.55 to 6.18.56
 

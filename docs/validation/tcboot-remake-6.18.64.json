@@ -1,0 +1,103 @@
+{
+  "kernel": "6.18.64",
+  "device_trees": {
+    "an7581-nokia_xg-040g-md": {
+      "compiled": true,
+      "sha256": "55082a6f95295fa9b57fc2b3f0679bda992d1c5491632446c1dd5dc6301d617d"
+    },
+    "an7581-nokia_xg-040g-md-ubi": {
+      "compiled": true,
+      "sha256": "a173bff62a17cde01d16cf8a87218611b63c8432b8ee7f78a75783060398c604"
+    },
+    "an7581-nokia_xg-040g-md-tcboot": {
+      "compiled": true,
+      "sha256": "7a00c658d09dc9c527cb41caab9e96b5a2ee1eba944de4fe75d2c7916af71766"
+    },
+    "an7581-nokia_xg-140g-tf-tcboot": {
+      "compiled": true,
+      "sha256": "9a14cb3525e0ddf731dae4093bfaaf55a0c24e0f1f4f0807dd582829724bd476"
+    },
+    "an7583-nokia_xg-040g-mf": {
+      "compiled": true,
+      "sha256": "16f4261bc03b151c857d434970bb4f4dc1b072a0fa79126b18eb8cea9672aa54"
+    },
+    "an7583-nokia_xg-040g-mf-ubi": {
+      "compiled": true,
+      "sha256": "3766e6f4464a92dba5fcb77e9975179830eaba93f315463390ecb21814d69742"
+    },
+    "mt7981b-xiaomi-mi-router-ax3000t": {
+      "compiled": true,
+      "sha256": "cc45c639aaa8e0f6827dddcdc7f4e252a9ff8b6d3bf42f647a5f5b4e981b3b18"
+    },
+    "mt7981b-xiaomi-mi-router-ax3000t-ubootmod": {
+      "compiled": true,
+      "sha256": "5857d732902794c722e2c618399570241fe7bca12612c9f10d925fc367deffda"
+    },
+    "mt7981b-cudy-tr3000-v1": {
+      "compiled": true,
+      "sha256": "fdfd71e559e246086fba9ddc43e8735fe8681a03077c32b45b48c9afc176bd38"
+    },
+    "mt7981b-cudy-tr3000-256mb-v1": {
+      "compiled": true,
+      "sha256": "c403e9766ed2fc3d7e0e00c781da466a7bfd165bff89866934b57a4f89162749"
+    },
+    "mt7981b-cudy-tr3000-v1-ubootmod": {
+      "compiled": true,
+      "sha256": "2d5a5d76dc394bb944773ed9d747fe8104a684ae2ac077116f451abac552eb95"
+    },
+    "mt7628an_cudy_tr1200-v1": {
+      "compiled": true,
+      "sha256": "4a2c9e8278f7cd9959c8a4dd16409e5ff6005c263af7e5db5f092a202dc90477"
+    }
+  },
+  "images": {
+    "openwrt-airoha-an7581-nokia_xg-040g-md-tcboot-squashfs-factory.bin": {
+      "size": 60817408,
+      "sha256": "dc1c63548fd21759910cbd239f0949f14c6eeed1d695c4ba0dbeebdafa4ea08b"
+    },
+    "openwrt-airoha-an7581-nokia_xg-040g-md-tcboot-squashfs-sysupgrade.bin": {
+      "size": 49777451,
+      "sha256": "01379ffdb670702aa5d76f951f43d2a3ba582e18b5ed967f9fe9a01f6477b792"
+    },
+    "openwrt-airoha-an7581-nokia_xg-140g-tf-tcboot-squashfs-factory.bin": {
+      "size": 60817408,
+      "sha256": "f4b6ce20a2e9f2a190d3fe812381ac13445da6c5d510a72757701ae9fadfd96a"
+    },
+    "openwrt-airoha-an7581-nokia_xg-140g-tf-tcboot-squashfs-sysupgrade.bin": {
+      "size": 49767211,
+      "sha256": "62808bfd9cdb1b43301bdda1930462240e406b4e7fdbd1392e23af3da4837e6b"
+    }
+  },
+  "reference_wrapper": "e5320831b9d7f77315e6bd141cb2931c5cb27092",
+  "reference_source": "fb42bd65924c99c1c0e1f95fe0b3a285656814a7",
+  "md_dts_matches_reference": true,
+  "checks": [
+    "12 device trees compiled against prepared Linux 6.18.64 inputs",
+    "MD and TF tcboot root bootargs, partition bounds and USB status verified",
+    "both factory images: 8 MiB FIT prefix, 2 KiB VID header, kernel/rootfs/rootfs_data volumes",
+    "both sysupgrade archives: correct CONTROL, FIT kernel, squashfs root and matching board metadata",
+    "both sysupgrade signatures verified with native fwtool, ucert and usign"
+  ],
+  "limitations": [
+    "fixture kernel and rootfs payloads used for packaging; not installable firmware",
+    "no complete Linux firmware cross-build",
+    "no hardware boot or flash test"
+  ],
+  "date": "2026-11-18",
+  "base_commit": "c0ea299d65d4a58faa7132543bcec9e0fac7cfe4",
+  "regression": {
+    "tests": 94,
+    "passed": 92,
+    "skipped": 2,
+    "skip_reasons": [
+      "Linux /dev/full close failure probe is unavailable on macOS",
+      "No current-version kernel migration kit; historical kits remain unchanged"
+    ]
+  },
+  "preservation": {
+    "stock_ubi_dts_files_identical": 25,
+    "non_tcboot_an7581_image_blocks_identical": 10,
+    "an7583_image_definitions_unchanged": true
+  },
+  "payloads": "Images contain fixture kernel/rootfs; only packaging was validated, and these images must not be installed."
+}

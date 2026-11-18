@@ -135,7 +135,10 @@ class TcbootUpgradeTests(unittest.TestCase):
             board_name() { echo "$test_board"; }
             nand_find_ubi() { [ "$layout" = attached ] && echo ubi0; }
             nand_find_volume() { echo "ubi0_$2"; }
-            nand_do_upgrade() { [ "$CI_SKIP_KERNEL_MTD" = 1 ] && echo "ready to write"; }
+            nand_do_upgrade() {
+                [ "$CI_SKIP_KERNEL_MTD:$CI_UBIPART:$CI_KERNPART:$CI_ROOTPART" = 1:ubi:kernel:rootfs ] &&
+                    echo "ready to write"
+            }
             "$6" "$4"
         '''
         for name in ['xg-040g-md-tcboot', 'xg-140g-tf-tcboot']:
@@ -171,6 +174,41 @@ class TcbootUpgradeTests(unittest.TestCase):
                                run(board, directory / 'kernel'), run(other_board, archive)]:
                     self.assertNotEqual(result.returncode, 0)
                     self.assertNotIn('ready to write', result.stdout)
+
+
+class TcbootMacTests(unittest.TestCase):
+    def test_environment_mac_is_validated_before_network_setup(self):
+        system = ROOT / 'package/base-files/files/lib/functions/system.sh'
+        network = ROOT / 'target/linux/airoha/an7581/base-files/etc/board.d/02_network'
+        harness = r'''
+            eval "$(sed '/^\. /d' "$1")"
+            eval "$(sed -n '/^an7581_setup_interfaces()/,/^board_config_update/{ /^board_config_update/d; p; }' "$2")"
+            layout="$5"
+            find_mtd_index() { [ "$layout" != absent ] && echo 1; }
+            contents="$4"
+            strings() { printf '%s\n' "$contents"; }
+            ucidef_set_network_device_mac() { echo "device $1 $2"; }
+            ucidef_set_label_macaddr() { echo "label $1"; }
+            an7581_xg040g_tcboot_ensure_mac "$3"
+        '''
+        for board in ['nokia,xg-040g-md-tcboot', 'nokia,xg-140g-tf-tcboot']:
+            for env, layout, expected in [
+                    ('ethaddr=00:11:22:AA:BB:CC\nethaddr=00:00:00:00:00:00', 'attached',
+                     'device lan1 00:11:22:aa:bb:cc\ndevice br-lan 00:11:22:aa:bb:cd\nlabel 00:11:22:aa:bb:cc\n'),
+                    ('ethaddr=invalid', 'attached', ''),
+                    ('unrelated=value', 'attached', ''),
+                    ('ethaddr=00:11:22:aa:bb:cc', 'absent', '')]:
+                with self.subTest(board=board, env=env, layout=layout):
+                    result = subprocess.run(['bash', '-c', harness, 'tcboot', str(system),
+                                             str(network), board, env, layout],
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, expected)
+        result = subprocess.run(['bash', '-c', harness, 'tcboot', str(system), str(network),
+                                 'nokia,xg-040g-md', 'ethaddr=00:11:22:aa:bb:cc', 'attached'],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, '')
 
 
 if __name__ == '__main__':

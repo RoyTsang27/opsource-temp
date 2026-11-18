@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 
-#include "an7581-nokia_xg-040g-md-common.dtsi"
-#include "an758x-nokia_xg-040g-tcboot-parts.dtsi"
+#include "an7581-nokia_xg-040g-md-tcboot.dts"
 
 / {
 	model = "Nokia XG-140G-TF (tcboot)";

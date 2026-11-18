@@ -39,26 +39,39 @@ an7581_setup_interfaces()
 	esac
 }
 
-an7581_setup_macs()
+an7581_xg040g_tcboot_ensure_mac()
 {
+	local board="$1"
 	local mac
+	local lan_mac
+	local idx
 
-	case "$1" in
+	case "$board" in
 	nokia,xg-040g-md-tcboot|\
 	nokia,xg-140g-tf-tcboot)
-		mac="$(mtd_get_mac_ascii env ethaddr)"
-		[ -n "$mac" ] || return 0
-		ucidef_set_network_device_mac "lan1" "$mac"
-		ucidef_set_network_device_mac "br-lan" "$(macaddr_add "$mac" 1)"
-		ucidef_set_label_macaddr "$mac"
+		;;
+	*)
+		return 0
 		;;
 	esac
+
+	# config_generate runs before uboot-envtools creates fw_env.config.
+	# Read the factory MAC directly, as in xiangtailiang's tcboot build.
+	idx="$(find_mtd_index env)"
+	[ -n "$idx" ] || return 0
+	mac="$(strings "/dev/mtd$idx" | sed -n 's/^ethaddr=//p' | head -n1)"
+	mac="$(macaddr_canonicalize "$mac")"
+	[ -n "$mac" ] || return 0
+	lan_mac="$(macaddr_add "$mac" 1)"
+	ucidef_set_network_device_mac "lan1" "$mac"
+	ucidef_set_network_device_mac "br-lan" "$lan_mac"
+	ucidef_set_label_macaddr "$mac"
 }
 
 board_config_update
 board=$(board_name)
 an7581_setup_interfaces "$board"
-an7581_setup_macs "$board"
+an7581_xg040g_tcboot_ensure_mac "$board"
 board_config_flush
 
 exit 0
