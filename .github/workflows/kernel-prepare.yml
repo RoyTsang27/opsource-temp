@@ -82,7 +82,10 @@ jobs:
           make target/linux/compile -j"$(nproc)" V=s 2>&1 | tee kernel-build.log
           for kernel_config in build_dir/target-*/linux-airoha_*/linux-[0-9]*/.config; do
             grep -qx 'CONFIG_MTD_OWRT_VIRT_CONCAT=y' "$kernel_config"
-            grep -qx '# CONFIG_MTD_VIRT_CONCAT is not set' "$kernel_config"
+            if grep -Eq '^CONFIG_MTD_VIRT_CONCAT=[my]$' "$kernel_config"; then
+              echo "Unexpected native MTD concatenation driver" >&2
+              exit 1
+            fi
           done
       - name: Compile integrated PON drivers and userspace packages
         run: |
