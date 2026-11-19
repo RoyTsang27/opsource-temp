@@ -140,7 +140,8 @@ def compile_package(feed, relative, name, extension):
             'EXTRA_CFLAGS=-I' + str(source / 'kernel'), 'modules')
         assert (source / 'kernel/pf_ring.ko').is_file()
     elif name == 'lttng-modules':
-        run('make', '-C', kernel, 'M=' + str(source), 'CONFIG_LTTNG=m', '-k',
+        run('make', '-C', kernel, 'M=' + str(source), 'CONFIG_LTTNG=m',
+            'KCFLAGS=-Werror=discarded-qualifiers', '-k',
             '-j' + str(os.cpu_count() or 2), 'modules')
         assert (source / 'src/lttng-tracer.ko').is_file()
         assert (source / 'src/probes/lttng-probe-dma-fence.ko').is_file()

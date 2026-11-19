@@ -15,6 +15,11 @@ source/Kbuild paths exist. They do not establish that every optional package
 compiles or works. Full default device builds also exercise external wireless
 packages, userspace dependencies, package installation and image generation.
 
+The current kernel pin is 7.3.5. Its official archive checksum is
+`8f293f83d54f0b7b9be56863ebc5e4ea79d73e530b4ae55c572be97ef39f0990`.
+All generic and target patch stacks were reapplied to that archive without fuzz;
+the Macronix fallback patch was removed because 7.3.5 contains the same fix.
+
 ## Corrections
 
 | Area | Linux 7.3 correction |
@@ -41,7 +46,7 @@ packages, userspace dependencies, package installation and image generation.
 | MediaTek WED integration | Match the pinned mt76 driver with the upstream mac80211 SCS/MSCS series and kernel flow-priority, flush and idle interfaces. Keep matching flow-layout assertions on both sides. |
 | RTSP connection tracking | Use the kernel initializer for the protocol fields and inline expectation policy; retain allocated helper copies and unregister only successful registrations. |
 | DAHDI PPP and NAPI | Use the PPP error callback without its removed error-code argument; include kernel NAPI declarations before defining the legacy compatibility alias. |
-| LTTng tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. Match the const packet-drop socket and Btrfs transaction-handle arguments. |
+| LTTng tracing | Use detached-safe names where the kernel may clear the fence callback table after signaling; keep the original callback class at the protected call sites. Match the const packet-drop socket and Btrfs transaction-handle arguments, retaining const in the serialized socket-address field. |
 | RTPengine build flags | Preserve external module definitions through current Kbuild `ccflags-y`. |
 | PF_RING sockets | Match the current variable-size socket-address type in the bind callback. |
 | Kernel string copies | Replace removed `strncpy` calls in LTTng, Xtables addons (including kernel Lua), OpenAppFilter and Netatop. Preserve bounded-copy padding and truncation; use `memmove` for overlapping trim buffers. |
@@ -182,7 +187,7 @@ trees also compile with the prepared 7.3 bindings and the new flags.
 
 ## Airoha Linux 7.3 port
 
-The Airoha target now selects Linux 7.3.4 for AN7581, AN7583 and EN7523.
+The Airoha target now selects Linux 7.3.5 for AN7581, AN7583 and EN7523.
 The target series contains 60 rebased patches. Backports already included in
 7.3 are omitted; the native QDMA migration, BQL flushing and typed DMA mapping
 implementations are retained. The AN7583 FE port ordering correction is carried
@@ -199,6 +204,12 @@ PHY shutdown remains in device stop and open-error unwinding. A source check
 rejects shutdown calls in unrelated functions before starting compilation.
 The PON identity parser includes `linux/hex.h` explicitly; its hex conversion
 API remains the same on the supported 6.18 and 7.3 kernels.
+
+AN7581 and AN7583 select `MTD_OWRT_VIRT_CONCAT` for the existing `mtd-concat`
+board binding. The native 7.3 concatenation driver has a separate binding and
+stays disabled. This also resolves the unanswered configuration option that
+stopped the full OpenWrt builds. CI checks the resolved selections in both
+standalone and OpenWrt builds.
 
 ARM64 uses scheduler-controlled lazy preemption and Cortex-A53 errata handling;
 ARM32 uses voluntary preemption. Standard software GRO remains available. The

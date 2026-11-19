@@ -148,6 +148,10 @@ jobs:
             fi
           done
           test "$missing" = 0
+          if [ "$TARGET" = airoha ] && [ "$ARCH" = arm64 ]; then
+            grep -qx 'CONFIG_MTD_OWRT_VIRT_CONCAT=y' "$RUNNER_TEMP/kernel/.config"
+            grep -qx '# CONFIG_MTD_VIRT_CONCAT is not set' "$RUNNER_TEMP/kernel/.config"
+          fi
       - name: Compile ATM library and PVC tools against Linux headers
         run: |
           make -C "$RUNNER_TEMP/kernel" \

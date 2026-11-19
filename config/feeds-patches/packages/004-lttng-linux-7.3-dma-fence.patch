@@ -11,7 +11,7 @@ The trace caller protects the name access with RCU.
  PKG_NAME:=lttng-modules
  PKG_VERSION:=2.15.2
 -PKG_RELEASE:=1
-+PKG_RELEASE:=5
++PKG_RELEASE:=6
  
  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
  PKG_SOURCE_URL:=https://lttng.org/files/$(PKG_NAME)/
@@ -83,7 +83,7 @@ The trace caller protects the name access with RCU.
 
 --- /dev/null
 +++ b/devel/lttng-modules/patches/101-linux-7.3-trace-prototypes.patch
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,53 @@
 +Subject: [PATCH] LTTng: match Linux 7.3 packet-drop and Btrfs trace prototypes
 +
 +The packet-drop socket is now const. Btrfs transaction commit takes a
@@ -105,6 +105,15 @@ The trace caller protects the name access with RCU.
 + 
 + 	TP_ARGS(skb, location, reason, rx_sk),
 + 
++@@ -59,7 +64,7 @@
++ 		ctf_integer_hex(void *, location, location)
++ 		ctf_integer_network(unsigned short, protocol, skb->protocol)
++ 		ctf_enum(skb_drop_reason, uint8_t, reason, reason)
++-		ctf_integer_hex(void *, rx_skaddr, rx_sk)
+++		ctf_integer_hex(const void *, rx_skaddr, rx_sk)
++ 	)
++ )
++ #elif (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(5,17,0) \
 +--- a/include/instrumentation/events/btrfs.h
 ++++ b/include/instrumentation/events/btrfs.h
 +@@ -55,7 +55,19 @@

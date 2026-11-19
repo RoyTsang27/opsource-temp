@@ -7,12 +7,14 @@ The public repository is
 with `test-flight` as its default branch.
 
 The experimental `test-flight` branch pins `mediatek/filogic` and
-`ramips/mt76x8` to Linux 7.3.4. The generic 7.3 configuration and patch stack
+`ramips/mt76x8` and Airoha AN7581/AN7583/EN7523 to Linux 7.3.5. The generic 7.3 configuration and patch stack
 come from [the OpenWrt development
 branch](https://github.com/graysky2/openwrt/tree/30c0d891b6103695e614de575814a67016973cf7).
 The target-specific stacks were rebased from the original 6.18.56 source.
 The 7.3.4 update removes the carried SPI QPIC ECC-context and MT7986 timer
 frequency fixes because both are included in the upstream kernel.
+The 7.3.5 update also removes the carried Macronix MX25L12805D fallback
+parameter fix, which is now included upstream.
 The OpenWrt MTD concatenation option has its own Kconfig symbol to distinguish
 the existing device-tree binding from Linux 7.3's concatenation support.
 
@@ -27,8 +29,11 @@ Its source archive SHA256 is
 
 Local checks verified the kernel archive checksum, applied both patch stacks
 to their referenced files, compiled all six device trees, and confirmed the
-7.3.4 selection through OpenWrt target metadata. Full Linux firmware
-compilation and device boot and upgrade tests are pending.
+kernel selection through OpenWrt target metadata. The three default device
+firmwares completed compilation and image checks on 7.3.4. Each workflow run
+records its exact source revision and kernel version; use the corresponding
+7.3.5 build results when selecting current artifacts. Device boot and upgrade
+tests require the actual hardware.
 
 ## Imported snapshot
 
@@ -44,8 +49,8 @@ compilation and device boot and upgrade tests are pending.
 
 The complete tracked source snapshot is imported into an independent source
 repository. Upstream history is available at the recorded reference commit;
-copyright notices, licenses, source pins, and the original PonWrt README are
-retained. `config/device-build.json` records the base and all device selectors.
+copyright notices, licenses and source pins are retained. The root README
+contains only the repository name as requested. `config/device-build.json` records the base and all device selectors.
 
 The `master` snapshot inspected was
 `a57faf93c6c3638ba3651690228aabaa51d3f235` (Linux 6.18.52). The requested 6.18.56

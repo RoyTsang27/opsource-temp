@@ -1,8 +1,8 @@
 # Linux 7.3 router defaults
 
-Reviewed on 2026-11-12 for the six Device Build profiles. The goal is a
-general-purpose Wi-Fi router with bounded memory and image size. These are
-source defaults; throughput and latency still need measurement on the devices.
+Reviewed for the six MediaTek Device Build profiles and the AN7581, AN7583
+and EN7523 Airoha targets. The goal is a general-purpose router with bounded
+memory and image size. These are source defaults; throughput and latency still need measurement on the devices.
 
 ## Scope and inventory
 
@@ -24,7 +24,13 @@ The input archive SHA-256 values are:
 | Archive | SHA-256 |
 | --- | --- |
 | linux-6.18.63.tar.xz | `81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71` |
-| linux-7.3.4.tar.xz | `b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f` |
+| linux-7.3.4.tar.xz (feature inventory) | `b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f` |
+| linux-7.3.5.tar.xz (current kernel) | `8f293f83d54f0b7b9be56863ebc5e4ea79d73e530b4ae55c572be97ef39f0990` |
+
+Linux 7.3.5 retains these configuration choices. Its stable fixes do not
+require a new router tuning policy. Airoha ARM64 selects the OpenWrt
+`MTD_OWRT_VIRT_CONCAT` driver for its existing `mtd-concat` device trees,
+while the separate native `MTD_VIRT_CONCAT` driver stays disabled.
 
 Sources are the [official release archives](https://www.kernel.org/pub/linux/kernel/),
 the upstream Kconfig files linked below, and kernel documentation. Release
@@ -50,8 +56,13 @@ to architectures without lazy preemption. ARM64 selects
 flags. The previous build menu requested `PREEMPT_NONE` for both, so it could
 disagree with the resolved kernel. The menu now selects lazy on ARM64 and
 voluntary on MIPS, and migrates an old preset when `make defconfig` runs.
-Explicit full-preemption selections remain possible. Linux 6.18 targets keep
-their previous choices. See the upstream
+Explicit full-preemption selections remain possible.
+
+Airoha AN7581 and AN7583 use the same ARM64 lazy-preemption and cache-aware
+scheduler defaults. ARM32 EN7523 uses voluntary preemption. The integrated
+PON drivers and device-specific hardware selections are retained; the Airoha
+port is described in [the compatibility report](KERNEL-7.3-PACKAGES.md#airoha-linux-73-port).
+Linux 6.18 targets keep their previous choices. See the upstream
 [preemption definitions](https://github.com/torvalds/linux/blob/v7.3/kernel/Kconfig.preempt)
 and [architecture definitions](https://github.com/torvalds/linux/tree/v7.3/arch).
 
@@ -108,7 +119,7 @@ bytes for this MIPS target).
 
 | New or substantially extended feature family | Default decision |
 | --- | --- |
-| Accurate ECN | Keep the pinned 7.3.4 setting `tcp_ecn=2` and its fallback. Its local TCP code supports AccECN, but requesting it globally is a separate network policy. The exact source still initializes mode 2, irrespective of earlier release summaries. |
+| Accurate ECN | Keep the reviewed 7.3 setting `tcp_ecn=2` and its fallback. Its local TCP code supports AccECN, but requesting it globally is a separate network policy. The exact source still initializes mode 2, irrespective of earlier release summaries. |
 | BIG TCP for UDP tunnels, GRO/GSO improvements, network queue leasing | Inherit networking code improvements; keep normal MTU and queue sizes. No tunnel, oversized aggregation or leased queue is created by default. |
 | Netfilter flowtables and MediaTek offload | Retain the existing firewall package and device policy. Kernel flowtable availability and firewall rule selection are separate settings. |
 | BPF scheduler and cgroup sub-schedulers | Keep `SCHED_CLASS_EXT` unselected. These require an actual BPF scheduler and additional configuration; no such service is supplied by these profiles. |
@@ -145,16 +156,20 @@ with the merged generic/target settings and exported build-menu values. It
 resolved lazy preemption plus `SCHED_CACHE=y` for Filogic and voluntary
 preemption for MT76x8.
 
-The local Python 3.12 suite completed with 97 passing tests and 15 skipped
+The local Python 3.12 suite completed with 109 passing tests and 15 skipped
 platform/tool-dependent tests. Device Build source checks passed for all six
 profiles.
 
 The manual **Linux 7.3 compile checks** workflow applies the same overlays and
-ordered patch stacks, resolves each target fragment with a Linux-hosted cross
-compiler, and builds the kernel and its configured in-tree modules. Its
-artifacts include the resolved kernel configuration, newly discovered options,
-and complete build logs. It does not build external mt76/mac80211 packages or
-firmware images; the Device Build workflow remains responsible for those.
+ordered patch stacks for Filogic, MT76x8 and the three Airoha subtargets, resolves
+each target fragment with a Linux-hosted cross compiler, and builds the kernel,
+in-tree modules, pinned mt76/mac80211 stack and the optional modules described
+in [the compatibility report](KERNEL-7.3-PACKAGES.md). ARM64 Airoha also builds
+the PON frontend and XPON modules. Artifacts include the resolved kernel
+configuration, newly discovered options and build logs. The **Device Build**
+workflow builds complete MediaTek firmware. **Compile Airoha kernels** builds
+the OpenWrt cross toolchains, kernel and PON packages for AN7581 and AN7583,
+plus the AN7581 tcboot images.
 
 These checks validate configuration selection. They are not a full firmware
 compile or a hardware latency/throughput benchmark. After updating an existing
