@@ -211,6 +211,14 @@ stays disabled. This also resolves the unanswered configuration option that
 stopped the full OpenWrt builds. CI checks the resolved selections in both
 standalone and OpenWrt builds.
 
+Airoha fragments explicitly resolve the remaining hardware and diagnostic
+options before compilation. AN7581 and AN7583 retain the upstream-enabled
+SMC eFuse provider for factory calibration data. The AN7563 pin controller,
+unrelated audio codec and ARM64 peripherals unused by EN7523 stay disabled.
+The standalone workflow rejects unanswered Airoha options before starting
+the kernel build. Build-menu tracing and frame-warning overrides remain
+available.
+
 ARM64 uses scheduler-controlled lazy preemption and Cortex-A53 errata handling;
 ARM32 uses voluntary preemption. Standard software GRO remains available. The
 experimental downstream hardware GRO patch is omitted because it depended on

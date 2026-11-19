@@ -138,6 +138,10 @@ jobs:
             CONFIG_KPROBES=y CONFIG_FTRACE=y CONFIG_FTRACE_SYSCALLS=y \
             >> "$RUNNER_TEMP/kernel/.config"
           make -C "$RUNNER_TEMP/kernel" listnewconfig 2>&1 | tee logs/new-options.log
+          if [ "$TARGET" = airoha ] && grep -q '^CONFIG_' logs/new-options.log; then
+            echo "Airoha kernel defaults contain unanswered options" >&2
+            exit 1
+          fi
           make -C "$RUNNER_TEMP/kernel" olddefconfig 2>&1 | tee logs/configure.log
           cp "$RUNNER_TEMP/kernel/.config" logs/kernel.config
           missing=0
