@@ -1,0 +1,321 @@
+{
+  "date": "2026-11-20",
+  "timezone": "Asia/Shanghai",
+  "repository": "https://github.com/RoyTsang27/op-source",
+  "branch": "imm",
+  "source": {
+    "url": "https://github.com/immortalwrt/immortalwrt",
+    "branch": "master",
+    "commit": "6003f6b8c3278a27712f4fdaaa8d1e5faa2b1f54",
+    "history": "independent root snapshot",
+    "original_kernel": "6.18.60",
+    "feeds": "official ImmortalWrt feeds.conf.default retained byte for byte"
+  },
+  "kernel": {
+    "version": "6.18.64",
+    "archive": "linux-6.18.64.tar.xz",
+    "sha256": "020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562",
+    "sha256_matches_kernel_org": true,
+    "size_bytes": 155382076
+  },
+  "kernel_patches": {
+    "method": "Original kernel archive files referenced by every patch; generic and platform overlays; backport, pending, hack, platform order; GNU patch 2.8.1",
+    "fuzz": 0,
+    "rejects": 0,
+    "stacks": 42,
+    "patch_applications": 26902,
+    "targets": {
+      "generic": {
+        "patches": 582,
+        "failure": null,
+        "already_upstream": []
+      },
+      "airoha": {
+        "patches": 746,
+        "failure": null,
+        "already_upstream": []
+      },
+      "apm821xx": {
+        "patches": 590,
+        "failure": null,
+        "already_upstream": []
+      },
+      "armsr": {
+        "patches": 585,
+        "failure": null,
+        "already_upstream": []
+      },
+      "ath79": {
+        "patches": 618,
+        "failure": null,
+        "already_upstream": []
+      },
+      "bcm27xx": {
+        "patches": 1475,
+        "failure": null,
+        "already_upstream": []
+      },
+      "bcm47xx": {
+        "patches": 597,
+        "failure": null,
+        "already_upstream": []
+      },
+      "bcm4908": {
+        "patches": 585,
+        "failure": null,
+        "already_upstream": []
+      },
+      "bcm53xx": {
+        "patches": 629,
+        "failure": null,
+        "already_upstream": []
+      },
+      "bmips": {
+        "patches": 596,
+        "failure": null,
+        "already_upstream": []
+      },
+      "d1": {
+        "patches": 584,
+        "failure": null,
+        "already_upstream": []
+      },
+      "econet": {
+        "patches": 643,
+        "failure": null,
+        "already_upstream": []
+      },
+      "gemini": {
+        "patches": 601,
+        "failure": null,
+        "already_upstream": []
+      },
+      "imx": {
+        "patches": 591,
+        "failure": null,
+        "already_upstream": []
+      },
+      "ipq40xx": {
+        "patches": 607,
+        "failure": null,
+        "already_upstream": []
+      },
+      "ipq806x": {
+        "patches": 608,
+        "failure": null,
+        "already_upstream": []
+      },
+      "ixp4xx": {
+        "patches": 585,
+        "failure": null,
+        "already_upstream": []
+      },
+      "kirkwood": {
+        "patches": 605,
+        "failure": null,
+        "already_upstream": []
+      },
+      "lantiq": {
+        "patches": 603,
+        "failure": null,
+        "already_upstream": []
+      },
+      "layerscape": {
+        "patches": 594,
+        "failure": null,
+        "already_upstream": []
+      },
+      "mediatek": {
+        "patches": 726,
+        "failure": null,
+        "already_upstream": []
+      },
+      "microchipsw": {
+        "patches": 607,
+        "failure": null,
+        "already_upstream": []
+      },
+      "mpc85xx": {
+        "patches": 605,
+        "failure": null,
+        "already_upstream": []
+      },
+      "mvebu": {
+        "patches": 626,
+        "failure": null,
+        "already_upstream": []
+      },
+      "octeon": {
+        "patches": 597,
+        "failure": null,
+        "already_upstream": []
+      },
+      "omap": {
+        "patches": 583,
+        "failure": null,
+        "already_upstream": []
+      },
+      "pistachio": {
+        "patches": 595,
+        "failure": null,
+        "already_upstream": []
+      },
+      "qoriq": {
+        "patches": 583,
+        "failure": null,
+        "already_upstream": []
+      },
+      "qualcommax": {
+        "patches": 680,
+        "failure": null,
+        "already_upstream": []
+      },
+      "qualcommbe": {
+        "patches": 654,
+        "failure": null,
+        "already_upstream": []
+      },
+      "ramips": {
+        "patches": 628,
+        "failure": null,
+        "already_upstream": []
+      },
+      "realtek": {
+        "patches": 700,
+        "failure": null,
+        "already_upstream": []
+      },
+      "rockchip": {
+        "patches": 893,
+        "failure": null,
+        "already_upstream": []
+      },
+      "sifiveu": {
+        "patches": 583,
+        "failure": null,
+        "already_upstream": []
+      },
+      "siflower": {
+        "patches": 598,
+        "failure": null,
+        "already_upstream": []
+      },
+      "starfive": {
+        "patches": 638,
+        "failure": null,
+        "already_upstream": []
+      },
+      "stm32": {
+        "patches": 585,
+        "failure": null,
+        "already_upstream": []
+      },
+      "sunxi": {
+        "patches": 661,
+        "failure": null,
+        "already_upstream": []
+      },
+      "tegra": {
+        "patches": 583,
+        "failure": null,
+        "already_upstream": []
+      },
+      "uml": {
+        "patches": 583,
+        "failure": null,
+        "already_upstream": []
+      },
+      "x86": {
+        "patches": 586,
+        "failure": null,
+        "already_upstream": []
+      },
+      "zynq": {
+        "patches": 584,
+        "failure": null,
+        "already_upstream": []
+      }
+    }
+  },
+  "mac80211": {
+    "kernel": "6.18.64",
+    "backports": "7.2",
+    "sha256": "6ec76a4cb0988b5382b2fc5053610a56ada90b8ef6a5a4f2807cd433badb9454",
+    "patches": 324,
+    "fuzz": 0,
+    "rejects": 0,
+    "socket_wrapper_syntax_probes": [
+      "aarch64-linux-gnu",
+      "mipsel-linux-gnu"
+    ],
+    "scope": "Patch applicability and focused wrapper syntax; no full driver compilation."
+  },
+  "compiler_probes": {
+    "mediatek": {
+      "native_header": "6.18.64 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "ramips": {
+      "native_header": "6.18.64 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "mipsel-linux-gnu"
+    },
+    "airoha": {
+      "native_header": "6.18.64 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "rockchip": {
+      "driver": "6.18.64 after complete rockchip patch stack",
+      "otp_execution": "passed byte/16-bit/32-bit reads and clock/allocation/read failures; locks and clocks released"
+    }
+  },
+  "removed_backports": {
+    "target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch": "exact reverse application to stable source passed",
+    "target/linux/bcm27xx/patches-6.18/0451-drm-vc4-Implement-vc6_hdmi_phy_disable.patch": "exact reverse application to stable source passed",
+    "target/linux/generic/backport-6.18/439-v7.4-mtd-spi-nor-macronix-Restore-fallback-parameters-for.patch": "exact reverse application to stable source passed",
+    "target/linux/generic/backport-6.18/441-v7.4-spi-spi-qpic-snand-publish-the-ECC-context-to-snandc.patch": "native stable implementation inspected",
+    "target/linux/generic/backport-6.18/503-01-v7.3-ksmbd-enable-tcp-keepalive-for-accepted-connections.patch": "exact reverse application to stable source passed",
+    "target/linux/generic/backport-6.18/734-v7.3-net-ethernet-mtk_wed-increase-WED-v2-WDMA-RESV_BUFF-.patch": "exact reverse application to stable source passed",
+    "target/linux/generic/backport-6.18/755-v7.3-net-sfp-add-quirk-for-HORACO-copper-SFP-module.patch": "exact reverse application to stable source passed",
+    "target/linux/generic/backport-6.18/856-01-v7.3-xhci-include-all-root-port-children-in-recovery-prevention-on-link-error.patch": "exact reverse application to stable source passed",
+    "target/linux/mediatek/patches-6.18/197-arm64-dts-mediatek-mt7986-correct-timer-frequency.patch": "exact reverse application to stable source passed",
+    "target/linux/microchipsw/patches-6.18/0014-v7.3-spi-atmel-quadspi-add-controller-init-callback.patch": "native stable implementation inspected",
+    "target/linux/microchipsw/patches-6.18/0015-v7.3-spi-atmel-quadspi-use-init-callback-for-gclk-variant.patch": "native stable implementation inspected",
+    "target/linux/qualcommax/patches-6.18/0090-v7.4-clk-qcom-gcc-ipq5018-mark-gpll0_main-clock-as-critical.patch": "exact reverse application to stable source passed"
+  },
+  "changed_source_files_sha256": {
+    "README.md": "252547f156fd75e5eca4503162324b28a74de2993eb018a207f7111a9aa9f222",
+    "package/kernel/mac80211/Makefile": "bed423d9725d20ffa0d243a3ae13f6981c6d3ba7cf4ec241e20c362ded03b959",
+    "package/kernel/mac80211/patches/build/160-backports-sockaddr_unsized-is-in-6.18.57.patch": "d1a2db16ad76be67bca95061a28a2231664523608c51fb650539ba35530faaf1",
+    "target/linux/airoha/patches-6.18/607-cpufreq-airoha-fix-probe-failure-with-correct-error-check.patch": null,
+    "target/linux/bcm27xx/patches-6.18/0120-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch": "6df7248b4b1626f32534ee83b0ee2079049028ff8e45bc4f0eacc0164e0634e6",
+    "target/linux/bcm27xx/patches-6.18/0451-drm-vc4-Implement-vc6_hdmi_phy_disable.patch": null,
+    "target/linux/bcm27xx/patches-6.18/0463-drm-vc4-Remove-request-for-min-clocks-when-hdmi-outp.patch": "8e21a7e227ae4ab63185f20ae4a591c423b0fb95dfdb544fcedf9e455374c489",
+    "target/linux/bcm27xx/patches-6.18/0545-media-i2c-imx219-fix-binning-and-rate_factor-for-480.patch": "3a3bdbc29f98c8252604c1736e47d27e92b60f701f9c04c9ce9fb6a66996d3a2",
+    "target/linux/bcm27xx/patches-6.18/0582-Fullscreen-Splash-Images.patch": "601ff2892b592ecf4d9784af7fb36b883a70ca2fee38ca1824efb1046bd6e95a",
+    "target/linux/bcm27xx/patches-6.18/0746-Revert-media-i2c-imx219-fix-binning-and-rate_factor-.patch": "144f27fda9c2509e96594a37266edf39cf97c0f6742b5eab492ecba99ef0e848",
+    "target/linux/bcm27xx/patches-6.18/0940-dma-dw-axi-dmac-fix-cyclic-DMA.patch": "90ea0a190daa790878065d7d1ec2fb9dcd546ff6aa41e2bada14b77d7cc2a6d1",
+    "target/linux/generic/backport-6.18/439-v7.4-mtd-spi-nor-macronix-Restore-fallback-parameters-for.patch": null,
+    "target/linux/generic/backport-6.18/441-v7.4-spi-spi-qpic-snand-publish-the-ECC-context-to-snandc.patch": null,
+    "target/linux/generic/backport-6.18/503-01-v7.3-ksmbd-enable-tcp-keepalive-for-accepted-connections.patch": null,
+    "target/linux/generic/backport-6.18/734-v7.3-net-ethernet-mtk_wed-increase-WED-v2-WDMA-RESV_BUFF-.patch": null,
+    "target/linux/generic/backport-6.18/755-v7.3-net-sfp-add-quirk-for-HORACO-copper-SFP-module.patch": null,
+    "target/linux/generic/backport-6.18/856-01-v7.3-xhci-include-all-root-port-children-in-recovery-prevention-on-link-error.patch": null,
+    "target/linux/generic/kernel-6.18": "71d67a13a717946633020bb8f1a4adfbd7440377b95d30b2a3a2a53f584d0c50",
+    "target/linux/generic/pending-6.18/739-03-net-pcs-pcs-mtk-lynxi-add-platform-driver-for-MT7988.patch": "a895eb9b95d9f1f905b58c92607e28185752f8da3bc759b55f16d5aed4d4643e",
+    "target/linux/mediatek/patches-6.18/197-arm64-dts-mediatek-mt7986-correct-timer-frequency.patch": null,
+    "target/linux/microchipsw/patches-6.18/0014-v7.3-spi-atmel-quadspi-add-controller-init-callback.patch": null,
+    "target/linux/microchipsw/patches-6.18/0015-v7.3-spi-atmel-quadspi-use-init-callback-for-gclk-variant.patch": null,
+    "target/linux/qualcommax/patches-6.18/0090-v7.4-clk-qcom-gcc-ipq5018-mark-gpll0_main-clock-as-critical.patch": null,
+    "target/linux/rockchip/patches-6.18/042-01-v7.1-nvmem-rockchip-otp-Handle-internal-word_size-in-main.patch": "29bd74f1481c122efde0af218b27c40db117fe844a79a0366040a14c0493f7b6",
+    "target/linux/starfive/patches-6.18/0027-RISC-V-Create-unique-identification-for-SoC-PMU.patch": "143e5e7a5d7e4b894b66e9594450a309762855de855847693c582c77d3192b4e"
+  },
+  "limits": [
+    "Patch applicability and focused C probes only; probes use minimal include stubs.",
+    "Full kernel, wireless module and firmware builds not performed on this macOS host.",
+    "Hardware boot and upgrade behavior not tested."
+  ],
+  "reference_repository": "https://github.com/tdsafgen1888asd/op-source"
+}
