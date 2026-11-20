@@ -66,9 +66,9 @@ def check_feeds(path, defaults='feeds.conf.default'):
         match = re.fullmatch(r'(https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git)\^([0-9a-f]{40})', source)
         if not match or name in actual:
             raise ValueError('Invalid or duplicate release feed: ' + name)
-        actual[name] = match.group(1)
+        actual[name] = source
     if actual != expected:
-        raise ValueError('Release feed names and upstream URLs must match feeds.conf.default')
+        raise ValueError('Release feed names, upstream URLs and revisions must match feeds.conf.default')
 
 
 def main():

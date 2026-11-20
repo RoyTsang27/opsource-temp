@@ -98,6 +98,15 @@ tmpinfo_gen=[ $(1) -nt tmp/.packageinfo ] && [ $(1) -nt scripts/package-metadata
 	[ $(1) -nt scripts/metadata.pm ] || \
 	./scripts/package-metadata.pl $(2) tmp/.packageinfo > $(1) || { rm -f $(1); false; }
 
+# Interactive configuration exposes all configured feeds, including on a fresh
+# checkout. Non-interactive builds retain the explicit feeds workflow.
+ifneq ($(filter config menuconfig nconfig xconfig,$(MAKECMDGOALS)),)
+prepare-tmpinfo: prepare-feeds
+endif
+
+prepare-feeds: $(STAGING_DIR_HOST)/.prereq-build FORCE
+	@+python3 ./scripts/prepare-feeds.py
+
 prepare-tmpinfo: FORCE
 	@+$(MAKE) -r -s $(STAGING_DIR_HOST)/.prereq-build $(PREP_MK)
 	mkdir -p tmp/info feeds

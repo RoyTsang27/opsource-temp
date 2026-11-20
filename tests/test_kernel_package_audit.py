@@ -65,6 +65,49 @@ class FeedPatchTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual((self.feed / 'Makefile').read_text(), 'old\n')
 
+    def version_patch(self, version):
+        return ('--- a/Makefile\n+++ b/Makefile\n'
+                '@@ -1,2 +1,2 @@\n-old\n+' + version + '\n # setting\n')
+
+    def test_feed_patch_upgrade_preserves_local_edits(self):
+        patch = self.patches / '001.patch'
+        (self.feed / 'Makefile').write_text('old\n# setting\n')
+        patch.write_text(self.version_patch('first'))
+        self.assertEqual(self.run_patches().returncode, 0)
+        # The edit is outside the replaced hunk, in the same file.
+        (self.feed / 'Makefile').write_text('first\n# setting\n# local setting\n')
+        patch.write_text(self.version_patch('second'))
+        result = self.run_patches()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Updated', result.stdout)
+        self.assertEqual((self.feed / 'Makefile').read_text(), 'second\n# setting\n# local setting\n')
+        self.assertEqual(self.run_patches().returncode, 0)
+
+    def test_conflicting_feed_patch_upgrade_leaves_files_untouched(self):
+        patch = self.patches / '001.patch'
+        (self.feed / 'Makefile').write_text('old\n# setting\n')
+        patch.write_text(self.version_patch('first'))
+        self.assertEqual(self.run_patches().returncode, 0)
+        (self.feed / 'Makefile').write_text('user version\n')
+        patch.write_text(self.version_patch('second'))
+        self.assertNotEqual(self.run_patches().returncode, 0)
+        self.assertEqual((self.feed / 'Makefile').read_text(), 'user version\n')
+
+    def test_upgrade_from_source_history_without_receipt(self):
+        patch = self.patches / '001.patch'
+        (self.feed / 'Makefile').write_text('old\n# setting\n')
+        patch.write_text(self.version_patch('first'))
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', 'config'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Feed test',
+                        '-c', 'user.email=feed@example.invalid', 'commit', '-qm', 'old patch'],
+                       check=True)
+        (self.feed / 'Makefile').write_text('first\n# setting\n')
+        patch.write_text(self.version_patch('second'))
+        result = self.run_patches()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.feed / 'Makefile').read_text(), 'second\n# setting\n')
+
 
 if __name__ == '__main__':
     unittest.main()

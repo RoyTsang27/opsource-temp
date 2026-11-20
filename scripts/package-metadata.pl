@@ -181,6 +181,8 @@ sub mconf_depends {
 		}
 		if ($flags =~ /\+/) {
 			my $vdep = $vpackage{$depend};
+			my $rank;
+			my $negation;
 			if ($vdep) {
 				my @vdeps;
 
@@ -196,22 +198,29 @@ sub mconf_depends {
 				$depend = shift @vdeps;
 
 				if (@vdeps > 1) {
-					$condition = ($condition ? "$condition && " : '') . join("&&", map { "PACKAGE_$_<PACKAGE_$pkgname" } @vdeps);
+					$rank = join("&&", map { "PACKAGE_$_<PACKAGE_$pkgname" } @vdeps);
+					$negation = '!('.join("||", map { "PACKAGE_$_" } @vdeps).')';
 				} elsif (@vdeps > 0) {
-					$condition = ($condition ? "$condition && " : '') . "PACKAGE_${vdeps[0]}<PACKAGE_$pkgname";
+					$rank = "PACKAGE_${vdeps[0]}<PACKAGE_$pkgname";
+					$negation = '!PACKAGE_'.$vdeps[0];
 				}
 			}
 
 			# Menuconfig will not treat 'select FOO' as a real dependency
 			# thus if FOO depends on other config options, these dependencies
 			# will not be checked. To fix this, we simply emit all of FOO's
-			# depends here as well.
-			$package{$depend} and push @t_depends, [ $package{$depend}->{depends}, $condition ];
+			# depends here as well. Only require the default provider's
+			# dependencies when no alternative provider is selected. A rank
+			# comparison here would make the consumer depend on itself.
+			my $reemit = $condition;
+			$reemit = ($reemit ? "$reemit && " : '') . $negation if defined $negation;
+			$package{$depend} and push @t_depends, [ $package{$depend}->{depends}, $reemit ];
 
 			$m = "select";
 			next if $only_dep;
 
 			$flags =~ /@/ or $depend = "PACKAGE_$depend";
+			$condition = ($condition ? "$condition && " : '') . $rank if defined $rank;
 		} else {
 			my $vdep = $vpackage{$depend};
 			if ($vdep && @$vdep > 0) {

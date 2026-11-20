@@ -6,6 +6,10 @@ The public repository is
 [RoyTsang27/opsource-temp](https://github.com/RoyTsang27/opsource-temp),
 with `test-flight` as its default branch.
 
+Interactive configuration prepares the complete standard feed catalog. See
+[the menuconfig guide](MENUCONFIG.md) for Utilities, LuCI, networking and other
+package choices, and for preserving custom feeds in existing checkouts.
+
 The experimental `test-flight` branch pins `mediatek/filogic` and
 `ramips/mt76x8` and Airoha AN7581/AN7583/EN7523 to Linux 7.3.5. The generic 7.3 configuration and patch stack
 come from [the OpenWrt development

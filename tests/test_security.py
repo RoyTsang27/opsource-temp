@@ -233,6 +233,7 @@ class ReleaseTests(unittest.TestCase):
             path = Path(temp) / 'feeds'
             source = (ROOT / 'feeds.conf.release').read_text()
             for changed in (source.replace('^e731ba76764082d9db71de60f1ddac43f4114101', ''),
+                            source.replace('e731ba76764082d9db71de60f1ddac43f4114101', '0' * 40),
                             source.replace('github.com/immortalwrt/packages', 'github.com/attacker/packages'),
                             source + source.splitlines()[1] + '\n'):
                 path.write_text(changed)
