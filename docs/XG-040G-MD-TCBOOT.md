@@ -1,13 +1,14 @@
 # Nokia XG-040G-MD with tcboot
 
-Profile: `nokia_xg-040g-md-tcboot`, AN7581. This profile is selected in the supplied
+PON profile: `nokia_xg-040g-md-tcboot-pon`, AN7581, displayed as
+`Nokia XG-040G-MD(Pon) (tcboot)`. This profile is selected in the supplied
 AN7581 multi-device configuration and has a separate minimal configuration in
 `configs/an7581-tcboot.config`.
 
 The boot layout and kernel load address follow the existing
 [tcboot source](https://github.com/xiangtailiang/openwrt/blob/67d579ed20011b2c601e75bdd9fa86f7b619fc69/target/linux/airoha/dts/an7581-nokia_xg-040g-md-tcboot.dts)
 and [image definition](https://github.com/xiangtailiang/openwrt/blob/67d579ed20011b2c601e75bdd9fa86f7b619fc69/target/linux/airoha/image/an7581.mk).
-The reference is adapted to PonWrt's existing LAN names, PON driver and calibration
+The reference is adapted to this source's existing LAN names, PON driver and calibration
 bindings. The separately maintained
 [tcboot bootstrap](https://github.com/Ljzd-PRO/xg040g-openwrt-switch/blob/22bd32ab0cb417138763174f3840a67584ff63cf/patches/openwrt/0001-airoha-add-xg040g-tcboot-switch-bootstrap.patch)
 corroborates the layout.
@@ -36,14 +37,15 @@ cp feeds.conf.release feeds.conf
 ./scripts/kconfig.pl + configs/an7581-tcboot.config configs/release.config > .config
 make defconfig
 python3 scripts/check-release.py --config .config
+python3 scripts/check-device-defaults.py
 make -j12
 ```
 
 Outputs under `bin/targets/airoha/an7581/`:
 
-- `*-nokia_xg-040g-md-tcboot-squashfs-factory.bin`: factory payload for an
+- `opsource-temp-*-nokia_xg-040g-md-tcboot-pon-squashfs-factory.bin`: factory payload for an
   already-installed compatible tcboot recovery interface.
-- `*-nokia_xg-040g-md-tcboot-squashfs-sysupgrade.bin`: signed upgrade tar for
+- `opsource-temp-*-nokia_xg-040g-md-tcboot-pon-squashfs-sysupgrade.bin`: signed upgrade tar for
   this exact tcboot profile.
 
 The profile does not bundle, install or rewrite a bootloader. It does not alias
@@ -53,6 +55,9 @@ if UBI or the personal-data volumes are missing. The standard NAND tar upgrader
 replaces kernel/rootfs/rootfs_data while preserving the other volumes; the raw
 bootloader and environment partitions are outside that operation. PON, LAN,
 USB and LEDs inherit the existing MD board support.
+The original `nokia_xg-040g-md-tcboot` profile remains available. The PON variant
+preserves its `sysupgrade-nokia_xg-040g-md-tcboot/` archive directory and
+`nokia,xg-040g-md-tcboot` hardware identity for the existing upgrade checks.
 
 The missing-volume guard checks the name returned by OpenWrt's UBI lookup,
 because an unsuccessful search can still return status zero. This also fixes

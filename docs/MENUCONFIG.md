@@ -72,10 +72,39 @@ errors are saved under `logs/<recipe-path>/dump.txt`.
 
 ## Device defaults and validation
 
+For explicit Airoha optical-device choices, select `Airoha ARM`, then the
+matching AN7581 or AN7583 subtarget and a profile ending in `(Pon)`, such as
+`Nokia XG-040G-MD(Pon) (tcboot)`. See the [PON profile list](AIROHA-PON-PROFILES.md)
+for model and bootloader variants. These profiles automatically include the
+PON drivers, control tools, daemon, diagnostics and LuCI PON/IPTV applications.
+
 MediaTek and Airoha kernel, wireless, network and security defaults remain
 device-specific. Exposing the full catalog does not set `ALL`, `ALL_KMODS` or
 `ALL_NONSHARED`, or add every package to small flash images. Enable only the
 applications needed for the chosen hardware and available flash space.
+
+After resolving a configuration, check that device defaults survived Kconfig
+dependency resolution:
+
+```sh
+make defconfig
+python3 scripts/check-device-defaults.py
+```
+
+The checker accepts the selected provider of a virtual package, requires
+built-in defaults to remain `y`, and allows device-specific packages to be
+`m` when using a separate root filesystem per device. It does not turn every
+package on. The 2026-11-21 review resolved all 41 Airoha profiles, the six
+MediaTek/Ralink manifest devices and three Airoha presets; all device package
+defaults were selected. These are configuration checks, without firmware builds.
+
+New firmware filenames start with `opsource-temp-`; the old `ponwrt-` prefix
+came from the distribution fallback in `include/version.mk`. The Version
+configuration default, first-boot hostname and release archive names now agree.
+An existing explicit `CONFIG_VERSION_DIST="PonWrt"` still overrides defaults:
+change **Image configuration → Version configuration options → Release
+distribution** to `opsource-temp` if your saved configuration contains that setting.
+Existing output files retain their old filenames until you build new images.
 
 Focused regression checks cover first-run installation, offline reuse, local
 recipe changes, removed package links, failed feed scans and patch upgrades

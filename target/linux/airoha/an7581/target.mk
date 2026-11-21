@@ -12,5 +12,4 @@ define Target/Description
 	Build firmware images for Airoha an7581 ARM based boards.
 endef
 
-# Core PON stack is maintained in package/pon. Frontends remain board-specific.
-DEFAULT_PACKAGES += kmod-airoha-xpon kmod-airoha-pon-frontend airoha-ponctl airoha-pond airoha-pon-debug luci-app-pon luci-app-iptv
+# Complete PON applications are selected by the board's independent (Pon) profile.

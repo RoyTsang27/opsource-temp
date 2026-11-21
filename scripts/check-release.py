@@ -19,7 +19,8 @@ PON_PACKAGES = (
 
 
 def missing_pon_packages(settings):
-    if settings.intersection({'CONFIG_TARGET_airoha_an7581=y', 'CONFIG_TARGET_airoha_an7583=y'}):
+    if any(re.fullmatch(r'CONFIG_TARGET_(?:DEVICE_)?airoha_an758[13]_DEVICE_.+-pon=y', setting)
+           for setting in settings):
         return ['PACKAGE_' + package for package in PON_PACKAGES
                 if 'CONFIG_PACKAGE_' + package + '=y' not in settings]
     return []

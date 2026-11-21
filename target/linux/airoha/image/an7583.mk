@@ -92,3 +92,6 @@ define Device/nokia_xg-040g-mf-ubi
   ARTIFACTS := bl31-uboot.fip preloader.bin
 endef
 TARGET_DEVICES += nokia_xg-040g-mf-ubi
+
+$(eval $(call Device/AirohaPonProfile,nokia_xg-040g-mf,XG-040G-MF))
+$(eval $(call Device/AirohaPonProfile,nokia_xg-040g-mf-ubi,XG-040G-MF))

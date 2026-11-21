@@ -173,10 +173,10 @@ if VERSIONOPT
 	config VERSION_DIST
 		string
 		prompt "Release distribution"
-		default "ImmortalWrt"
+		default "opsource-temp"
 		help
 			This is the name of the release distribution.
-			If unspecified, it defaults to ImmortalWrt.
+			If unspecified, it defaults to opsource-temp.
 
 	config VERSION_NUMBER
 		string

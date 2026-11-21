@@ -116,6 +116,7 @@ jobs:
         run: |
           mkdir -p logs
           python3 scripts/device-build.py configure "$DEVICE" 2>&1 | tee logs/configure.log
+          python3 scripts/check-device-defaults.py
           ./scripts/diffconfig.sh > logs/resolved.config
       - name: Download sources
         run: make download -j4 V=s 2>&1 | tee logs/download.log

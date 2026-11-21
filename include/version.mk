@@ -36,7 +36,7 @@ VERSION_REPO:=$(call qstrip,$(CONFIG_VERSION_REPO))
 VERSION_REPO:=$(if $(VERSION_REPO),$(VERSION_REPO),https://downloads.immortalwrt.org/snapshots)
 
 VERSION_DIST:=$(call qstrip,$(CONFIG_VERSION_DIST))
-VERSION_DIST:=$(if $(VERSION_DIST),$(VERSION_DIST),PonWrt)
+VERSION_DIST:=$(if $(VERSION_DIST),$(VERSION_DIST),opsource-temp)
 VERSION_DIST_SANITIZED:=$(call sanitize,$(VERSION_DIST))
 
 VERSION_MANUFACTURER:=$(call qstrip,$(CONFIG_VERSION_MANUFACTURER))
@@ -46,10 +46,10 @@ VERSION_MANUFACTURER_URL:=$(call qstrip,$(CONFIG_VERSION_MANUFACTURER_URL))
 VERSION_MANUFACTURER_URL:=$(if $(VERSION_MANUFACTURER_URL),$(VERSION_MANUFACTURER_URL),https://immortalwrt.org/)
 
 VERSION_BUG_URL:=$(call qstrip,$(CONFIG_VERSION_BUG_URL))
-VERSION_BUG_URL:=$(if $(VERSION_BUG_URL),$(VERSION_BUG_URL),https://github.com/immortalwrt/immortalwrt/issues)
+VERSION_BUG_URL:=$(if $(VERSION_BUG_URL),$(VERSION_BUG_URL),https://github.com/RoyTsang27/opsource-temp/issues)
 
 VERSION_HOME_URL:=$(call qstrip,$(CONFIG_VERSION_HOME_URL))
-VERSION_HOME_URL:=$(if $(VERSION_HOME_URL),$(VERSION_HOME_URL),https://github.com/pbs05/ponwrt)
+VERSION_HOME_URL:=$(if $(VERSION_HOME_URL),$(VERSION_HOME_URL),https://github.com/RoyTsang27/opsource-temp)
 
 VERSION_SUPPORT_URL:=$(call qstrip,$(CONFIG_VERSION_SUPPORT_URL))
 VERSION_SUPPORT_URL:=$(if $(VERSION_SUPPORT_URL),$(VERSION_SUPPORT_URL),https://github.com/immortalwrt/immortalwrt/discussions)

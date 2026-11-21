@@ -56,11 +56,17 @@ jobs:
           cp feeds.conf.release feeds.conf
           ./scripts/feeds update -a
           ./scripts/feeds install -a
-          # Check target defaults independently of the saved device profiles.
-          printf 'CONFIG_TARGET_airoha=y\nCONFIG_TARGET_airoha_%s=y\n' "$TARGET" > .config
+          # Check PON profile defaults independently of the saved package selections.
+          pon_profile=nokia_xg-040g-md-tcboot-pon
+          if [ "$TARGET" = an7583 ]; then
+            pon_profile=nokia_xg-040g-mf-ubi-pon
+          fi
+          printf 'CONFIG_TARGET_airoha=y\nCONFIG_TARGET_airoha_%s=y\nCONFIG_TARGET_airoha_%s_DEVICE_%s=y\n' \
+            "$TARGET" "$TARGET" "$pon_profile" > .config
           cat configs/release.config >> .config
           make defconfig
           python3 scripts/check-release.py --pon-config .config
+          python3 scripts/check-device-defaults.py
           profile="configs/$TARGET.config"
           if [ "$TARGET" = an7581 ]; then
             profile=configs/an7581-tcboot.config
@@ -68,6 +74,7 @@ jobs:
           ./scripts/kconfig.pl + "$profile" configs/release.config > .config
           make defconfig
           python3 scripts/check-release.py --config .config
+          python3 scripts/check-device-defaults.py
           make target/linux/prepare -j"$(nproc)" V=s
           python3 scripts/check-kernel-patches.py \
             build_dir/target-*/linux-airoha_"$TARGET"/linux-[0-9]*
@@ -104,7 +111,7 @@ jobs:
           set -o pipefail
           make -j"$(nproc)" V=s 2>&1 | tee tcboot-image-build.log
           python3 scripts/check-tcboot-image.py \
-            bin/targets/airoha/an7581/*nokia_xg-040g-md-tcboot-squashfs-factory.bin
+            bin/targets/airoha/an7581/*nokia_xg-040g-md-tcboot-pon-squashfs-factory.bin
           bash scripts/verify-release.sh bin/targets/airoha/an7581
           git rev-parse HEAD > bin/targets/airoha/an7581/source-commit.txt
       - name: Upload verified tcboot images

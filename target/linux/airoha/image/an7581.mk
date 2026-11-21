@@ -492,3 +492,19 @@ define Device/nokia_xg-040g-tf-ubi
   DEVICE_PACKAGES += fitblk
 endef
 TARGET_DEVICES += nokia_xg-040g-tf-ubi
+
+# Independent optical-networking choices. Keep each flash/bootloader layout.
+$(eval $(call Device/AirohaPonProfile,gemtek_xg2010g,XG2010G))
+$(eval $(call Device/AirohaPonProfile,fiberhome_hg5382a,HG5382A))
+$(eval $(call Device/AirohaPonProfile,fiberhome_hg5585f-ct,HG5585F))
+$(eval $(call Device/AirohaPonProfile,fiberhome_hg5585f-cu,HG5585F))
+$(eval $(call Device/AirohaPonProfile,fiberhome_hg5585f-ct-usb-sfp,HG5585F))
+$(eval $(call Device/AirohaPonProfile,fiberhome_hg5585f-cu-usb-sfp,HG5585F))
+$(eval $(call Device/AirohaPonProfile,znxt_zn515xg-d,ZN515XG-D))
+$(eval $(call Device/AirohaPonProfile,znxt_zn504xg-d,ZN504XG-D))
+$(eval $(call Device/AirohaPonProfile,unionman_ung00a,UNG00A))
+$(eval $(call Device/AirohaPonProfile,h3c_hm2004-du,HM2004-DU))
+$(eval $(call Device/AirohaPonProfile,nokia_xg-040g-md-ubi,XG-040G-MD))
+$(eval $(call Device/AirohaPonProfile,nokia_xg-040g-md-ubi-usb-sfp,XG-040G-MD))
+$(eval $(call Device/AirohaPonProfile,nokia_xg-040g-md-tcboot,XG-040G-MD))
+$(eval $(call Device/AirohaPonProfile,nokia_xg-040g-tf-ubi,XG-040G-TF))

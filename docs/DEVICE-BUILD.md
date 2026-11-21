@@ -79,7 +79,12 @@ Linux version, sysupgrade image, file sizes, and SHA256 hashes.
 
 Feeds use the reference's `feeds.conf.release` pins. PON driver/userspace
 packages are already vendored under `package/pon`; no extra PON feed is needed.
-Existing distribution branding stays ImmortalWrt; Device Build is the project.
+Firmware distribution and filename defaults use `opsource-temp`. Upstream
+copyright notices and package source references are retained.
+
+Explicit Airoha optical-device choices, including `XG-040G-MD(Pon)`, are
+documented in [Airoha PON profiles](AIROHA-PON-PROFILES.md). They inherit their
+board's drivers and flash layout and select the complete PON application stack.
 
 ## Corrections required for TR1200
 

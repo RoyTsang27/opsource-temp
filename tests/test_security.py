@@ -216,6 +216,19 @@ class DownloadTests(unittest.TestCase):
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_pon_profiles_require_complete_optical_stack(self):
+        for selector in ('TARGET_airoha_an7581_DEVICE_nokia_xg-040g-md-tcboot-pon',
+                         'TARGET_DEVICE_airoha_an7583_DEVICE_nokia_xg-040g-mf-ubi-pon'):
+            settings = {'CONFIG_' + selector + '=y'}
+            self.assertEqual(len(release.missing_pon_packages(settings)), 7)
+            settings.update('CONFIG_PACKAGE_' + name + '=y' for name in release.PON_PACKAGES)
+            self.assertEqual(release.missing_pon_packages(settings), [])
+
+    def test_non_pon_profile_does_not_require_optical_applications(self):
+        self.assertEqual(release.missing_pon_packages({
+            'CONFIG_TARGET_airoha_an7581=y',
+            'CONFIG_TARGET_airoha_an7581_DEVICE_gemtek_w1700k-ubi=y'}), [])
+
     def test_valid_tag(self):
         release.check_tag('v1.2.3-rc1')
 

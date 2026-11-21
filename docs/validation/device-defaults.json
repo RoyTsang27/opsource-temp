@@ -1,0 +1,269 @@
+{
+  "date": "2026-11-21",
+  "kernel": "7.3.5",
+  "method": "Native OpenWrt Kconfig resolution using production target and package metadata; no firmware compilation",
+  "catalog_recipe_count": 2403,
+  "case_count": 50,
+  "passed": 50,
+  "new_pon_profile_count": 16,
+  "image_prefix_checks": {
+    "fallback": "opsource-temp-airoha-an7581",
+    "configured": "opsource-temp-airoha-an7581"
+  },
+  "limits": [
+    "The full optional feed catalog emits 10 recursive-dependency diagnostics tolerated by OpenWrt conf. All checked device selections and package defaults resolved. Arbitrary optional package combinations were not verified.",
+    "Device boot, optical operation, firmware size and flashing require actual firmware builds and hardware."
+  ],
+  "cases": [
+    {
+      "case": "en7523-airoha_en7523-evb",
+      "status": "passed",
+      "default_count": 25
+    },
+    {
+      "case": "an7581-airoha_an7581-evb",
+      "status": "passed",
+      "default_count": 31
+    },
+    {
+      "case": "an7581-airoha_an7581-evb-emmc-eagle",
+      "status": "passed",
+      "default_count": 31
+    },
+    {
+      "case": "an7581-airoha_an7581-evb-emmc-kite",
+      "status": "passed",
+      "default_count": 30
+    },
+    {
+      "case": "an7581-gemtek_w1700k-ubi",
+      "status": "passed",
+      "default_count": 34
+    },
+    {
+      "case": "an7581-gemtek_xg2010g",
+      "status": "passed",
+      "default_count": 38
+    },
+    {
+      "case": "an7581-nokia_valyrian",
+      "status": "passed",
+      "default_count": 43
+    },
+    {
+      "case": "an7581-fiberhome_hg5382a",
+      "status": "passed",
+      "default_count": 36
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-ct",
+      "status": "passed",
+      "default_count": 46
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-cu",
+      "status": "passed",
+      "default_count": 45
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-ct-usb-sfp",
+      "status": "passed",
+      "default_count": 46
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-cu-usb-sfp",
+      "status": "passed",
+      "default_count": 45
+    },
+    {
+      "case": "an7581-znxt_zn515xg-d",
+      "status": "passed",
+      "default_count": 48
+    },
+    {
+      "case": "an7581-znxt_zn504xg-d",
+      "status": "passed",
+      "default_count": 36
+    },
+    {
+      "case": "an7581-unionman_ung00a",
+      "status": "passed",
+      "default_count": 36
+    },
+    {
+      "case": "an7581-h3c_hm2004-du",
+      "status": "passed",
+      "default_count": 47
+    },
+    {
+      "case": "an7581-nokia_xg-040g-md-ubi",
+      "status": "passed",
+      "default_count": 43
+    },
+    {
+      "case": "an7581-nokia_xg-040g-md-ubi-usb-sfp",
+      "status": "passed",
+      "default_count": 43
+    },
+    {
+      "case": "an7581-nokia_xg-040g-md-tcboot",
+      "status": "passed",
+      "default_count": 44
+    },
+    {
+      "case": "an7581-quantum_q1000k-ubi",
+      "status": "passed",
+      "default_count": 31
+    },
+    {
+      "case": "an7581-nokia_xg-040g-tf-ubi",
+      "status": "passed",
+      "default_count": 34
+    },
+    {
+      "case": "an7581-gemtek_xg2010g-pon",
+      "status": "passed",
+      "default_count": 42
+    },
+    {
+      "case": "an7581-fiberhome_hg5382a-pon",
+      "status": "passed",
+      "default_count": 40
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-ct-pon",
+      "status": "passed",
+      "default_count": 50
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-cu-pon",
+      "status": "passed",
+      "default_count": 49
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-ct-usb-sfp-pon",
+      "status": "passed",
+      "default_count": 50
+    },
+    {
+      "case": "an7581-fiberhome_hg5585f-cu-usb-sfp-pon",
+      "status": "passed",
+      "default_count": 49
+    },
+    {
+      "case": "an7581-znxt_zn515xg-d-pon",
+      "status": "passed",
+      "default_count": 52
+    },
+    {
+      "case": "an7581-znxt_zn504xg-d-pon",
+      "status": "passed",
+      "default_count": 40
+    },
+    {
+      "case": "an7581-unionman_ung00a-pon",
+      "status": "passed",
+      "default_count": 40
+    },
+    {
+      "case": "an7581-h3c_hm2004-du-pon",
+      "status": "passed",
+      "default_count": 51
+    },
+    {
+      "case": "an7581-nokia_xg-040g-md-ubi-pon",
+      "status": "passed",
+      "default_count": 47
+    },
+    {
+      "case": "an7581-nokia_xg-040g-md-ubi-usb-sfp-pon",
+      "status": "passed",
+      "default_count": 47
+    },
+    {
+      "case": "an7581-nokia_xg-040g-md-tcboot-pon",
+      "status": "passed",
+      "default_count": 48
+    },
+    {
+      "case": "an7581-nokia_xg-040g-tf-ubi-pon",
+      "status": "passed",
+      "default_count": 38
+    },
+    {
+      "case": "an7583-airoha_an7583-evb",
+      "status": "passed",
+      "default_count": 31
+    },
+    {
+      "case": "an7583-airoha_an7583-evb-emmc",
+      "status": "passed",
+      "default_count": 28
+    },
+    {
+      "case": "an7583-nokia_xg-040g-mf",
+      "status": "passed",
+      "default_count": 41
+    },
+    {
+      "case": "an7583-nokia_xg-040g-mf-ubi",
+      "status": "passed",
+      "default_count": 42
+    },
+    {
+      "case": "an7583-nokia_xg-040g-mf-pon",
+      "status": "passed",
+      "default_count": 45
+    },
+    {
+      "case": "an7583-nokia_xg-040g-mf-ubi-pon",
+      "status": "passed",
+      "default_count": 46
+    },
+    {
+      "case": "ax3000t",
+      "status": "passed",
+      "default_count": 33
+    },
+    {
+      "case": "ax3000t-ubootmod",
+      "status": "passed",
+      "default_count": 33
+    },
+    {
+      "case": "tr3000",
+      "status": "passed",
+      "default_count": 35
+    },
+    {
+      "case": "tr3000-256mb",
+      "status": "passed",
+      "default_count": 35
+    },
+    {
+      "case": "tr3000-ubootmod",
+      "status": "passed",
+      "default_count": 35
+    },
+    {
+      "case": "tr1200",
+      "status": "passed",
+      "default_count": 32
+    },
+    {
+      "case": "preset-an7581",
+      "status": "passed",
+      "default_count": 57
+    },
+    {
+      "case": "preset-an7583",
+      "status": "passed",
+      "default_count": 46
+    },
+    {
+      "case": "preset-an7581-tcboot",
+      "status": "passed",
+      "default_count": 48
+    }
+  ]
+}
