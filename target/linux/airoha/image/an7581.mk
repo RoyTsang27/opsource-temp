@@ -168,6 +168,10 @@ define Device/nokia_xg-040g-md
 endef
 TARGET_DEVICES += nokia_xg-040g-md
 
+define Build/nokia-tcboot-check-factory
+	$(STAGING_DIR_HOST)/bin/python3 $(TOPDIR)/scripts/check-tcboot-image.py $@
+endef
+
 define Device/nokia_xg-040g-md-tcboot
   $(call Device/nokia_xg-040g-md-common)
   DEVICE_VARIANT := (tcboot)
@@ -176,10 +180,13 @@ define Device/nokia_xg-040g-md-tcboot
   KERNEL_SIZE := 8192k
   IMAGE_SIZE := 261120k
   KERNEL_IN_UBI := 1
-  UBINIZE_OPTS += -s 2048
+  # U-Boot can relocate the volume table past an EOF marker during attach.
+  # Linux would stop scanning at that marker and miss the live table.
+  UBINIZE_OPTS := -s 2048
+  SUPPORTED_DEVICES := nokia,xg-040g-md-tcboot nokia,xg-140g-tf-tcboot
   IMAGES := factory.bin sysupgrade.bin
   # tcboot Web recovery expects an 8 MiB FIT area before the UBI image.
-  IMAGE/factory.bin := append-kernel | pad-to $$$$(KERNEL_SIZE) | append-ubi | check-size
+  IMAGE/factory.bin := append-kernel | pad-to $$$$(KERNEL_SIZE) | append-ubi | check-size | nokia-tcboot-check-factory
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata | check-size
   DEVICE_PACKAGES += ubi-utils
 endef

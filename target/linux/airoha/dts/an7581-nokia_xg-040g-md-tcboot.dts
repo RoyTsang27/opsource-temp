@@ -8,7 +8,9 @@
 		     "airoha,en7581";
 
 	chosen {
-		bootargs = "ubi.mtd=ubi root=ubi0:rootfs rootfstype=squashfs ro rootwait console=ttyS0,115200 earlycon";
+		bootargs = "ubi.mtd=ubi console=ttyS0,115200 earlycon";
+		/* Keep the SquashFS block mapping when U-Boot replaces bootargs. */
+		bootargs-append = " ubi.block=0,rootfs root=/dev/ubiblock0_1 rootfstype=squashfs ro rootwait";
 	};
 };
 

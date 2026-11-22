@@ -1,0 +1,79 @@
+{
+  "kernel": "6.18.64",
+  "device_trees": {
+    "an7581-nokia_xg-040g-md-tcboot": {
+      "compiled": true,
+      "sha256": "7b48596c913684a36fdd3fe4676e9b5f60a71cc0050f860fc01961a236987d90"
+    },
+    "an7581-nokia_xg-140g-tf-tcboot": {
+      "compiled": true,
+      "sha256": "fbf210b64dcc14d917749e46debf484e62f643a1191ff07cf3c04010cad4ec3b"
+    }
+  },
+  "images": {
+    "openwrt-airoha-an7581-nokia_xg-040g-md-tcboot-squashfs-factory.bin": {
+      "size": 60162048,
+      "sha256": "1ca891588bfdf0f511660b5da1c38b26cccc9bae40b5faa276db6b915646a811"
+    },
+    "openwrt-airoha-an7581-nokia_xg-040g-md-tcboot-squashfs-sysupgrade.bin": {
+      "size": 49777477,
+      "sha256": "317a464a6828097a3d672a097f04aa9167e7761856c7b8a49f6f44343a50c11d"
+    },
+    "openwrt-airoha-an7581-nokia_xg-140g-tf-tcboot-squashfs-factory.bin": {
+      "size": 60162048,
+      "sha256": "613cbb0ad5035843019e89824e2d5c19bed173bb1f5d4eebc25c8a1f2aec9b2a"
+    },
+    "openwrt-airoha-an7581-nokia_xg-140g-tf-tcboot-squashfs-sysupgrade.bin": {
+      "size": 49767237,
+      "sha256": "90101907bf5fb4c3aa886c4e7c96f32a12795764ef979a6f6aa61566d425e95c"
+    }
+  },
+  "checks": [
+    "both tcboot device trees compiled against prepared Linux 6.18.64 inputs",
+    "rootfs ubiblock arguments survive the exact failing U-Boot command line",
+    "MD and TF partition bounds and distinct USB settings verified",
+    "real factory recipes retain 8 MiB FIT prefix, 2 KiB VID and volume IDs 0/1/2",
+    "both factory images passed the build-time EOF/UBI checker",
+    "both sysupgrade archives match their FIT and SquashFS payloads",
+    "both sysupgrade metadata records support both tcboot models",
+    "both sysupgrade signatures verified with native fwtool, ucert and usign"
+  ],
+  "limitations": [
+    "fixture kernel and rootfs payloads used for packaging; not installable firmware",
+    "no complete Linux firmware cross-build",
+    "no hardware boot or flash test"
+  ],
+  "date": "2026-11-22",
+  "base_commit": "a49e194f6",
+  "repository": "RoyTsang27/opsource-temp",
+  "cross_upgrade_checks": [
+    {
+      "running_board": "nokia,xg-040g-md-tcboot",
+      "image_profile": "nokia_xg-040g-md-tcboot",
+      "accepted_without_flash_writes": true
+    },
+    {
+      "running_board": "nokia,xg-040g-md-tcboot",
+      "image_profile": "nokia_xg-140g-tf-tcboot",
+      "accepted_without_flash_writes": true
+    },
+    {
+      "running_board": "nokia,xg-140g-tf-tcboot",
+      "image_profile": "nokia_xg-040g-md-tcboot",
+      "accepted_without_flash_writes": true
+    },
+    {
+      "running_board": "nokia,xg-140g-tf-tcboot",
+      "image_profile": "nokia_xg-140g-tf-tcboot",
+      "accepted_without_flash_writes": true
+    }
+  ],
+  "regression_tests": {
+    "total": 99,
+    "passed": 93,
+    "skipped": 6,
+    "runtime": "Python 3.12",
+    "real_signing_tools": true
+  },
+  "previous_factory_rejected_for_eof_markers": true
+}

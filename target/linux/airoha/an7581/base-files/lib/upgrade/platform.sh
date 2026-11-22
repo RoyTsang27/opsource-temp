@@ -11,23 +11,27 @@ nokia_initial_setup()
 
 nokia_tcboot_check_image()
 {
-	local dir="sysupgrade-${1//,/_}"
+	local dir candidate
 	local image="$2"
 	local entries
 
-	nand_do_platform_check "$1" "$image" || return 1
-
-	# The NAND helper also accepts raw FIT and UBI images. Restrict this
-	# layout to the board's own upgrade archive, even with sysupgrade -F.
-	entries="$(tar tf "$image" 2>/dev/null)" &&
+	# MD and TF share the tcboot flash layout. Accept either archive while
+	# still excluding raw images and archives for other bootloader layouts.
+	entries="$(tar tf "$image" 2>/dev/null)" || return 1
+	for candidate in nokia_xg-040g-md-tcboot nokia_xg-140g-tf-tcboot; do
+		dir="sysupgrade-$candidate"
 		[ "$entries" = "$dir/
 $dir/CONTROL
 $dir/kernel
 $dir/root" ] &&
 		[ "$(identify_tar "$image" cat "$dir/kernel")" = "fit" ] &&
-		[ "$(identify_tar "$image" cat "$dir/root")" = "squashfs" ] && return 0
+		[ "$(identify_tar "$image" cat "$dir/root")" = "squashfs" ] && {
+			nand_do_platform_check "$candidate" "$image"
+			return $?
+		}
+	done
 
-	echo "Use the tcboot sysupgrade image for $1."
+	echo "Use an XG-040G-MD or XG-140G-TF tcboot sysupgrade image."
 	return 1
 }
 
@@ -38,10 +42,10 @@ nokia_tcboot_check_layout()
 	# Refuse layouts that would make nand_do_upgrade format the partition.
 	ubidev="$(nand_find_ubi ubi)"
 	[ -n "$ubidev" ] &&
-		[ -n "$(nand_find_volume "$ubidev" kernel)" ] &&
-		[ -n "$(nand_find_volume "$ubidev" rootfs)" ] && return 0
+		[ "$(nand_find_volume "$ubidev" kernel)" = "${ubidev}_0" ] &&
+		[ "$(nand_find_volume "$ubidev" rootfs)" = "${ubidev}_1" ] && return 0
 
-	echo "The tcboot kernel and rootfs volumes are missing."
+	echo "tcboot requires kernel/rootfs volume IDs 0/1; reinstall the factory image through recovery."
 	return 1
 }
 

@@ -123,7 +123,7 @@ class ImageTests(unittest.TestCase):
 
 
 class TcbootUpgradeTests(unittest.TestCase):
-    def test_only_matching_archive_and_existing_ubi_can_reach_flash(self):
+    def test_both_shared_archives_and_existing_ubi_can_reach_flash(self):
         base = ROOT / 'package/base-files/files/lib/upgrade'
         platform = ROOT / 'target/linux/airoha/an7581/base-files/lib/upgrade/platform.sh'
         check = r'''
@@ -133,8 +133,14 @@ class TcbootUpgradeTests(unittest.TestCase):
             test_board="$3"
             layout="$5"
             board_name() { echo "$test_board"; }
-            nand_find_ubi() { [ "$layout" = attached ] && echo ubi0; }
-            nand_find_volume() { echo "ubi0_$2"; }
+            nand_find_ubi() { [ "$layout" = absent ] || echo ubi0; }
+            nand_find_volume() {
+                [ "$layout" = "missing-$2" ] && return 0
+                case "$2" in
+                    kernel) echo ubi0_0 ;;
+                    rootfs) [ "$layout" = wrong-id ] && echo ubi0_3 || echo ubi0_1 ;;
+                esac
+            }
             nand_do_upgrade() {
                 [ "$CI_SKIP_KERNEL_MTD:$CI_UBIPART:$CI_KERNPART:$CI_ROOTPART" = 1:ubi:kernel:rootfs ] &&
                     echo "ready to write"
@@ -170,10 +176,19 @@ class TcbootUpgradeTests(unittest.TestCase):
                 self.assertIn('ready to write', run(board, archive).stdout)
                 other_board = ('nokia,xg-140g-tf-tcboot' if '040g' in board
                                else 'nokia,xg-040g-md-tcboot')
-                for result in [run(board, archive, 'absent'), run(board, broken),
-                               run(board, directory / 'kernel'), run(other_board, archive)]:
+                result = run(other_board, archive, action='platform_check_image')
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('ready to write', run(other_board, archive).stdout)
+                for result in [run(board, archive, layout) for layout in
+                               ['absent', 'missing-kernel', 'missing-rootfs', 'wrong-id']] + [
+                               run(board, broken), run(board, directory / 'kernel')]:
                     self.assertNotEqual(result.returncode, 0)
                     self.assertNotIn('ready to write', result.stdout)
+                # A structurally valid archive for the stock bootloader is excluded.
+                wrong = files / 'wrong-board.bin'
+                with tarfile.open(wrong, 'w') as tar:
+                    tar.add(directory, arcname='sysupgrade-nokia_xg-040g-md')
+                self.assertNotEqual(run(board, wrong).returncode, 0)
 
 
 class TcbootMacTests(unittest.TestCase):
