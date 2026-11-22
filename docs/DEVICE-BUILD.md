@@ -86,6 +86,35 @@ Explicit Airoha optical-device choices, including `XG-040G-MD(Pon)`, are
 documented in [Airoha PON profiles](AIROHA-PON-PROFILES.md). They inherit their
 board's drivers and flash layout and select the complete PON application stack.
 
+## AX3000T WED boot panic correction
+
+The 2026-11-22 TTL log reached OpenWrt userspace, then repeatedly panicked in
+`regmap_write → wo_w32 → mtk_wed_mcu_init` while loading `mt7915e`. Its register
+dump contained `ERR_PTR(-ENODEV)` as the regmap argument. The MT7981 device tree
+retains a legacy `wo-boot` reserved-memory region, while the carried WED patch
+also supports the newer `mediatek,wo-cpuboot` syscon reference.
+
+Patch `947-net-ethernet-mtk_wed-fix-legacy-cpuboot-fallback.patch` uses the
+optional syscon lookup: an absent reference selects the legacy mapped region,
+and actual lookup errors return before firmware loading or boot-register
+access. A valid syscon skips the legacy region. WED stays enabled.
+
+Seven native regression cases compile the actual prepared kernel's firmware
+loader, register-access helpers and optional syscon lookup against simulated
+hardware. They cover both mappings, deferred/invalid lookup, missing legacy
+region, missing firmware and firmware-load failure. The legacy case fails on
+the unpatched source and passes with the correction. MediaTek device CI runs
+these checks after kernel preparation. To run them separately:
+
+```sh
+WED_TEST_KERNEL=build_dir/target-aarch64_cortex-a53_musl/linux-mediatek_filogic/linux-7.3.5 \
+  python3 -m unittest discover -s tests -p test_wed_boot.py -v
+```
+
+The WED patches apply to Linux 7.3.5 without fuzz. These checks do not perform
+a firmware build or a physical boot test. Rebuild the AX3000T firmware from
+the corrected source; already generated images do not contain this fix.
+
 ## Corrections required for TR1200
 
 1. Removed

@@ -1,0 +1,37 @@
+Subject: [PATCH] net: ethernet: mtk_wed: fix legacy WO CPU-boot fallback
+
+MT7981 device trees can still describe the WO CPU-boot registers through
+memory-region-names = "wo-boot" instead of mediatek,wo-cpuboot. The
+carried syscon conversion stores ERR_PTR(-ENODEV) when the latter is
+absent, then passes it to regmap_write() because wo_w32() only checks
+for NULL. This panics while mt7915e probes on AX3000T.
+
+Use the optional lookup to represent an absent phandle with NULL and
+propagate genuine lookup errors, including deferred probes. Skip the
+legacy boot mapping only when a valid syscon regmap is present. The
+existing read/write helpers then use the mapped legacy region safely.
+
+--- a/drivers/net/ethernet/mediatek/mtk_wed_mcu.c
++++ b/drivers/net/ethernet/mediatek/mtk_wed_mcu.c
+@@ -356,16 +356,18 @@
+ 	const char *fw_name;
+ 	u32 val, boot_cr;
+ 	int ret, i;
+ 
+ 	mtk_wed_mcu_load_ilm(wo);
+-	wo->boot_regmap = syscon_regmap_lookup_by_phandle(wo->hw->node,
+-							  "mediatek,wo-cpuboot");
++	wo->boot_regmap = syscon_regmap_lookup_by_phandle_optional(
++		wo->hw->node, "mediatek,wo-cpuboot");
++	if (IS_ERR(wo->boot_regmap))
++		return PTR_ERR(wo->boot_regmap);
+ 
+ 	/* load firmware region metadata */
+ 	for (i = 0; i < ARRAY_SIZE(mem_region); i++) {
+-		if (i == MTK_WED_WO_REGION_BOOT && !IS_ERR(wo->boot_regmap))
++		if (i == MTK_WED_WO_REGION_BOOT && wo->boot_regmap)
+ 			continue;
+ 
+ 		if (mem_region[i].addr)
+ 			continue;
+ 

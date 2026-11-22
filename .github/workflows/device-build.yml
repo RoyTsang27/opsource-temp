@@ -122,6 +122,15 @@ jobs:
         run: make download -j4 V=s 2>&1 | tee logs/download.log
       - name: Prepare Linux ${{ needs.plan.outputs.kernel }}
         run: make target/linux/prepare -j2 V=s 2>&1 | tee logs/kernel-prepare.log
+      - name: Check WED CPU-boot fallback
+        if: matrix.target == 'mediatek'
+        env:
+          SUBTARGET: ${{ matrix.subtarget }}
+        run: |
+          kernels=(build_dir/target-*/linux-mediatek_"$SUBTARGET"/linux-[0-9]*)
+          test "${#kernels[@]}" -eq 1
+          WED_TEST_KERNEL="${kernels[0]}" \
+            python3 -m unittest discover -s tests -p test_wed_boot.py -v
       - name: Compile firmware
         run: make -j"$(nproc)" V=s 2>&1 | tee logs/build.log
       - name: Package firmware and source provenance
