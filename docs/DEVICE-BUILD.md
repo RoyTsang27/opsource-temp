@@ -86,7 +86,7 @@ Explicit Airoha optical-device choices, including `XG-040G-MD(Pon)`, are
 documented in [Airoha PON profiles](AIROHA-PON-PROFILES.md). They inherit their
 board's drivers and flash layout and select the complete PON application stack.
 
-## AX3000T WED boot panic correction
+## AX3000T WED boot and startup defaults
 
 The 2026-11-22 TTL log reached OpenWrt userspace, then repeatedly panicked in
 `regmap_write → wo_w32 → mtk_wed_mcu_init` while loading `mt7915e`. Its register
@@ -97,7 +97,7 @@ also supports the newer `mediatek,wo-cpuboot` syscon reference.
 Patch `947-net-ethernet-mtk_wed-fix-legacy-cpuboot-fallback.patch` uses the
 optional syscon lookup: an absent reference selects the legacy mapped region,
 and actual lookup errors return before firmware loading or boot-register
-access. A valid syscon skips the legacy region. WED stays enabled.
+access. A valid syscon skips the legacy region.
 
 Seven native regression cases compile the actual prepared kernel's firmware
 loader, register-access helpers and optional syscon lookup against simulated
@@ -114,6 +114,20 @@ WED_TEST_KERNEL=build_dir/target-aarch64_cortex-a53_musl/linux-mediatek_filogic/
 The WED patches apply to Linux 7.3.5 without fuzz. These checks do not perform
 a firmware build or a physical boot test. Rebuild the AX3000T firmware from
 the corrected source; already generated images do not contain this fix.
+
+The 2026-11-23 follow-up log passes that initialization, starts both AP
+interfaces and reports a WA firmware transmit failure. It ends at 22.55 seconds
+with the LAN link up, without a reset or kernel panic. To bypass the suspect
+offload path during startup, `PACKAGE_MT7915_WED` defaults off for both AX3000T
+layouts, including multiple-device selections. Other Filogic and MT7622
+profiles keep their existing default. The option can be enabled explicitly in
+menuconfig. The mt76 package release and configuration dependencies ensure
+that changing this option regenerates the module loader parameters.
+
+This is a targeted stability mitigation; the follow-up capture does not
+establish the actual reset cause. See [AX3000T startup troubleshooting](AX3000T-BOOT.md)
+for the matching U-Boot-layout profile, an existing-device workaround and
+the evidence needed if rebooting continues.
 
 ## Corrections required for TR1200
 

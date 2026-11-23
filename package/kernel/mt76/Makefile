@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mt76
-PKG_RELEASE=3
+PKG_RELEASE=4
 
 PKG_LICENSE:=BSD-3-Clause-Clear
 PKG_LICENSE_FILES:=
@@ -25,6 +25,7 @@ PKG_CONFIG_DEPENDS += \
 	CONFIG_PACKAGE_kmod-mt76x2 \
 	CONFIG_PACKAGE_kmod-mt76x2u \
 	CONFIG_PACKAGE_kmod-mt7603 \
+	CONFIG_PACKAGE_MT7915_WED \
 	CONFIG_PACKAGE_CFG80211_TESTMODE
 
 STAMP_CONFIGURED_DEPENDS := $(STAGING_DIR)/usr/include/mac80211-backport/backport/autoconf.h
@@ -239,8 +240,26 @@ define KernelPackage/mt7915e
   FILES:= $(PKG_BUILD_DIR)/mt7915/mt7915e.ko
   AUTOLOAD:=$(call AutoProbe,mt7915e)
 ifneq ($(CONFIG_TARGET_mediatek_filogic)$(CONFIG_TARGET_mediatek_mt7622),)
-  MODPARAMS.mt7915e:=wed_enable=Y
+  MODPARAMS.mt7915e:=wed_enable=$(if $(CONFIG_PACKAGE_MT7915_WED),Y,N)
 endif
+endef
+
+define KernelPackage/mt7915e/config
+	config PACKAGE_MT7915_WED
+		bool "Enable MediaTek WED wireless acceleration"
+		depends on PACKAGE_kmod-mt7915e
+		depends on TARGET_mediatek_filogic || TARGET_mediatek_mt7622
+		default n if TARGET_mediatek_filogic_DEVICE_xiaomi_mi-router-ax3000t
+		default n if TARGET_mediatek_filogic_DEVICE_xiaomi_mi-router-ax3000t-ubootmod
+		default n if TARGET_DEVICE_mediatek_filogic_DEVICE_xiaomi_mi-router-ax3000t
+		default n if TARGET_DEVICE_mediatek_filogic_DEVICE_xiaomi_mi-router-ax3000t-ubootmod
+		default y
+		help
+		  Accelerate forwarding between Ethernet and wireless interfaces.
+		  This defaults off for AX3000T profiles after firmware transmit
+		  failures during access-point startup. Wi-Fi remains available
+		  through the software path. Enable this option to test WED again.
+
 endef
 
 define KernelPackage/mt7916-firmware
