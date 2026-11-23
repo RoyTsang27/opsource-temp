@@ -16,9 +16,9 @@ Signed-off-by: Frank Li <Frank.Li@nxp.com>
 
 --- a/arch/arm64/boot/dts/freescale/imx8mp-kontron-dl.dtso
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-kontron-dl.dtso
-@@ -7,6 +7,7 @@
- /plugin/;
+@@ -8,6 +8,7 @@
  
+ #include <dt-bindings/clock/imx8mp-clock.h>
  #include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/interrupt-controller/irq.h>
  #include "imx8mp-pinfunc.h"

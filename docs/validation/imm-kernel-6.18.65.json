@@ -1,0 +1,422 @@
+{
+  "date": "2026-11-24",
+  "timezone": "Asia/Shanghai",
+  "repository": "https://github.com/RoyTsang27/op-source",
+  "branch": "imm",
+  "baseline_commit": "9b787fb32d997c5eaf46a2470b835e4cf243f089",
+  "upstream_snapshot": "6003f6b8c3278a27712f4fdaaa8d1e5faa2b1f54",
+  "kernel": {
+    "previous": "6.18.64",
+    "version": "6.18.65",
+    "archive": "linux-6.18.65.tar.xz",
+    "archive_sha256": "c92606f956f09dc50b5a0e2af9e86763fce27ada1647de97f8d1ac8cfc95801d",
+    "archive_checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc",
+    "full_archive_downloaded_for_local_checks": false,
+    "source_preparation": {
+      "method": "Verified Linux 6.18.64 archive plus verified official incremental 6.18.64-to-6.18.65 patch",
+      "baseline_archive": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.64.tar.xz",
+      "baseline_archive_sha256": "020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562",
+      "incremental_patch": "https://cdn.kernel.org/pub/linux/kernel/v6.x/incr/patch-6.18.64-65.xz",
+      "incremental_patch_sha256": "e2e3f71c6931b4fb7375c8fd42b5e8b140345a46ba2c27af93cf8b8481cc4524",
+      "checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v6.x/incr/sha256sums.asc",
+      "incremental_fuzz": 0,
+      "incremental_rejects": 0,
+      "extracted_original_files": 5120,
+      "prepared_makefile_version": "6.18.65"
+    },
+    "changelog_sha256": "f6c0211987bd7f431592a0974192119a4455d741bd9e2352c7954fd687021779"
+  },
+  "kernel_patches": {
+    "method": "Original kernel files prepared using the verified 6.18.64 archive plus verified official incremental patch; generic/platform overlays; backport, pending, hack and platform patch order; GNU patch 2.8.1. A single generated source tree is restored between targets to limit temporary disk use.",
+    "fuzz": 0,
+    "rejects": 0,
+    "stacks": 46,
+    "selection": "generic plus all 45 target Makefiles selecting KERNEL_PATCHVER 6.18, including four targets without platform patch directories",
+    "patch_applications": 28982,
+    "targets": {
+      "generic": {
+        "patches": 577,
+        "failure": null
+      },
+      "airoha": {
+        "patches": 741,
+        "failure": null
+      },
+      "apm821xx": {
+        "patches": 585,
+        "failure": null
+      },
+      "armsr": {
+        "patches": 580,
+        "failure": null
+      },
+      "at91": {
+        "patches": 577,
+        "failure": null
+      },
+      "ath79": {
+        "patches": 613,
+        "failure": null
+      },
+      "bcm27xx": {
+        "patches": 1470,
+        "failure": null
+      },
+      "bcm47xx": {
+        "patches": 592,
+        "failure": null
+      },
+      "bcm4908": {
+        "patches": 580,
+        "failure": null
+      },
+      "bcm53xx": {
+        "patches": 624,
+        "failure": null
+      },
+      "bmips": {
+        "patches": 591,
+        "failure": null
+      },
+      "d1": {
+        "patches": 579,
+        "failure": null
+      },
+      "econet": {
+        "patches": 638,
+        "failure": null
+      },
+      "gemini": {
+        "patches": 595,
+        "failure": null
+      },
+      "imx": {
+        "patches": 586,
+        "failure": null
+      },
+      "ipq40xx": {
+        "patches": 602,
+        "failure": null
+      },
+      "ipq806x": {
+        "patches": 603,
+        "failure": null
+      },
+      "ixp4xx": {
+        "patches": 580,
+        "failure": null
+      },
+      "kirkwood": {
+        "patches": 600,
+        "failure": null
+      },
+      "lantiq": {
+        "patches": 598,
+        "failure": null
+      },
+      "layerscape": {
+        "patches": 589,
+        "failure": null
+      },
+      "loongarch64": {
+        "patches": 577,
+        "failure": null
+      },
+      "malta": {
+        "patches": 577,
+        "failure": null
+      },
+      "mediatek": {
+        "patches": 721,
+        "failure": null
+      },
+      "microchipsw": {
+        "patches": 602,
+        "failure": null
+      },
+      "mpc85xx": {
+        "patches": 600,
+        "failure": null
+      },
+      "mvebu": {
+        "patches": 620,
+        "failure": null
+      },
+      "mxs": {
+        "patches": 577,
+        "failure": null
+      },
+      "octeon": {
+        "patches": 592,
+        "failure": null
+      },
+      "omap": {
+        "patches": 578,
+        "failure": null
+      },
+      "pistachio": {
+        "patches": 590,
+        "failure": null
+      },
+      "qoriq": {
+        "patches": 578,
+        "failure": null
+      },
+      "qualcommax": {
+        "patches": 675,
+        "failure": null
+      },
+      "qualcommbe": {
+        "patches": 649,
+        "failure": null
+      },
+      "ramips": {
+        "patches": 623,
+        "failure": null
+      },
+      "realtek": {
+        "patches": 695,
+        "failure": null
+      },
+      "rockchip": {
+        "patches": 872,
+        "failure": null
+      },
+      "sifiveu": {
+        "patches": 578,
+        "failure": null
+      },
+      "siflower": {
+        "patches": 593,
+        "failure": null
+      },
+      "starfive": {
+        "patches": 633,
+        "failure": null
+      },
+      "stm32": {
+        "patches": 580,
+        "failure": null
+      },
+      "sunxi": {
+        "patches": 656,
+        "failure": null
+      },
+      "tegra": {
+        "patches": 578,
+        "failure": null
+      },
+      "uml": {
+        "patches": 578,
+        "failure": null
+      },
+      "x86": {
+        "patches": 581,
+        "failure": null
+      },
+      "zynq": {
+        "patches": 579,
+        "failure": null
+      }
+    }
+  },
+  "mac80211": {
+    "kernel": "6.18.65",
+    "backports": "7.2",
+    "sha256": "6ec76a4cb0988b5382b2fc5053610a56ada90b8ef6a5a4f2807cd433badb9454",
+    "patches": 324,
+    "fuzz": 0,
+    "rejects": 0,
+    "socket_wrapper_syntax_probes": [
+      "aarch64-linux-gnu",
+      "mipsel-linux-gnu"
+    ],
+    "scope": "Patch applicability and focused wrapper syntax; no full driver compilation."
+  },
+  "compiler_probes": {
+    "mediatek": {
+      "native_header": "6.18.65 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "ramips": {
+      "native_header": "6.18.65 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "mipsel-linux-gnu"
+    },
+    "airoha": {
+      "native_header": "6.18.65 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "rockchip": {
+      "driver": "6.18.65 after complete rockchip patch stack",
+      "otp_execution": "passed byte/16-bit/32-bit reads and clock/allocation/read failures; locks and clocks released"
+    }
+  },
+  "bridge_probes": {
+    "source": "actual fully patched Linux 6.18.65 generic bridge header",
+    "host_execution": "passed",
+    "cross_syntax": [
+      "aarch64-linux-gnu",
+      "mipsel-linux-gnu"
+    ],
+    "independent_controls": [
+      "BR_NEIGH_FORWARD_GRAT_BIT=24",
+      "BR_BPDU_FILTER_BIT=25"
+    ],
+    "scope": "Extracted declarations and minimal include stubs, not a full bridge build."
+  },
+  "rockchip_usbdp_probes": {
+    "source": "actual rk_udphy_update_power_state after complete Linux 6.18.65 Rockchip patch stack",
+    "host_execution": "passed seven scenarios: setup, reinit, setup/init/PRE_RESET failures, poweroff and high-speed-only USB",
+    "checks": [
+      "paired PRE/POST reset notifications",
+      "state retained on failure",
+      "reinit preserves clocks",
+      "USB3 delay and high-speed gating retained"
+    ],
+    "scope": "Extracted function with minimal hardware stubs; no full driver build or hardware test."
+  },
+  "removed_backports": {
+    "target/linux/gemini/patches-6.18/0011-v7.4-ARM-dts-gemini-Use-a-level-high-interrupt-for-TVE200.patch": {
+      "upstream_commit": "5bf1bb010712bba28eda926ed453db3cab91381a",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/generic/backport-6.18/500-v6.19-ksmbd-server-avoid-busy-polling-in-accept-loop.patch": {
+      "upstream_commit": "3316a8fc840d82fad5efcf76ad0ea3f76fdca209",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/generic/backport-6.18/504-v7.3-ksmbd-fix-listener-task-lifetime-on-netdev-events.patch": {
+      "upstream_commit": "a506290f59e1c6ce9ac0a13158640bb8fee93471",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/generic/backport-6.18/706-04-v7.3-netfilter-flowtable-use-the-vlan-id-not-the-full-tci.patch": {
+      "upstream_commit": "c203ecf905745d979de5df28fa657121f2e9342d",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/generic/hack-6.18/940-kbuild-extract-modules-builtin-modinfo-from-vmlinux_o.patch": {
+      "verification": "Replaced by stable module metadata retention and extraction; native rules audited separately."
+    },
+    "target/linux/generic/pending-6.18/880-leds-st1202-add-hardware-accelerated-blink-support.patch": {
+      "upstream_commit": "35cbd34a6a05cc53882b1b7ca6f338a93ab29fcb",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/mvebu/patches-6.18/303-mvebu-armada-38x-errata.patch": {
+      "upstream_commit": "0000000000000000000000000000000000000000",
+      "verification": "Exact reverse application to native Linux 6.18.65 source with zero fuzz passed."
+    },
+    "target/linux/rockchip/patches-6.18/039-04-v7.4-phy-rockchip-usbdp-Update-mode_change-after-error-handlin.patch": {
+      "upstream_commit": "3f2181226d7708349c69cd4a4b21372a8049576b",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-05-v7.4-phy-rockchip-usbdp-Do-not-lose-USB3-PHY-status.patch": {
+      "upstream_commit": "b322403c294b67fd6bcf6719b4fc9f8a9e313129",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-06-v7.4-phy-rockchip-usbdp-Fix-devm_clk_bulk_get_all-check.patch": {
+      "upstream_commit": "a2ddfc60a7d3ba0f571f037371b261642f8ed208",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-07-v7.4-phy-rockchip-usbdp-Handle-missing-clock-names-DT-property.patch": {
+      "upstream_commit": "17cd5e026a6e806b811f915b8e02a8b9d14f6f41",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-08-v7.4-phy-rockchip-usbdp-Drop-seamless-DP-takeover.patch": {
+      "upstream_commit": "1ab628ce8f3ab694c28dcfcd5b1eec0cf9f499b8",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-12-v7.4-phy-rockchip-usbdp-Add-missing-mode_change-update.patch": {
+      "upstream_commit": "5def5d61ea5ac6f391364f6fdcff13a27a52026e",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-13-v7.4-phy-rockchip-usbdp-Support-single-lane-DP.patch": {
+      "upstream_commit": "ae9b60ef1d626d1a4fdf8854f66d58f6ac56e37d",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-14-v7.4-phy-rockchip-usbdp-Limit-DP-lane-count-to-muxed-lanes.patch": {
+      "upstream_commit": "443997ca8d797375ff35e8f3ad3828799e88f71b",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-19-v7.4-phy-rockchip-usbdp-Drop-DP-HPD-handling.patch": {
+      "upstream_commit": "4fd2c13cbb11f5483a43cc789cb8de1c3bd23238",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-20-v7.4-phy-rockchip-usbdp-Rename-mode_change-to-phy_needs_reinit.patch": {
+      "upstream_commit": "fbce9cc28cadb24026a6c061819d42e50d3bfea0",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-23-v7.4-phy-rockchip-usbdp-Properly-handle-TYPEC_STATE_SAFE-and.patch": {
+      "upstream_commit": "b1ca8de219ae6e4d9eec22acfbe4357d8addd94c",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-25-v7.4-phy-rockchip-usbdp-Hold-mutex-in-DP-PHY-configure.patch": {
+      "upstream_commit": "619233ce6b2329529c9f0ff9682d6e22d160ebd6",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-27-v7.4-phy-rockchip-usbdp-Avoid-xHCI-SErrors.patch": {
+      "upstream_commit": "cf3aa34e6f0798544c26ad93a6c3c2231ab09738",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-28-v7.4-phy-rockchip-usbdp-Handle-rk_udphy_reset_deassert-errors.patch": {
+      "upstream_commit": "35101e2f49c04bf1cfc69b8a0d3f85c742369ccc",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/039-29-v7.4-phy-rockchip-usbdp-Only-enable-USB3-when-not-in-high-spee.patch": {
+      "upstream_commit": "fbbf6c85b08008bf68ef49931175edeaa36ba82f",
+      "verification": "Exact upstream commit recorded in the checksum-verified Linux 6.18.65 changelog."
+    },
+    "target/linux/rockchip/patches-6.18/109-phy-rockchip-naneng-combphy-Fix-TX-detect-RX.patch": {
+      "upstream_commit": null,
+      "verification": "Exact reverse application to native Linux 6.18.65 source with zero fuzz passed."
+    }
+  },
+  "changed_source_files_sha256": {
+    "README.md": "728da706526a716a59a338c8be79ff0397945a2605b4c166bb797f0ba5bc6fa5",
+    "docs/IMM-SOURCE.md": "f6df0fb366e25ce642462976aa3c6d652f2088695151a3f8b31a9c59accb4f05",
+    "target/linux/bcm27xx/patches-6.18/0020-BCM2708-Add-core-Device-Tree-support.patch": "9f97d087b798bd92337dda344810e56659f364d8230d45d217f7e8fe89d55df8",
+    "target/linux/bcm27xx/patches-6.18/0050-Main-bcm2708-bcm2709-linux-port.patch": "412595ae3e7fa102606b5e8ee1e1944180296d224cb23f07889a354fc78d5725",
+    "target/linux/bcm27xx/patches-6.18/0110-bcmgenet-Better-coalescing-parameter-defaults.patch": "649e5598a4d3e2c5161ef40d0fb5f4b8f3fce2092286abd267632c8b69d26341",
+    "target/linux/bcm27xx/patches-6.18/0302-dmaengine-dw-axi-dmac-Fixes-for-RP1.patch": "7b9d45332460c8c45eebdd78a070698f87bcdfd862790c0713170aa4f9cf9438",
+    "target/linux/bcm27xx/patches-6.18/0436-drm-vc4-Block-swiotlb-bounce-buffers-being-imported-.patch": "333b5a4344270a44806b214c27c265b8d7ad32df68ce0d12a93dc1baf2f07565",
+    "target/linux/bcm27xx/patches-6.18/0465-drm-vc4-fkms-Add-firmware-kms-mode.patch": "da7d7ce034d5b52b5e9d1aed717cf081edb9d57cb7f70ea516fc7092f9c21ea1",
+    "target/linux/bcm27xx/patches-6.18/0579-dmaengine-dw-axi-dmac-Per-channel-burst-limits.patch": "ef4d77c11014f70db87d72dd8c474cffec6c98bdf1c31fc65493ec253f33d7bd",
+    "target/linux/bcm27xx/patches-6.18/0766-arm64-dts-Revert-to-upstream.patch": "a2e22d345e040bc4e8869facb585c159e83abdef6a57ff780f5c10fed1b58a95",
+    "target/linux/bcm27xx/patches-6.18/0769-Revert-arm64-dts-Revert-to-upstream.patch": "6c6f493fd0eb82a308b91ca354d65d22f162fa945895c3ae58ca7d5acce2de2f",
+    "target/linux/econet/patches-6.18/101-econet-timer-add-en7528-support.patch": "49fe98e8ffce55108bf663461d29a7c3ba7e0299b11525b54385e2ab814a3d5e",
+    "target/linux/gemini/patches-6.18/0011-v7.4-ARM-dts-gemini-Use-a-level-high-interrupt-for-TVE200.patch": null,
+    "target/linux/generic/backport-6.18/500-v6.19-ksmbd-server-avoid-busy-polling-in-accept-loop.patch": null,
+    "target/linux/generic/backport-6.18/504-v7.3-ksmbd-fix-listener-task-lifetime-on-netdev-events.patch": null,
+    "target/linux/generic/backport-6.18/706-04-v7.3-netfilter-flowtable-use-the-vlan-id-not-the-full-tci.patch": null,
+    "target/linux/generic/hack-6.18/940-kbuild-extract-modules-builtin-modinfo-from-vmlinux_o.patch": null,
+    "target/linux/generic/kernel-6.18": "ef9c5960c0851aa9f4fb47fd64724c5a4d9ab0db7c0ac8088275d099a8644907",
+    "target/linux/generic/pending-6.18/710-bridge-add-knob-for-filtering-rx-tx-BPDU-pack.patch": "123c8aff9b094d52eb83fc504162a0ce87a998142c9a8dee4b9f570a49c5fcb1",
+    "target/linux/generic/pending-6.18/880-leds-st1202-add-hardware-accelerated-blink-support.patch": null,
+    "target/linux/imx/patches-6.18/518-v7.1-arm64-dts-imx8mp-kontron-Use-GPIO-IRQ-defines-in-DL-devicetree.patch": "470eaede6eab18e68c72337a89e158d170f9ea08f78915c28c6905f848ca7dca",
+    "target/linux/mvebu/patches-6.18/303-mvebu-armada-38x-errata.patch": null,
+    "target/linux/rockchip/patches-6.18/039-04-v7.4-phy-rockchip-usbdp-Update-mode_change-after-error-handlin.patch": null,
+    "target/linux/rockchip/patches-6.18/039-05-v7.4-phy-rockchip-usbdp-Do-not-lose-USB3-PHY-status.patch": null,
+    "target/linux/rockchip/patches-6.18/039-06-v7.4-phy-rockchip-usbdp-Fix-devm_clk_bulk_get_all-check.patch": null,
+    "target/linux/rockchip/patches-6.18/039-07-v7.4-phy-rockchip-usbdp-Handle-missing-clock-names-DT-property.patch": null,
+    "target/linux/rockchip/patches-6.18/039-08-v7.4-phy-rockchip-usbdp-Drop-seamless-DP-takeover.patch": null,
+    "target/linux/rockchip/patches-6.18/039-09-v7.4-phy-rockchip-usbdp-Keep-clocks-running-on-PHY-re-init.patch": "9f59f87d0b91bcc2f1152c8b30d2df41eec22b9c8c47a9cb8b0443ec4dd4d870",
+    "target/linux/rockchip/patches-6.18/039-12-v7.4-phy-rockchip-usbdp-Add-missing-mode_change-update.patch": null,
+    "target/linux/rockchip/patches-6.18/039-13-v7.4-phy-rockchip-usbdp-Support-single-lane-DP.patch": null,
+    "target/linux/rockchip/patches-6.18/039-14-v7.4-phy-rockchip-usbdp-Limit-DP-lane-count-to-muxed-lanes.patch": null,
+    "target/linux/rockchip/patches-6.18/039-19-v7.4-phy-rockchip-usbdp-Drop-DP-HPD-handling.patch": null,
+    "target/linux/rockchip/patches-6.18/039-20-v7.4-phy-rockchip-usbdp-Rename-mode_change-to-phy_needs_reinit.patch": null,
+    "target/linux/rockchip/patches-6.18/039-22-v7.4-phy-rockchip-usbdp-Factor-out-lane_mux_sel-setup.patch": "e01faff3f63e6f1529c534e6e28fbf23e8e276d547e2f64698cf06e5d408be9a",
+    "target/linux/rockchip/patches-6.18/039-23-v7.4-phy-rockchip-usbdp-Properly-handle-TYPEC_STATE_SAFE-and.patch": null,
+    "target/linux/rockchip/patches-6.18/039-25-v7.4-phy-rockchip-usbdp-Hold-mutex-in-DP-PHY-configure.patch": null,
+    "target/linux/rockchip/patches-6.18/039-27-v7.4-phy-rockchip-usbdp-Avoid-xHCI-SErrors.patch": null,
+    "target/linux/rockchip/patches-6.18/039-28-v7.4-phy-rockchip-usbdp-Handle-rk_udphy_reset_deassert-errors.patch": null,
+    "target/linux/rockchip/patches-6.18/039-29-v7.4-phy-rockchip-usbdp-Only-enable-USB3-when-not-in-high-spee.patch": null,
+    "target/linux/rockchip/patches-6.18/109-phy-rockchip-naneng-combphy-Fix-TX-detect-RX.patch": null,
+    "target/linux/starfive/patches-6.18/1021-riscv-dts-Add-full-JH7100-Starlight-and-VisionFive-s.patch": "2a36604aaf17b0566782b69dc0c43839a0d32452a2eeaf8b3f26397899afadf1"
+  },
+  "limits": [
+    "Full 6.18.65 archive hash is pinned from kernel.org; local source preparation instead verifies the 6.18.64 archive and the official incremental patch.",
+    "Compiler probes use extracted actual declarations/functions with minimal include or hardware stubs; full kernel, wireless module and firmware builds were not performed.",
+    "Hardware boot and upgrade behavior not tested."
+  ]
+}

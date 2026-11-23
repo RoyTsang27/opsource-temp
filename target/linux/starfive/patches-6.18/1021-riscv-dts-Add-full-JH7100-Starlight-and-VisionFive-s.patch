@@ -217,8 +217,8 @@ Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
 +		};
 +	};
 +
- 	pwm_pins: pwm-0 {
- 		pwm-pins {
+ 	pwm0_pins: pwm0-0 {
+ 		pwm0-pins {
  			pinmux = <GPIOMUX(7,
 @@ -289,6 +372,39 @@
  		};

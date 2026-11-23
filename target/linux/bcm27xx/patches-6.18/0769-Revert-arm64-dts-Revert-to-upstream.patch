@@ -95,10 +95,11 @@ This reverts commit 5c635c793591bb06bc51c4ac464bde529382ab43.
  		gicv2: interrupt-controller@7fff9000 {
  			compatible = "arm,gic-400";
  			reg = <0x7fff9000 0x1000>,
-@@ -674,5 +610,6 @@
+@@ -674,6 +610,7 @@
  		interrupt-parent = <&disp_intr>;
  		interrupts = <2>, <9>, <16>;
  		interrupt-names = "ch0-eof", "ch1-eof", "ch2-eof";
 +		iommus = <&iommu4>;
+ 		status = "disabled";
  	};
  };

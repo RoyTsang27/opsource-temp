@@ -92,14 +92,14 @@ Signed-off-by: Vinod Koul <vkoul@kernel.org>
  }
  
  static int rk_udphy_orien_sw_set(struct typec_switch_dev *sw,
-@@ -1269,7 +1297,6 @@ static int rk_udphy_typec_mux_set(struct
- 				  struct typec_mux_state *state)
+@@ -1300,7 +1336,6 @@ static int rk_udphy_typec_mux_set(struct
  {
  	struct rk_udphy *udphy = typec_mux_get_drvdata(mux);
 -	u8 mode;
  
- 	/*
- 	 * Ignore mux events not involving DP AltMode, because
+ 	/* Ignore mux events not involving USB or DP */
+ 	if (!rk_udphy_is_supported_mode(state))
+ 		return 0;
 @@ -1281,38 +1308,10 @@ static int rk_udphy_typec_mux_set(struct
  
  	mutex_lock(&udphy->mutex);

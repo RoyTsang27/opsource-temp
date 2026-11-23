@@ -4,7 +4,7 @@
 
 This is the independent ImmortalWrt source branch **`imm`** of
 [`RoyTsang27/op-source`](https://github.com/RoyTsang27/op-source/tree/imm),
-based on official ImmortalWrt master with **Linux 6.18.64**.
+based on official ImmortalWrt master with **Linux 6.18.65**.
 See [source provenance, kernel changes and build instructions](docs/IMM-SOURCE.md).
 
 ImmortalWrt is a fork of [OpenWrt](https://openwrt.org), with more packages ported, more devices supported, default optimized profiles and localization modifications for mainland China users.<br/>

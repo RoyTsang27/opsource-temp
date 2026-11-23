@@ -171,9 +171,9 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
  		drm_WARN_ON(drm, vc4_bo_debugfs_init(minor));
 --- a/drivers/gpu/drm/vc4/vc4_drv.c
 +++ b/drivers/gpu/drm/vc4/vc4_drv.c
-@@ -300,6 +300,18 @@ static const struct of_device_id vc4_dma
- 	{}
- };
+@@ -287,6 +287,18 @@ static void vc4_component_unbind_all(void
+ 	component_unbind_all(vc4->dev, &vc4->base);
+ }
  
 +/*
 + * we need this helper function for determining presence of fkms

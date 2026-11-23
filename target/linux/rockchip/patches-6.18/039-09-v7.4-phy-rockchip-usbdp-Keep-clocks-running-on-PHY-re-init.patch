@@ -23,13 +23,13 @@ Signed-off-by: Vinod Koul <vkoul@kernel.org>
 
 --- a/drivers/phy/rockchip/phy-rockchip-usbdp.c
 +++ b/drivers/phy/rockchip/phy-rockchip-usbdp.c
-@@ -987,8 +987,7 @@ static int rk_udphy_power_on(struct rk_u
- 		if (udphy->mode == UDPHY_MODE_DP)
- 			rk_udphy_u3_port_disable(udphy, true);
+@@ -981,8 +981,7 @@
+ 		rk_udphy_u3_port_disable(udphy, true);
+ 		udelay(10);
  
 -		rk_udphy_disable(udphy);
 -		ret = rk_udphy_setup(udphy);
 +		ret = rk_udphy_init(udphy);
  		if (ret)
  			return ret;
- 		udphy->mode_change = false;
+ 
