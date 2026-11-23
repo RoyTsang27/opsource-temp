@@ -25,9 +25,10 @@ The input archive SHA-256 values are:
 | --- | --- |
 | linux-6.18.63.tar.xz | `81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71` |
 | linux-7.3.4.tar.xz (feature inventory) | `b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f` |
-| linux-7.3.5.tar.xz (current kernel) | `8f293f83d54f0b7b9be56863ebc5e4ea79d73e530b4ae55c572be97ef39f0990` |
+| linux-7.3.5.tar.xz (previous kernel) | `8f293f83d54f0b7b9be56863ebc5e4ea79d73e530b4ae55c572be97ef39f0990` |
+| linux-7.3.6.tar.xz (current kernel) | `8183d475a76a0faffa92d6cd500af421f589dfd0300a0f1060bb875e11d45723` |
 
-Linux 7.3.5 retains these configuration choices. Its stable fixes do not
+Linux 7.3.6 retains these configuration choices. Its stable fixes do not
 require a new router tuning policy. Airoha ARM64 selects the OpenWrt
 `MTD_OWRT_VIRT_CONCAT` driver for its existing `mtd-concat` device trees,
 while the separate native `MTD_VIRT_CONCAT` driver stays disabled.
@@ -46,7 +47,7 @@ the actual configuration and runtime defaults.
 | Multi-generation LRU | Retain enabled | Retain enabled | Keep the memory-reclaim improvements supplied by the newer kernel. |
 | Default queue discipline | Retain FQ-CoDel | Retain FQ-CoDel | General default without inventing WAN bandwidth or shaping parameters. |
 | TCP congestion control | Retain CUBIC | Retain CUBIC | Applies to router TCP sockets; changing this does not change clients' forwarded TCP congestion control. |
-| MediaTek Wi-Fi acceleration | Retain mt76 and WED support | Retain device-specific mt76 drivers | Existing device defaults already select the applicable driver and firmware. |
+| MediaTek Wi-Fi acceleration | Retain mt76; WED is opt-in on AX3000T and enabled by default on the other listed Filogic devices | Retain device-specific mt76 drivers | AX3000T bypasses the suspect WED transmit path during AP startup; profiles select their applicable driver and firmware. |
 | Partitioned kmalloc caches | Explicitly disabled | Explicitly disabled | Avoid the additional cache copies and memory overhead in the default router image. |
 | New MT7628 DSA driver | Disabled | Explicitly disabled | The TR1200 device tree and network setup still use the existing swconfig driver. A DSA conversion requires a separate board migration. |
 

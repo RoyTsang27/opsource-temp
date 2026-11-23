@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-24",
+  "kernel": "7.3.6",
+  "kernel_archive_sha256": "8183d475a76a0faffa92d6cd500af421f589dfd0300a0f1060bb875e11d45723",
+  "checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v7.x/sha256sums.asc",
+  "source_verification": {
+    "method": "Reconstruct patch inputs from the checksum-verified Linux 7.3.5 archive and the checksum-verified official incremental update",
+    "base_archive_sha256": "8f293f83d54f0b7b9be56863ebc5e4ea79d73e530b4ae55c572be97ef39f0990",
+    "incremental_update": "https://cdn.kernel.org/pub/linux/kernel/v7.x/incr/patch-7.3.5-6.xz",
+    "incremental_sha256": "f9738464f487bdbb1e19b1a1ab41f8071d4b0ceed51fe886631c3d5e40234de5",
+    "incremental_checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v7.x/incr/sha256sums.asc",
+    "updated_patch_inputs": 44,
+    "git_blob_hashes_verified": 44,
+    "full_7_3_6_archive_downloaded": false
+  },
+  "patch_stacks": [
+    {
+      "target": "airoha",
+      "status": "passed",
+      "generic_patches": 269,
+      "target_patches": 60
+    },
+    {
+      "target": "mediatek",
+      "status": "passed",
+      "generic_patches": 269,
+      "target_patches": 117
+    },
+    {
+      "target": "ramips",
+      "status": "passed",
+      "generic_patches": 269,
+      "target_patches": 41
+    }
+  ],
+  "patch_application_fuzz": 0,
+  "target_versions": [
+    {
+      "target": "mediatek/filogic",
+      "kernel": "7.3.6"
+    },
+    {
+      "target": "ramips/mt76x8",
+      "kernel": "7.3.6"
+    },
+    {
+      "target": "airoha/an7581",
+      "kernel": "7.3.6"
+    },
+    {
+      "target": "airoha/an7583",
+      "kernel": "7.3.6"
+    },
+    {
+      "target": "airoha/en7523",
+      "kernel": "7.3.6"
+    }
+  ],
+  "patch_changes": {
+    "removed": [
+      "generic/pending-7.3/880-leds-st1202-add-hardware-accelerated-blink-support.patch"
+    ],
+    "reason": "ST1202 blink support and follow-up fixes are included upstream",
+    "refreshed": [
+      "generic/hack-7.3/904-debloat_dma_buf.patch",
+      "generic/hack-7.3/940-kbuild-extract-modules-builtin-modinfo-from-vmlinux_o.patch"
+    ]
+  },
+  "focused_tests": {
+    "wed_boot": 7,
+    "kernel_build_compat": 7,
+    "mt7915_wed_defaults": 4,
+    "kernel_defaults": 6,
+    "device_build": 10,
+    "total": 34,
+    "status": "passed"
+  },
+  "prepared_airoha_kernel_invariants": "passed",
+  "limits": [
+    "Source applicability and focused boot/configuration tests only; no full kernel or firmware compilation and no physical boot test.",
+    "The prior optional-package compatibility audit remains scoped to its recorded kernel and feed snapshots."
+  ]
+}

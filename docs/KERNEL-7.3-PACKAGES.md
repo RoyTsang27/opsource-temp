@@ -15,10 +15,17 @@ source/Kbuild paths exist. They do not establish that every optional package
 compiles or works. Full default device builds also exercise external wireless
 packages, userspace dependencies, package installation and image generation.
 
-The current kernel pin is 7.3.5. Its official archive checksum is
-`8f293f83d54f0b7b9be56863ebc5e4ea79d73e530b4ae55c572be97ef39f0990`.
-All generic and target patch stacks were reapplied to that archive without fuzz;
-the Macronix fallback patch was removed because 7.3.5 contains the same fix.
+The current kernel pin is 7.3.6. Its official archive checksum is
+`8183d475a76a0faffa92d6cd500af421f589dfd0300a0f1060bb875e11d45723`.
+The Macronix fallback patch was removed in the previous update because 7.3.5
+contains the same fix.
+For 7.3.6, all generic and MediaTek/MT76x8/Airoha patch stacks apply without
+fuzz. The ST1202 hardware-blink backport is included upstream and is removed
+from the carried stack. The DMA-buffer Kconfig and built-in module metadata
+patches are refreshed against the new source. Verification uses the checked
+7.3.5 archive plus the checksum-verified official incremental update; the
+changed patch inputs also match the upstream Git blob hashes. See
+[the 7.3.6 validation record](validation/kernel-7.3.6.json) for scope and limits.
 
 ## Corrections
 
@@ -187,7 +194,7 @@ trees also compile with the prepared 7.3 bindings and the new flags.
 
 ## Airoha Linux 7.3 port
 
-The Airoha target now selects Linux 7.3.5 for AN7581, AN7583 and EN7523.
+The Airoha target now selects Linux 7.3.6 for AN7581, AN7583 and EN7523.
 The target series contains 60 rebased patches. Backports already included in
 7.3 are omitted; the native QDMA migration, BQL flushing and typed DMA mapping
 implementations are retained. The AN7583 FE port ordering correction is carried

@@ -11,7 +11,7 @@ Interactive configuration prepares the complete standard feed catalog. See
 package choices, and for preserving custom feeds in existing checkouts.
 
 The experimental `test-flight` branch pins `mediatek/filogic` and
-`ramips/mt76x8` and Airoha AN7581/AN7583/EN7523 to Linux 7.3.5. The generic 7.3 configuration and patch stack
+`ramips/mt76x8` and Airoha AN7581/AN7583/EN7523 to Linux 7.3.6. The generic 7.3 configuration and patch stack
 come from [the OpenWrt development
 branch](https://github.com/graysky2/openwrt/tree/30c0d891b6103695e614de575814a67016973cf7).
 The target-specific stacks were rebased from the original 6.18.56 source.
@@ -19,6 +19,10 @@ The 7.3.4 update removes the carried SPI QPIC ECC-context and MT7986 timer
 frequency fixes because both are included in the upstream kernel.
 The 7.3.5 update also removes the carried Macronix MX25L12805D fallback
 parameter fix, which is now included upstream.
+The 7.3.6 update removes the carried ST1202 hardware-blink patch because the
+stable kernel includes that feature and follow-up fixes. The DMA-buffer
+Kconfig and built-in module metadata patches are refreshed for the updated
+upstream source. AX3000T retains its WED opt-in startup default.
 The OpenWrt MTD concatenation option has its own Kconfig symbol to distinguish
 the existing device-tree binding from Linux 7.3's concatenation support.
 
@@ -36,7 +40,7 @@ to their referenced files, compiled all six device trees, and confirmed the
 kernel selection through OpenWrt target metadata. The three default device
 firmwares completed compilation and image checks on 7.3.4. Each workflow run
 records its exact source revision and kernel version; use the corresponding
-7.3.5 build results when selecting current artifacts. Device boot and upgrade
+7.3.6 build results when selecting current artifacts. Device boot and upgrade
 tests require the actual hardware.
 
 ## Imported snapshot
@@ -107,11 +111,11 @@ the unpatched source and passes with the correction. MediaTek device CI runs
 these checks after kernel preparation. To run them separately:
 
 ```sh
-WED_TEST_KERNEL=build_dir/target-aarch64_cortex-a53_musl/linux-mediatek_filogic/linux-7.3.5 \
+WED_TEST_KERNEL=build_dir/target-aarch64_cortex-a53_musl/linux-mediatek_filogic/linux-7.3.6 \
   python3 -m unittest discover -s tests -p test_wed_boot.py -v
 ```
 
-The WED patches apply to Linux 7.3.5 without fuzz. These checks do not perform
+The WED patches apply to Linux 7.3.6 without fuzz. These checks do not perform
 a firmware build or a physical boot test. Rebuild the AX3000T firmware from
 the corrected source; already generated images do not contain this fix.
 
