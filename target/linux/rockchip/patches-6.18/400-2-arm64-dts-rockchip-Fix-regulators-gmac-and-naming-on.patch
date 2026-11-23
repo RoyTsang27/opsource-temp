@@ -51,12 +51,12 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  
  		button-user {
 -			label = "User";
--			linux,code = <BTN_1>;
--			gpios = <&gpio1 RK_PC0 GPIO_ACTIVE_LOW>;
- 			debounce-interval = <50>;
++			debounce-interval = <50>;
 +			gpios = <&gpio1 RK_PC0 GPIO_ACTIVE_LOW>;
 +			label = "User Button";
-+			linux,code = <BTN_1>;
+ 			linux,code = <BTN_1>;
+-			gpios = <&gpio1 RK_PC0 GPIO_ACTIVE_LOW>;
+-			debounce-interval = <50>;
  		};
  	};
  
@@ -83,10 +83,12 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  		regulator-min-microvolt = <1100000>;
  		regulator-max-microvolt = <1100000>;
 -		vin-supply = <&vcc5v0_sys>;
+-	};
+-
 +		regulator-name = "vcc_1v1_nldo_s3";
 +		vin-supply = <&vcc_5v0>;
- 	};
- 
++	};
++
 +	/* SY6280AAC power switch (U3824 in schematics) */
  	vcc_3v3_s0: regulator-vcc-3v3-s0 {
  		compatible = "regulator-fixed";
@@ -95,68 +97,71 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  		gpios = <&gpio4 RK_PB4 GPIO_ACTIVE_HIGH>;
  		pinctrl-names = "default";
  		pinctrl-0 = <&sd_s0_pwr>;
--		regulator-name = "vcc_3v3_sd_s0";
++		regulator-boot-on;
++		regulator-max-microvolt = <3300000>;
++		regulator-min-microvolt = <3300000>;
+ 		regulator-name = "vcc_3v3_sd_s0";
 -		regulator-boot-on;
 -		regulator-max-microvolt = <3000000>;
 -		regulator-min-microvolt = <3000000>;
--		vin-supply = <&vcc_3v3_s3>;
--	};
--
--	vcc_3v3_pcie20: regulator-vcc3v3-pcie20 {
--		compatible = "regulator-fixed";
--		regulator-name = "vcc_3v3_pcie20";
--		regulator-always-on;
- 		regulator-boot-on;
--		regulator-min-microvolt = <3300000>;
- 		regulator-max-microvolt = <3300000>;
-+		regulator-min-microvolt = <3300000>;
-+		regulator-name = "vcc_3v3_sd_s0";
  		vin-supply = <&vcc_3v3_s3>;
  	};
  
+-	vcc_3v3_pcie20: regulator-vcc3v3-pcie20 {
++	/* SY6280AAC power switch (U9539 in schematics) */
++	/* For USB 2.0 Type-A port */
++	vcc_5v0_host_20: regulator-vcc-5v0-host-20 {
+ 		compatible = "regulator-fixed";
+-		regulator-name = "vcc_3v3_pcie20";
+-		regulator-always-on;
+-		regulator-boot-on;
+-		regulator-min-microvolt = <3300000>;
+-		regulator-max-microvolt = <3300000>;
+-		vin-supply = <&vcc_3v3_s3>;
+-	};
+-
 -	vcc5v0_usb: regulator-vcc5v0-usb {
 -		compatible = "regulator-fixed";
 -		regulator-name = "vcc5v0_usb";
 -		regulator-always-on;
 -		regulator-boot-on;
--		regulator-min-microvolt = <5000000>;
--		regulator-max-microvolt = <5000000>;
--		vin-supply = <&vcc5v0_sys>;
--	};
--
--	vcc5v0_usb_otg0: regulator-vcc5v0-usb-otg0 {
-+	/* SY6280AAC power switch (U9539 in schematics) */
-+	/* For USB 2.0 Type-A port */
-+	vcc_5v0_host_20: regulator-vcc-5v0-host-20 {
- 		compatible = "regulator-fixed";
- 		enable-active-high;
--		gpios = <&gpio1 RK_PD2 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
 +		gpios = <&gpio4 RK_PB5 GPIO_ACTIVE_HIGH>;
- 		pinctrl-names = "default";
--		pinctrl-0 = <&typec5v_pwren>;
--		regulator-name = "vcc5v0_usb_otg0";
++		pinctrl-names = "default";
 +		pinctrl-0 = <&usb_host_pwren_h>;
  		regulator-min-microvolt = <5000000>;
  		regulator-max-microvolt = <5000000>;
--		vin-supply = <&vcc5v0_usb>;
+-		vin-supply = <&vcc5v0_sys>;
+-	};
+-
 +		regulator-name = "vcc_5v0_host_20";
 +		vin-supply = <&vcc_5v0>;
- 	};
- 
--	vcc5v0_host_20: regulator-vcc5v0-host-20 {
++	};
++
 +	/* SY6280AAC power switch (U9538 in schematics) */
 +	/* For USB 3.0 Type-A port */
-+	vcc5v0_usb_otg0: regulator-vcc5v0-usb-otg0 {
+ 	vcc5v0_usb_otg0: regulator-vcc5v0-usb-otg0 {
  		compatible = "regulator-fixed";
  		enable-active-high;
--		gpios = <&gpio4 RK_PB5 GPIO_ACTIVE_HIGH>;
-+		gpios = <&gpio1 RK_PD2 GPIO_ACTIVE_HIGH>;
+ 		gpios = <&gpio1 RK_PD2 GPIO_ACTIVE_HIGH>;
  		pinctrl-names = "default";
--		pinctrl-0 = <&vcc5v0_host20_en>;
--		regulator-name = "vcc5v0_host_20";
+-		pinctrl-0 = <&typec5v_pwren>;
+-		regulator-name = "vcc5v0_usb_otg0";
 +		pinctrl-0 = <&typec5v_pwren_h>;
  		regulator-min-microvolt = <5000000>;
  		regulator-max-microvolt = <5000000>;
+-		vin-supply = <&vcc5v0_usb>;
+-	};
+-
+-	vcc5v0_host_20: regulator-vcc5v0-host-20 {
+-		compatible = "regulator-fixed";
+-		enable-active-high;
+-		gpios = <&gpio4 RK_PB5 GPIO_ACTIVE_HIGH>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&vcc5v0_host20_en>;
+-		regulator-name = "vcc5v0_host_20";
+-		regulator-min-microvolt = <5000000>;
+-		regulator-max-microvolt = <5000000>;
 -		vin-supply = <&vcc5v0_usb>;
 +		regulator-name = "vcc5v0_usb_otg0";
 +		vin-supply = <&vcc_5v0>;
@@ -232,16 +237,16 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  		reg = <0x51>;
  		#clock-cells = <0>;
  		clock-output-names = "hym8563";
--		pinctrl-names = "default";
--		pinctrl-0 = <&rtc_int>;
- 		interrupt-parent = <&gpio0>;
- 		interrupts = <RK_PB0 IRQ_TYPE_LEVEL_LOW>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&rtc_int>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <RK_PB0 IRQ_TYPE_LEVEL_LOW>;
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&rtc_int>;
+-		interrupt-parent = <&gpio0>;
+-		interrupts = <RK_PB0 IRQ_TYPE_LEVEL_LOW>;
  		wakeup-source;
  	};
  };
-@@ -343,27 +329,35 @@
+@@ -343,31 +329,35 @@
  	status = "okay";
  };
  
@@ -262,39 +267,31 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  
 +/* RTL8125BG Ethernet */
  &pcie2x1l1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie20x1_1_perstn_m2>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pcie20x1_1_perstn_m2>;
  	reset-gpios = <&gpio1 RK_PA7 GPIO_ACTIVE_HIGH>;
 -	vpcie3v3-supply = <&vcc_3v3_pcie20>;
+-	status = "okay";
+-};
+-
 +	vpcie3v3-supply = <&vcc_3v3_s3>;
- 	status = "okay";
- };
- 
++	status = "okay";
++};
++
 +/* R6C: M.2 M-Key socket */
 +/* R6S: RTL8125BG Ethernet */
  &pcie2x1l2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie20x1_2_perstn_m0>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pcie20x1_2_perstn_m0>;
  	reset-gpios = <&gpio3 RK_PD1 GPIO_ACTIVE_HIGH>;
 -	vpcie3v3-supply = <&vcc_3v3_pcie20>;
  	status = "okay";
  };
  
-@@ -410,24 +404,34 @@
+@@ -429,23 +419,23 @@
+ 			rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_up>;
  		};
- 	};
  
-+	pcie {
-+		pcie20x1_1_perstn_m2: pcie2x1-1-rst {
-+			rockchip,pins = <1 RK_PA7 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		pcie20x1_2_perstn_m0: pcie2x1-2-rst {
-+			rockchip,pins = <3 RK_PD1 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+	};
-+
- 	sdmmc {
 -		sd_s0_pwr: sd-s0-pwr {
 +		sd_s0_pwr: sd-pwr {
  			rockchip,pins = <4 RK_PB4 RK_FUNC_GPIO &pcfg_pull_up>;
@@ -319,29 +316,32 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  			rockchip,pins = <3 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>;
  		};
  	};
-@@ -468,15 +472,19 @@
+@@ -486,15 +476,19 @@
  	status = "okay";
  };
  
 +/* eMMC */
  &sdhci {
  	bus-width = <8>;
--	no-sdio;
 +	mmc-hs200-1_8v;
- 	no-sd;
-+	no-sdio;
++	no-sd;
+ 	no-sdio;
+-	no-sd;
  	non-removable;
 -	mmc-hs200-1_8v;
+-	status = "okay";
+-};
+-
 +	vmmc-supply = <&vcc_3v3_s3>;
 +	vqmmc-supply = <&vcc_1v8_s3>;
- 	status = "okay";
- };
- 
++	status = "okay";
++};
++
 +/* microSD card */
  &sdmmc {
  	bus-width = <4>;
  	cap-sd-highspeed;
-@@ -492,16 +500,15 @@
+@@ -512,16 +506,15 @@
  };
  
  &spi2 {
@@ -352,16 +352,17 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  	pinctrl-names = "default";
  	pinctrl-0 = <&spi2m2_cs0 &spi2m2_pins>;
 -	num-cs = <1>;
-+	status = "okay";
- 
+-
 -	pmic@0 {
++	status = "okay";
++
 +	rk806_single: pmic@0 {
  		compatible = "rockchip,rk806";
 -		spi-max-frequency = <1000000>;
  		reg = <0x0>;
  
  		interrupt-parent = <&gpio0>;
-@@ -511,23 +518,24 @@
+@@ -531,23 +524,24 @@
  		pinctrl-0 = <&pmic_pins>, <&rk806_dvs1_null>,
  			    <&rk806_dvs2_null>, <&rk806_dvs3_null>;
  
@@ -398,15 +399,18 @@ Signed-off-by: Sebastian Kropatsch <seb-dev@mail.de>
  
  		gpio-controller;
  		#gpio-cells = <2>;
-@@ -835,10 +843,11 @@
+@@ -855,10 +849,11 @@
  };
  
  &u2phy2_host {
 -	phy-supply = <&vcc5v0_host_20>;
+-	status = "okay";
+-};
+-
 +	phy-supply = <&vcc_5v0_host_20>;
- 	status = "okay";
- };
- 
++	status = "okay";
++};
++
 +/* Debug UART */
  &uart2 {
  	pinctrl-0 = <&uart2m0_xfer>;

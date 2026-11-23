@@ -10,8 +10,8 @@
 | Customization reference | `tdsafgen1888asd/Device-Build`, branch `main` |
 | Reference commit | `db96277fbc98282751cb1d70b83bc1cd8156eb4d` |
 | Import date | 2026-10-13, Asia/Shanghai |
-| Kernel | Linux 6.18.64 |
-| Kernel archive SHA256 | `020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562` |
+| Kernel | Linux 6.18.65 |
+| Kernel archive SHA256 | `c92606f956f09dc50b5a0e2af9e86763fce27ada1647de97f8d1ac8cfc95801d` |
 
 The source is an independent snapshot of the official OpenWrt tree with the
 listed customizations. Upstream history is available at the recorded base
@@ -21,7 +21,7 @@ The [2026-11-06 upstream security audit](UPSTREAM-SECURITY-2026-11-06.md)
 records the earlier kernel updates and selected package fixes. The
 [Linux 6.18.63 migration kit](../updates/kernel-6.18.63/) covers the earlier
 6.18.63 kernel and mt76 update from an op-source 6.18.60 build directory.
-The current [6.18.64 preflight record](validation/kernel-6.18.64-preflight.json)
+The current [6.18.65 preflight record](validation/kernel-6.18.65-preflight.json)
 records patch compatibility and local regression checks for this source.
 
 ## Device-Build customizations
@@ -365,3 +365,75 @@ make package/kernel/mt76/clean
 make target/linux/prepare -j1 V=s
 make -j2 V=s
 ```
+
+## Linux 6.18.65, 2026-11-24
+
+Update `RoyTsang27/opsource-temp` from main commit
+`82e5038ab8397119446564ffa70734e542be0590` to Linux 6.18.65, retaining the
+2026-11-22 MD/TF tcboot boot fix. The kernel selector and device manifest
+both use the kernel.org archive SHA256
+`c92606f956f09dc50b5a0e2af9e86763fce27ada1647de97f8d1ac8cfc95801d`.
+
+The [official changelog](https://cdn.kernel.org/pub/linux/kernel/v6.x/ChangeLog-6.18.65)
+is dated 2026-11-23 and contains 2,145 change entries plus the release commit
+`4700e3adf3b24b39dd4929e9c6d62811ba3ccea8`. Changes most relevant to routers
+include:
+
+- IPv6 conntrack retains the full next-header offset during fragment
+  reassembly. Previously, offsets above 255 could wrap, making conntrack
+  classify a packet differently from IPv6 local delivery.
+- Flowtable lookup masks VLAN tags to the 12-bit VID. Priority-tagged VLAN
+  traffic can consequently match its offload entry instead of missing it.
+  Bridge forwarding also distinguishes foreign DSA ports when deciding
+  whether VLAN untagging is performed by hardware.
+- TCP rechecks an unaccepted child's state under the BH lock to prevent a
+  double destruction/use-after-free during listener teardown. Conntrack's
+  garbage collector waits for running work during network-namespace cleanup.
+- BPF fixes cover split-BTF bounds, extension-program context limits, object
+  lifetimes, socket-buffer writes and stream buffer accounting.
+- SMB server fixes include listener and interface-list lifetimes, RPC pipe
+  handle validation, allocation accounting and read-only stream creation.
+  The release also includes USB, storage, filesystem and architecture fixes.
+
+OpenWrt builds mac80211 backports and mt76 from separate package sources.
+The Linux changelog's wireless entries do not by themselves replace those
+packages. This update retains the selected package versions and validates
+compatibility with the new kernel interfaces.
+
+Remove six obsolete carried patches: the two ksmbd listener backports,
+ST1202 hardware blinking, the Rockchip PCIe RX-termination workaround,
+the Armada 38x Cortex-A9 errata selection, and
+OpenWrt's earlier `modules.builtin.modinfo` extraction workaround. Linux
+6.18.65 contains the first five implementations and fixes `.modinfo`
+retention/extraction with `KEEP`, non-allocatable metadata and `--dump-section`.
+
+The bridge BPDU-filter patch now uses its own enum bit 25 and atomic flag
+reads. Bit 24 belongs to the new upstream gratuitous-neighbour forwarding
+control, so reusing the previous numeric bit would couple two independent
+settings. Native and AArch64/MIPS compiler probes verify their independence.
+
+Refresh EcoNet, Rockchip and Raspberry Pi patch contexts while retaining
+stable changes: clock reference cleanup, existing PCIe reset pins, default
+disabled display blocks, VC4 component cleanup, bounded DMA descriptor dumps,
+and length-minus-one DMA burst encoding. Broadcom Ethernet coalescing defaults
+are now set through the stable driver's per-ring fields so user-selected
+ethtool values survive ring reinitialization.
+
+The [preflight record](validation/kernel-6.18.65-preflight.json) records the
+kernel patch stacks, compiler probes, device trees, packaging and regression
+results. All 42 generic/platform patch stacks passed with zero fuzz and no
+rejects. Twelve device trees, four tcboot image packaging checks and both
+sysupgrade signatures passed. The regression suite passed 97 tests with two
+expected skips (Linux `/dev/full` and a current-version migration kit).
+Local source preparation uses the previously verified 6.18.64 archive
+and kernel.org's checksum-verified
+[6.18.64-to-6.18.65 incremental patch](https://cdn.kernel.org/pub/linux/kernel/v6.x/incr/patch-6.18.64-65.xz).
+The full 6.18.65 archive download was incomplete; its published SHA256 is used
+for normal OpenWrt downloads, and the local check does not claim to have
+verified that incomplete archive. Both the complete changelog and incremental
+patch match kernel.org's published checksums.
+
+Device-tree and packaging checks cover the owner's AX3000T, XG-040G-MD,
+XG-040G-MF, XG-140G-TF, TR3000 and TR1200 profiles. Factory/sysupgrade tests use
+fixture kernel/rootfs payloads. Full Linux firmware compilation and hardware
+boot remain unverified. Commits use `[skip ci]`; cloud builds are not started.

@@ -85,10 +85,11 @@ Subject: [PATCH] arm64: dts: Revert to upstream
  		gicv2: interrupt-controller@7fff9000 {
  			compatible = "arm,gic-400";
  			reg = <0x7fff9000 0x1000>,
-@@ -619,6 +674,5 @@
+@@ -619,7 +674,6 @@
  		interrupt-parent = <&disp_intr>;
  		interrupts = <2>, <9>, <16>;
  		interrupt-names = "ch0-eof", "ch1-eof", "ch2-eof";
 -		iommus = <&iommu4>;
+ 		status = "disabled";
  	};
  };

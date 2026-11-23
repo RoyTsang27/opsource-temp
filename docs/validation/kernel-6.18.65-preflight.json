@@ -1,0 +1,369 @@
+{
+  "version": "6.18.65",
+  "sha256": "c92606f956f09dc50b5a0e2af9e86763fce27ada1647de97f8d1ac8cfc95801d",
+  "source_preparation": {
+    "method": "Verified Linux 6.18.64 archive plus verified official incremental 6.18.64-to-6.18.65 patch",
+    "baseline_archive": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.64.tar.xz",
+    "baseline_archive_sha256": "020d45510c539972e6f14c5c71566878d3b7ef56fb082b3e09134f2ebaade562",
+    "incremental_patch": "https://cdn.kernel.org/pub/linux/kernel/v6.x/incr/patch-6.18.64-65.xz",
+    "incremental_patch_sha256": "e2e3f71c6931b4fb7375c8fd42b5e8b140345a46ba2c27af93cf8b8481cc4524",
+    "checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v6.x/incr/sha256sums.asc",
+    "incremental_fuzz": 0,
+    "incremental_rejects": 0,
+    "extracted_original_files": 5126,
+    "prepared_makefile_version": "6.18.65"
+  },
+  "targets": {
+    "generic": {
+      "patches": 448,
+      "failure": null
+    },
+    "airoha": {
+      "patches": 590,
+      "failure": null
+    },
+    "apm821xx": {
+      "patches": 454,
+      "failure": null
+    },
+    "armsr": {
+      "patches": 451,
+      "failure": null
+    },
+    "ath79": {
+      "patches": 485,
+      "failure": null
+    },
+    "bcm47xx": {
+      "patches": 463,
+      "failure": null
+    },
+    "bcm53xx": {
+      "patches": 486,
+      "failure": null
+    },
+    "bmips": {
+      "patches": 462,
+      "failure": null
+    },
+    "d1": {
+      "patches": 450,
+      "failure": null
+    },
+    "econet": {
+      "patches": 509,
+      "failure": null
+    },
+    "gemini": {
+      "patches": 466,
+      "failure": null
+    },
+    "ipq40xx": {
+      "patches": 471,
+      "failure": null
+    },
+    "ixp4xx": {
+      "patches": 451,
+      "failure": null
+    },
+    "kirkwood": {
+      "patches": 471,
+      "failure": null
+    },
+    "lantiq": {
+      "patches": 469,
+      "failure": null
+    },
+    "layerscape": {
+      "patches": 457,
+      "failure": null
+    },
+    "loongarch64": {
+      "patches": 448,
+      "failure": null
+    },
+    "malta": {
+      "patches": 448,
+      "failure": null
+    },
+    "mediatek": {
+      "patches": 587,
+      "failure": null
+    },
+    "microchipsw": {
+      "patches": 473,
+      "failure": null
+    },
+    "mpc85xx": {
+      "patches": 466,
+      "failure": null
+    },
+    "mvebu": {
+      "patches": 491,
+      "failure": null
+    },
+    "mxs": {
+      "patches": 448,
+      "failure": null
+    },
+    "octeon": {
+      "patches": 460,
+      "failure": null
+    },
+    "omap": {
+      "patches": 449,
+      "failure": null
+    },
+    "pistachio": {
+      "patches": 461,
+      "failure": null
+    },
+    "qoriq": {
+      "patches": 448,
+      "failure": null
+    },
+    "qualcommax": {
+      "patches": 541,
+      "failure": null
+    },
+    "qualcommbe": {
+      "patches": 515,
+      "failure": null
+    },
+    "ramips": {
+      "patches": 494,
+      "failure": null
+    },
+    "realtek": {
+      "patches": 558,
+      "failure": null
+    },
+    "rockchip": {
+      "patches": 589,
+      "failure": null
+    },
+    "sifiveu": {
+      "patches": 449,
+      "failure": null
+    },
+    "siflower": {
+      "patches": 464,
+      "failure": null
+    },
+    "starfive": {
+      "patches": 504,
+      "failure": null
+    },
+    "stm32": {
+      "patches": 451,
+      "failure": null
+    },
+    "sunxi": {
+      "patches": 471,
+      "failure": null
+    },
+    "tegra": {
+      "patches": 449,
+      "failure": null
+    },
+    "uml": {
+      "patches": 449,
+      "failure": null
+    },
+    "x86": {
+      "patches": 450,
+      "failure": null
+    },
+    "zynq": {
+      "patches": 450,
+      "failure": null
+    },
+    "bcm27xx": {
+      "patches": 1353,
+      "failure": null
+    }
+  },
+  "checked_on": "2026-11-24",
+  "host": "macOS arm64",
+  "repository": "https://github.com/RoyTsang27/opsource-temp",
+  "baseline_commit": "82e5038ab8397119446564ffa70734e542be0590",
+  "release_commit": "4700e3adf3b24b39dd4929e9c6d62811ba3ccea8",
+  "release_date": "2026-11-23",
+  "changelog_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/ChangeLog-6.18.65",
+  "changelog_sha256": "f6c0211987bd7f431592a0974192119a4455d741bd9e2352c7954fd687021779",
+  "changelog_entries_excluding_release": 2145,
+  "archive_checksum_source": "https://cdn.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc",
+  "full_archive_verified_locally": false,
+  "fuzz": 0,
+  "rejects": 0,
+  "patchset_sha256": "9ba6ae2b19e4defc25a844400058b2e16cff91f538b8992d436443554b3d527d",
+  "removed_obsolete_patches": [
+    "target/linux/generic/backport-6.18/500-v6.19-ksmbd-server-avoid-busy-polling-in-accept-loop.patch",
+    "target/linux/generic/backport-6.18/504-v7.3-ksmbd-fix-listener-task-lifetime-on-netdev-events.patch",
+    "target/linux/generic/hack-6.18/940-kbuild-extract-modules-builtin-modinfo-from-vmlinux_o.patch",
+    "target/linux/generic/pending-6.18/880-leds-st1202-add-hardware-accelerated-blink-support.patch",
+    "target/linux/mvebu/patches-6.18/303-mvebu-armada-38x-errata.patch",
+    "target/linux/rockchip/patches-6.18/104-phy-rockchip-naneng-combphy-Fix-TX-detect-RX.patch"
+  ],
+  "refreshed_patches": [
+    "target/linux/bcm27xx/patches-6.18/0020-BCM2708-Add-core-Device-Tree-support.patch",
+    "target/linux/bcm27xx/patches-6.18/0050-Main-bcm2708-bcm2709-linux-port.patch",
+    "target/linux/bcm27xx/patches-6.18/0110-bcmgenet-Better-coalescing-parameter-defaults.patch",
+    "target/linux/bcm27xx/patches-6.18/0302-dmaengine-dw-axi-dmac-Fixes-for-RP1.patch",
+    "target/linux/bcm27xx/patches-6.18/0436-drm-vc4-Block-swiotlb-bounce-buffers-being-imported-.patch",
+    "target/linux/bcm27xx/patches-6.18/0465-drm-vc4-fkms-Add-firmware-kms-mode.patch",
+    "target/linux/bcm27xx/patches-6.18/0579-dmaengine-dw-axi-dmac-Per-channel-burst-limits.patch",
+    "target/linux/bcm27xx/patches-6.18/0766-arm64-dts-Revert-to-upstream.patch",
+    "target/linux/bcm27xx/patches-6.18/0769-Revert-arm64-dts-Revert-to-upstream.patch",
+    "target/linux/econet/patches-6.18/101-econet-timer-add-en7528-support.patch",
+    "target/linux/generic/pending-6.18/710-bridge-add-knob-for-filtering-rx-tx-BPDU-pack.patch",
+    "target/linux/rockchip/patches-6.18/400-2-arm64-dts-rockchip-Fix-regulators-gmac-and-naming-on.patch",
+    "target/linux/starfive/patches-6.18/1021-riscv-dts-Add-full-JH7100-Starlight-and-VisionFive-s.patch"
+  ],
+  "regression": {
+    "run": 99,
+    "passed": 97,
+    "failed": 0,
+    "skipped": 2,
+    "skip_reasons": [
+      "Linux /dev/full unavailable on macOS",
+      "No current-version kernel migration kit"
+    ]
+  },
+  "compiler_probes": {
+    "mediatek": {
+      "native_header": "6.18.65 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "ramips": {
+      "native_header": "6.18.65 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "mipsel-linux-gnu"
+    },
+    "airoha": {
+      "native_header": "6.18.65 after complete patch stack",
+      "host_execution": "passed",
+      "cross_syntax": "aarch64-linux-gnu"
+    },
+    "rockchip": {
+      "driver": "6.18.65 after complete rockchip patch stack",
+      "otp_execution": "passed byte/16-bit/32-bit reads and clock/allocation/read failures; locks and clocks released"
+    }
+  },
+  "bridge_flag_probe": {
+    "source": "fully patched generic Linux 6.18.65 include/linux/if_bridge.h",
+    "bpdu_bit": 25,
+    "gratuitous_neighbour_bit": 24,
+    "host_execution": "passed independent flag toggles",
+    "cross_syntax": [
+      "aarch64-linux-gnu",
+      "mipsel-linux-gnu"
+    ]
+  },
+  "prepared_source_assertions": {
+    "flowtable_masks_vlan_priority_in_both_paths": true,
+    "ipv6_conntrack_next_header_offset_is_int": true,
+    "modinfo_kept_nonallocatable_and_dumped_from_unstripped_kernel": true,
+    "ksmbd_listener_reference_and_interface_list_lifetime_fixes_present": true,
+    "rp1_dma_burst_encoding_retains_length_minus_one": true,
+    "rp1_dma_dump_uses_per_descriptor_bounds": true,
+    "bcmgenet_defaults_retain_per_ring_ethtool_settings": true,
+    "bcm2712_hvs_retains_disabled_default": true
+  },
+  "device_profiles": 8,
+  "device_tree_and_packaging": {
+    "kernel": "6.18.65",
+    "device_trees": {
+      "an7581-nokia_xg-040g-md": {
+        "compiled": true,
+        "sha256": "55082a6f95295fa9b57fc2b3f0679bda992d1c5491632446c1dd5dc6301d617d"
+      },
+      "an7581-nokia_xg-040g-md-ubi": {
+        "compiled": true,
+        "sha256": "a173bff62a17cde01d16cf8a87218611b63c8432b8ee7f78a75783060398c604"
+      },
+      "an7581-nokia_xg-040g-md-tcboot": {
+        "compiled": true,
+        "sha256": "7b48596c913684a36fdd3fe4676e9b5f60a71cc0050f860fc01961a236987d90"
+      },
+      "an7581-nokia_xg-140g-tf-tcboot": {
+        "compiled": true,
+        "sha256": "fbf210b64dcc14d917749e46debf484e62f643a1191ff07cf3c04010cad4ec3b"
+      },
+      "an7583-nokia_xg-040g-mf": {
+        "compiled": true,
+        "sha256": "16f4261bc03b151c857d434970bb4f4dc1b072a0fa79126b18eb8cea9672aa54"
+      },
+      "an7583-nokia_xg-040g-mf-ubi": {
+        "compiled": true,
+        "sha256": "3766e6f4464a92dba5fcb77e9975179830eaba93f315463390ecb21814d69742"
+      },
+      "mt7981b-xiaomi-mi-router-ax3000t": {
+        "compiled": true,
+        "sha256": "cc45c639aaa8e0f6827dddcdc7f4e252a9ff8b6d3bf42f647a5f5b4e981b3b18"
+      },
+      "mt7981b-xiaomi-mi-router-ax3000t-ubootmod": {
+        "compiled": true,
+        "sha256": "5857d732902794c722e2c618399570241fe7bca12612c9f10d925fc367deffda"
+      },
+      "mt7981b-cudy-tr3000-v1": {
+        "compiled": true,
+        "sha256": "fdfd71e559e246086fba9ddc43e8735fe8681a03077c32b45b48c9afc176bd38"
+      },
+      "mt7981b-cudy-tr3000-256mb-v1": {
+        "compiled": true,
+        "sha256": "c403e9766ed2fc3d7e0e00c781da466a7bfd165bff89866934b57a4f89162749"
+      },
+      "mt7981b-cudy-tr3000-v1-ubootmod": {
+        "compiled": true,
+        "sha256": "2d5a5d76dc394bb944773ed9d747fe8104a684ae2ac077116f451abac552eb95"
+      },
+      "mt7628an_cudy_tr1200-v1": {
+        "compiled": true,
+        "sha256": "4a2c9e8278f7cd9959c8a4dd16409e5ff6005c263af7e5db5f092a202dc90477"
+      }
+    },
+    "images": {
+      "openwrt-airoha-an7581-nokia_xg-040g-md-tcboot-squashfs-factory.bin": {
+        "size": 60162048,
+        "sha256": "88a4ea927d87b00c17525f273b4d9d03858017c8b59d7900557d6304a0874d23"
+      },
+      "openwrt-airoha-an7581-nokia_xg-040g-md-tcboot-squashfs-sysupgrade.bin": {
+        "size": 49777477,
+        "sha256": "44cbfe3ccc17a4faf1effc7c6619cacadbe2d1aad9fd1b97ee9aa82efb7732fa"
+      },
+      "openwrt-airoha-an7581-nokia_xg-140g-tf-tcboot-squashfs-factory.bin": {
+        "size": 60162048,
+        "sha256": "8fdff3b34312674d603cd63b106ed03445d1a4b2a2dc5554d7c66bec883aa062"
+      },
+      "openwrt-airoha-an7581-nokia_xg-140g-tf-tcboot-squashfs-sysupgrade.bin": {
+        "size": 49767237,
+        "sha256": "aa279616cfc8086379c247c652e00c57a60130020a10cd59ff918311983e8c8e"
+      }
+    },
+    "checks": [
+      "12 device trees compiled against prepared Linux 6.18.65 inputs",
+      "rootfs ubiblock arguments survive the exact failing U-Boot command line",
+      "MD and TF partition bounds and distinct USB settings verified",
+      "real factory recipes retain 8 MiB FIT prefix, 2 KiB VID and volume IDs 0/1/2",
+      "both factory images passed the build-time EOF/UBI checker",
+      "both sysupgrade archives match their FIT and SquashFS payloads",
+      "both sysupgrade metadata records support both tcboot models",
+      "both sysupgrade signatures verified with native fwtool, ucert and usign"
+    ],
+    "limitations": [
+      "fixture kernel and rootfs payloads used for packaging; not installable firmware",
+      "no complete Linux firmware cross-build",
+      "no hardware boot or flash test"
+    ]
+  },
+  "current_mt76_pin_retained": "0936617dc529ff9da0385221d3fa6de732231177",
+  "tcboot_boot_fix_retained": "82e5038ab8397119446564ffa70734e542be0590",
+  "limitations": [
+    "No complete Linux kernel/firmware cross-build",
+    "Packaging used fixture payloads and test signing keys, not installable firmware",
+    "No hardware boot or flash testing",
+    "Local kernel inputs reconstructed using verified baseline archive and official incremental patch; full 6.18.65 archive not verified"
+  ]
+}

@@ -9,16 +9,28 @@ the low data rate and wakeups of clients in powersave mode.
 This knob can be used to ensure that BPDU packets are never sent or forwarded
 to/from these devices
 
+Linux 6.18.65 assigns bit 24 to BR_NEIGH_FORWARD_GRAT. Allocate BPDU filtering
+through bridge_flags_bit so the two controls remain independent, and use the
+same atomic flag reads as the stable kernel.
+
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
 
 --- a/include/linux/if_bridge.h
 +++ b/include/linux/if_bridge.h
-@@ -61,6 +61,7 @@ struct br_ip_list {
- #define BR_PORT_LOCKED		BIT(21)
- #define BR_PORT_MAB		BIT(22)
- #define BR_NEIGH_VLAN_SUPPRESS	BIT(23)
-+#define BR_BPDU_FILTER		BIT(24)
+@@ -61,6 +61,7 @@ enum bridge_flags_bit {
+ 	BR_PORT_MAB_BIT,
+ 	BR_NEIGH_VLAN_SUPPRESS_BIT,
+ 	BR_NEIGH_FORWARD_GRAT_BIT,
++	BR_BPDU_FILTER_BIT,
+ };
+ 
+ #define BR_HAIRPIN_MODE		BIT(BR_HAIRPIN_MODE_BIT)
+@@ -91,6 +92,7 @@ enum bridge_flags_bit {
+ #define BR_PORT_MAB		BIT(BR_PORT_MAB_BIT)
+ #define BR_NEIGH_VLAN_SUPPRESS	BIT(BR_NEIGH_VLAN_SUPPRESS_BIT)
+ #define BR_NEIGH_FORWARD_GRAT	BIT(BR_NEIGH_FORWARD_GRAT_BIT)
++#define BR_BPDU_FILTER		BIT(BR_BPDU_FILTER_BIT)
  
  #define BR_DEFAULT_AGEING_TIME	(300 * HZ)
  
@@ -36,7 +48,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
  		case BR_PKT_MULTICAST:
  			if (!(p->flags & BR_MCAST_FLOOD) && skb->dev != br->dev)
  				continue;
-+			if ((p->flags & BR_BPDU_FILTER) &&
++			if (test_bit(BR_BPDU_FILTER_BIT, &p->flags) &&
 +			    unlikely(is_link_local_ether_addr(dest) &&
 +				     dest[5] == 0))
 +				continue;
@@ -49,7 +61,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
  		fwd_mask |= p->group_fwd_mask;
  		switch (dest[5]) {
  		case 0x00:	/* Bridge Group Address */
-+			if (p->flags & BR_BPDU_FILTER)
++			if (test_bit(BR_BPDU_FILTER_BIT, &p->flags))
 +				goto drop;
  			/* If STP is turned off,
  			   then must forward to keep loop detection */
@@ -80,7 +92,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
  
 -	if (p->br->stp_enabled != BR_KERNEL_STP)
 +	if (p->br->stp_enabled != BR_KERNEL_STP ||
-+	    (p->flags & BR_BPDU_FILTER))
++	    test_bit(BR_BPDU_FILTER_BIT, &p->flags))
  		return;
  
  	buf[0] = 0;
@@ -90,7 +102,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
  
 -	if (p->br->stp_enabled != BR_KERNEL_STP)
 +	if (p->br->stp_enabled != BR_KERNEL_STP ||
-+	    (p->flags & BR_BPDU_FILTER))
++	    test_bit(BR_BPDU_FILTER_BIT, &p->flags))
  		return;
  
  	buf[0] = 0;

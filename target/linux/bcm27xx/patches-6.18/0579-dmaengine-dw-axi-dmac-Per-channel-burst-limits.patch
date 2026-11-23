@@ -8,6 +8,9 @@ parameters. Allow maximum burst length to be set per-channel by making
 snps,axi-max-burst-len an array.
 
 Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+
+Retain the Linux 6.18.65 conversion from burst length to the hardware
+length-minus-one field for both transfer paths.
 ---
  .../dma/dw-axi-dmac/dw-axi-dmac-platform.c    | 29 ++++++++++++-------
  drivers/dma/dw-axi-dmac/dw-axi-dmac.h         |  2 +-
@@ -19,8 +22,8 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
  	ctlhi = CH_CTL_H_LLI_VALID;
  
  	if (chan->chip->dw->hdata->restrict_axi_burst_len) {
--		burst_len = chan->chip->dw->hdata->axi_rw_burst_len;
-+		burst_len = chan->chip->dw->hdata->axi_rw_burst_len[chan->id];
+-		burst_len = chan->chip->dw->hdata->axi_rw_burst_len - 1;
++		burst_len = chan->chip->dw->hdata->axi_rw_burst_len[chan->id] - 1;
  		ctlhi |= CH_CTL_H_ARLEN_EN | CH_CTL_H_AWLEN_EN |
  			 burst_len << CH_CTL_H_ARLEN_POS |
  			 burst_len << CH_CTL_H_AWLEN_POS;
@@ -28,8 +31,8 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
  
  		reg = CH_CTL_H_LLI_VALID;
  		if (chan->chip->dw->hdata->restrict_axi_burst_len) {
--			u32 burst_len = chan->chip->dw->hdata->axi_rw_burst_len;
-+			u32 burst_len = chan->chip->dw->hdata->axi_rw_burst_len[chan->id];
+-			u32 burst_len = chan->chip->dw->hdata->axi_rw_burst_len - 1;
++			u32 burst_len = chan->chip->dw->hdata->axi_rw_burst_len[chan->id] - 1;
  
  			reg |= (CH_CTL_H_ARLEN_EN |
  				burst_len << CH_CTL_H_ARLEN_POS |

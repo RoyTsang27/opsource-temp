@@ -9,7 +9,7 @@ The driver now auto-detects the IRQ mode based on device tree:
 Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
 --- a/drivers/clocksource/Kconfig
 +++ b/drivers/clocksource/Kconfig
-@@ -79,7 +79,10 @@ config ECONET_EN751221_TIMER
+@@ -79,7 +79,10 @@
  	select CLKSRC_MMIO
  	select TIMER_OF
  	help
@@ -59,7 +59,7 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
  } econet_timer __ro_after_init;
  
  static DEFINE_PER_CPU(struct clock_event_device, econet_timer_pcpu);
-@@ -98,12 +110,21 @@ static int cevt_init_cpu(uint cpu)
+@@ -98,12 +110,21 @@
  	struct clock_event_device *cd = &per_cpu(econet_timer_pcpu, cpu);
  	u32 reg;
  
@@ -82,7 +82,7 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
  
  	/* Do this last because it synchronously configures the timer */
  	clockevents_config_and_register(cd, econet_timer.freq_hz,
-@@ -126,7 +147,21 @@ static void __init cevt_dev_init(uint cp
+@@ -126,7 +147,21 @@
  	iowrite32(U32_MAX, reg_compare(cpu));
  }
  
@@ -105,7 +105,7 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
  {
  	int i, irq, ret;
  
-@@ -137,42 +172,85 @@ static int __init cevt_init(struct devic
+@@ -137,42 +172,85 @@
  	}
  
  	ret = request_percpu_irq(irq, cevt_interrupt, np->name, &econet_timer_pcpu);
@@ -128,10 +128,18 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
 -		cd->irq			= irq;
 -		cd->cpumask		= cpumask_of(i);
 -		cd->name		= np->name;
+-
 +		cevt_setup_clockevent(cd, np, irq, i);
-+		cevt_dev_init(i);
-+	}
-+
+ 		cevt_dev_init(i);
+ 	}
+ 
+-	cpuhp_setup_state(CPUHP_AP_ONLINE_DYN,
+-			  "clockevents/econet/timer:starting",
+-			  cevt_init_cpu, NULL);
+-	return 0;
+-
+-err_unmap_irq:
+-	irq_dispose_mapping(irq);
 +	return 0;
 +}
 +
@@ -158,26 +166,21 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
 +			irq_dispose_mapping(econet_timer.irqs[i]);
 +			goto err_free_irqs;
 +		}
- 
++
 +		cevt_setup_clockevent(cd, np, econet_timer.irqs[i], i);
- 		cevt_dev_init(i);
- 	}
- 
--	cpuhp_setup_state(CPUHP_AP_ONLINE_DYN,
--			  "clockevents/econet/timer:starting",
--			  cevt_init_cpu, NULL);
- 	return 0;
- 
--err_unmap_irq:
--	irq_dispose_mapping(irq);
++		cevt_dev_init(i);
++	}
++
++	return 0;
++
 +err_free_irqs:
 +	while (--i >= 0) {
 +		free_irq(econet_timer.irqs[i], NULL);
 +		irq_dispose_mapping(econet_timer.irqs[i]);
 +	}
  	return ret;
- }
- 
++}
++
 +static int __init cevt_init(struct device_node *np)
 +{
 +	econet_timer.num_irqs = of_irq_count(np);
@@ -196,8 +199,8 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
 +		return cevt_init_percpu(np);
 +	else
 +		return cevt_init_separate(np);
-+}
-+
+ }
+ 
  static int __init timer_init(struct device_node *np)
  {
  	int num_blocks = DIV_ROUND_UP(num_possible_cpus(), 2);
@@ -207,9 +210,9 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
  
  	clk = of_clk_get(np, 0);
  	if (IS_ERR(clk)) {
-@@ -182,11 +260,12 @@ static int __init timer_init(struct devi
- 
+@@ -183,11 +261,12 @@
  	econet_timer.freq_hz = clk_get_rate(clk);
+ 	clk_put(clk);
  
 -	for (int i = 0; i < num_blocks; i++) {
 +	for (i = 0; i < num_blocks; i++) {
@@ -222,7 +225,7 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
  		}
  	}
  
-@@ -196,21 +275,34 @@ static int __init timer_init(struct devi
+@@ -197,21 +276,34 @@
  				    clocksource_mmio_readl_up);
  	if (ret) {
  		pr_err("%pOFn: clocksource_mmio_init failed: %d", np, ret);
@@ -246,10 +249,15 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
 +	pr_info("%pOFn: using %u.%03u MHz high precision timer (%s mode)\n", np,
  		econet_timer.freq_hz / 1000000,
 -		(econet_timer.freq_hz / 1000) % 1000);
+-
+-	return 0;
+-}
+-
+-TIMER_OF_DECLARE(econet_timer_hpt, "econet,en751221-timer", timer_init);
 +		(econet_timer.freq_hz / 1000) % 1000,
 +		econet_timer.use_percpu_irq ? "percpu" : "separate IRQ");
- 
- 	return 0;
++
++	return 0;
 +
 +err_unmap:
 +	for (i = 0; i < num_blocks; i++) {
@@ -257,8 +265,7 @@ Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
 +			iounmap(econet_timer.membase[i]);
 +	}
 +	return ret;
- }
- 
--TIMER_OF_DECLARE(econet_timer_hpt, "econet,en751221-timer", timer_init);
++}
++
 +TIMER_OF_DECLARE(econet_en751221_timer, "econet,en751221-timer", timer_init);
 +TIMER_OF_DECLARE(econet_en7528_timer, "econet,en7528-timer", timer_init);
