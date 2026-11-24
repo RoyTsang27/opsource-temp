@@ -99,6 +99,7 @@ for (let phy_name, phy in board.wlan) {
 		print(`set ${s}=wifi-device
 set ${s}.type='mac80211'
 set ${s}.${id}
+set ${s}.disabled='1'
 set ${s}.band='${band_name}'
 set ${s}.channel='${channel}'
 set ${s}.htmode='${htmode}'
