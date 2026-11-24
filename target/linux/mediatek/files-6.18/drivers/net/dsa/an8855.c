@@ -948,15 +948,15 @@ static void
 an8855_read_port_stats(struct an8855_priv *priv, int port, u32 offset, u8 size,
 		       uint64_t *data)
 {
-	u32 val, reg = AN8855_PORT_MIB_COUNTER(port) + offset;
+	u32 reg = AN8855_PORT_MIB_COUNTER(port) + offset;
+	u32 lo, hi = 0;
 
-	regmap_read(priv->regmap, reg, &val);
-	*data = val;
+	if (regmap_read(priv->regmap, reg, &lo))
+		return;
+	if (size == 2 && regmap_read(priv->regmap, reg + 4, &hi))
+		return;
 
-	if (size == 2) {
-		regmap_read(priv->regmap, reg + 4, &val);
-		*data |= (u64)val << 32;
-	}
+	*data = ((u64)hi << 32) | lo;
 }
 
 static void
@@ -1026,17 +1026,27 @@ an8855_get_eth_mac_stats(struct dsa_switch *ds, int port,
 
 	an8855_read_port_stats(priv, port, AN8855_PORT_MIB_TX_MULTICAST, 1,
 			       &mac_stats->MulticastFramesXmittedOK);
-	mac_stats->FramesTransmittedOK += mac_stats->MulticastFramesXmittedOK;
 	an8855_read_port_stats(priv, port, AN8855_PORT_MIB_TX_BROADCAST, 1,
 			       &mac_stats->BroadcastFramesXmittedOK);
-	mac_stats->FramesTransmittedOK += mac_stats->BroadcastFramesXmittedOK;
+	if (mac_stats->FramesTransmittedOK != ETHTOOL_STAT_NOT_SET &&
+	    mac_stats->MulticastFramesXmittedOK != ETHTOOL_STAT_NOT_SET &&
+	    mac_stats->BroadcastFramesXmittedOK != ETHTOOL_STAT_NOT_SET)
+		mac_stats->FramesTransmittedOK += mac_stats->MulticastFramesXmittedOK +
+						 mac_stats->BroadcastFramesXmittedOK;
+	else
+		mac_stats->FramesTransmittedOK = ETHTOOL_STAT_NOT_SET;
 
 	an8855_read_port_stats(priv, port, AN8855_PORT_MIB_RX_MULTICAST, 1,
 			       &mac_stats->MulticastFramesReceivedOK);
-	mac_stats->FramesReceivedOK += mac_stats->MulticastFramesReceivedOK;
 	an8855_read_port_stats(priv, port, AN8855_PORT_MIB_RX_BROADCAST, 1,
 			       &mac_stats->BroadcastFramesReceivedOK);
-	mac_stats->FramesReceivedOK += mac_stats->BroadcastFramesReceivedOK;
+	if (mac_stats->FramesReceivedOK != ETHTOOL_STAT_NOT_SET &&
+	    mac_stats->MulticastFramesReceivedOK != ETHTOOL_STAT_NOT_SET &&
+	    mac_stats->BroadcastFramesReceivedOK != ETHTOOL_STAT_NOT_SET)
+		mac_stats->FramesReceivedOK += mac_stats->MulticastFramesReceivedOK +
+						 mac_stats->BroadcastFramesReceivedOK;
+	else
+		mac_stats->FramesReceivedOK = ETHTOOL_STAT_NOT_SET;
 }
 
 static const struct ethtool_rmon_hist_range an8855_rmon_ranges[] = {

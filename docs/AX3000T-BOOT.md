@@ -56,6 +56,32 @@ cat /sys/module/mt7915e/parameters/wed_enable
 Expected output is `mt7915e wed_enable=N` and `N`, respectively. Retained custom
 files in the writable overlay can override the newly generated loader file.
 
+## Wired Ethernet checks
+
+The Linux 7.3.6 capture with the build timestamp `2026-11-23 23:04:22 UTC`
+matches the source timestamp of `53aa6747f`. The AN8855 port MAC fix is in
+the later commit `89b152cfb`. Compare `DISTRIB_REVISION` with the build's
+`source-commit.txt` to identify the firmware. The GCC revision printed in
+the kernel banner identifies the toolchain.
+
+Both AX3000T layouts include `ethtool`, `bridge`, and iproute2's `ip`. Take
+these readings before and after sending ARP or DHCP traffic from a wired
+client connected to LAN2.
+
+```sh
+cat /etc/openwrt_release
+cat /sys/module/mt7915e/parameters/wed_enable
+bridge -d link show dev lan2
+ethtool -S lan2 --groups eth-mac rmon
+ethtool -S eth0
+ip -s link show dev lan2
+ip -s link show dev eth0
+```
+
+The AN8855 MAC counters show whether frames reached the external switch
+port. The MediaTek `eth0` counters show whether those frames reached the
+CPU-side Ethernet MAC.
+
 ## Existing-device serial workaround
 
 At the OpenWrt `Press the [f] key ...` prompt, enter failsafe before the normal
