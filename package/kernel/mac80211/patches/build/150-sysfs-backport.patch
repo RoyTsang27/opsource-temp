@@ -1,10 +1,15 @@
+Linux 6.18.65 backports the switch to struct ns_common for sysfs
+namespace callbacks. Use the typed callback on that stable branch as
+well as on Linux 7.0 and newer.
+
 --- a/net/wireless/sysfs.c
 +++ b/net/wireless/sysfs.c
-@@ -160,12 +160,21 @@ static SIMPLE_DEV_PM_OPS(wiphy_pm_ops, w
+@@ -160,12 +160,22 @@ static SIMPLE_DEV_PM_OPS(wiphy_pm_ops, w
  #define WIPHY_PM_OPS NULL
  #endif
  
-+#if LINUX_VERSION_IS_GEQ(7,0,0)
++#if LINUX_VERSION_IS_GEQ(7,0,0) || \
++    LINUX_VERSION_IN_RANGE(6,18,65, 6,19,0)
  static const struct ns_common *wiphy_namespace(const struct device *d)
  {
  	struct wiphy *wiphy = container_of(d, struct wiphy, dev);
