@@ -1,0 +1,22 @@
+Subject: [PATCH] net: ethernet: mtk_eth_soc: wait for an explicit SRAM provider
+
+A DT with a separate SRAM region only maps the frame-engine registers
+as the first Ethernet resource. If the SRAM provider is still probing,
+defer Ethernet initialization instead of trying the legacy offset.
+
+diff --git a/drivers/net/ethernet/mediatek/mtk_eth_soc.c b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
+--- a/drivers/net/ethernet/mediatek/mtk_eth_soc.c
++++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
+@@ -5210,6 +5210,12 @@
+ 			eth->sram_pool = of_gen_pool_get(pdev->dev.of_node,
+ 							 "sram", 0);
+ 			if (!eth->sram_pool) {
++				if (of_property_present(pdev->dev.of_node, "sram")) {
++					err = dev_err_probe(&pdev->dev, -EPROBE_DEFER,
++							    "waiting for SRAM pool\n");
++					goto err_destroy_sgmii;
++				}
++
+ 				if (!mtk_is_netsys_v3_or_greater(eth)) {
+ 					err = mtk_setup_legacy_sram(eth, res);
+ 					if (err)

@@ -1,0 +1,49 @@
+Subject: [PATCH] arm64: dts: mediatek: describe MT7981 Ethernet SRAM and interrupts
+
+Use the Ethernet resource layout from the upstream MT7981 device tree.
+Keep FE TX and RX on their existing IRQs and expose the SRAM as a
+separate, non-overlapping resource.
+
+Link: https://github.com/torvalds/linux/blob/master/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+
+diff --git a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+--- a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+@@ -435,13 +435,20 @@
+ 
+ 		eth: ethernet@15100000 {
+ 			compatible = "mediatek,mt7981-eth";
+-			reg = <0 0x15100000 0 0x80000>;
++			reg = <0 0x15100000 0 0x40000>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			interrupts = <GIC_SPI 196 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 197 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 198 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 199 IRQ_TYPE_LEVEL_HIGH>;
++				     <GIC_SPI 199 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 189 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 191 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "fe0", "fe1", "fe2", "fe3",
++					  "pdma0", "pdma1", "pdma2", "pdma3";
++			sram = <&eth_sram>;
+ 			clocks = <&ethsys CLK_ETH_FE_EN>,
+ 				<&ethsys CLK_ETH_GP2_EN>,
+ 				<&ethsys CLK_ETH_GP1_EN>,
+@@ -506,6 +513,14 @@
+ 			};
+ 		};
+ 
++		eth_sram: sram@15140000 {
++			compatible = "mmio-sram";
++			reg = <0 0x15140000 0 0x40000>;
++			ranges = <0 0x15140000 0 0x40000>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++		};
++
+ 		wo_dlm0: syscon@151e8000 {
+ 			compatible = "mediatek,mt7986-wo-dlm", "syscon";
+ 			reg = <0 0x151e8000 0 0x2000>;

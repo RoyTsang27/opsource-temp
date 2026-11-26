@@ -1,0 +1,22 @@
+Subject: [PATCH] wifi: mt76: mt7915: report truncated TX-free events
+
+The WA firmware may report a short completion in its own log. Record
+when the host parser also receives one, with the completion count and
+whether WED is attached. Rate-limit reports and keep the normal cleanup.
+
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -961,8 +961,10 @@
+ 
+ 		if (unlikely((u8 *)cur_info > end ||
+ 			     (size_t)(end - (u8 *)cur_info) < sizeof(*cur_info))) {
+-			dev_dbg_ratelimited(dev->mt76.dev,
+-					    "short TX-free event\n");
++			dev_warn_ratelimited(mdev->dev,
++				"short TX-free event: %u/%u MSDUs, %d bytes, WED %s\n",
++				count, total, len,
++				mtk_wed_device_active(&mdev->mmio.wed) ? "on" : "off");
+ 			goto out;
+ 		}
+ 

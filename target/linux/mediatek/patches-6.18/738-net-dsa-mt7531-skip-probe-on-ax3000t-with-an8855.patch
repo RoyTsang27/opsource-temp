@@ -1,0 +1,64 @@
+Subject: [PATCH] net: dsa: mt7531: skip probe on AX3000T with AN8855
+
+The two AX3000T variants share a device tree and a switch reset GPIO.
+With AN8855 hardware, the MT7531 probe toggles reset and waits for a
+second before the AN8855 can start. Skip that probe only when the
+AN8855 PHY ID matches. Keep the MT7531 fallback if the ID is unavailable.
+
+diff --git a/drivers/net/dsa/mt7530-mdio.c b/drivers/net/dsa/mt7530-mdio.c
+--- a/drivers/net/dsa/mt7530-mdio.c
++++ b/drivers/net/dsa/mt7530-mdio.c
+@@ -2,6 +2,7 @@
+ 
+ #include <linux/gpio/consumer.h>
+ #include <linux/mdio.h>
++#include <linux/mii.h>
+ #include <linux/module.h>
+ #include <linux/pcs/pcs-mtk-lynxi.h>
+ #include <linux/of_irq.h>
+@@ -151,6 +152,34 @@
+ 	.disable_locking = true,
+ };
+ 
++#define AX3000T_AN8855_PHY_ID 0xc0ff0410
++
++static bool mt7531_ax3000t_has_an8855(struct mii_bus *bus)
++{
++	struct device_node *an8855;
++	int addr;
++
++	if (!of_machine_is_compatible("xiaomi,mi-router-ax3000t") &&
++	    !of_machine_is_compatible("xiaomi,mi-router-ax3000t-ubootmod"))
++		return false;
++
++	an8855 = of_get_compatible_child(bus->dev.of_node, "airoha,an8855-mfd");
++	if (!an8855)
++		return false;
++
++	addr = of_device_is_available(an8855) ?
++		of_mdio_parse_addr(&bus->dev, an8855) : -ENODEV;
++	of_node_put(an8855);
++	if (addr < 0)
++		return false;
++
++	/* Identify the AN8855 by its internal PHY before touching reset. */
++	if (mdiobus_read(bus, addr, MII_PHYSID1) != upper_16_bits(AX3000T_AN8855_PHY_ID))
++		return false;
++
++	return mdiobus_read(bus, addr, MII_PHYSID2) == lower_16_bits(AX3000T_AN8855_PHY_ID);
++}
++
+ static int
+ mt7530_probe(struct mdio_device *mdiodev)
+ {
+@@ -159,6 +188,10 @@
+ 	int ret;
+ 
+ 	dn = mdiodev->dev.of_node;
++
++	if (of_device_is_compatible(dn, "mediatek,mt7531") &&
++	    mt7531_ax3000t_has_an8855(mdiodev->bus))
++		return -ENODEV;
+ 
+ 	priv = devm_kzalloc(&mdiodev->dev, sizeof(*priv), GFP_KERNEL);
+ 	if (!priv)
