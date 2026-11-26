@@ -1,0 +1,17 @@
+#!/bin/sh
+
+. /lib/functions/uci-defaults.sh
+
+board_config_update
+
+case "$(board_name)" in
+skyworth,sk-d840n)
+	for port in lan2 lan3 lan4; do
+		ucidef_set_led_netdev "$port" "$port" "skyworth:green:$port" "$port" "link"
+	done
+	ucidef_set_led_netdev wan WAN skyworth:green:wan eth0 link
+	;;
+esac
+
+board_config_flush
+exit 0

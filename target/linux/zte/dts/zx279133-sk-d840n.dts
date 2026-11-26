@@ -1,0 +1,968 @@
+// SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+// Skyworth SK-D840N (GPON ONU, Sanechips/ZTE ZX279133) board tree for the
+// cnjn mainline 6.18.38 zte/zx279133 target.
+//
+// Facts taken from this unit, not guessed:
+//   - SPI-NAND hangs off the SFC at 0x10d0f000 (live: /sys/.../10d0f000.spifc/spi_master/spi1/spi1.0)
+//   - partition map is derived from the community/vendor U-Boot one (env at boot+0x180000):
+//       boot 2048k@0x0 kernel 8192k@0x200000 dtb 1024k@0xa00000
+//       "parameter tags" 4096k@0xb00000 root 246784k@0xf00000
+//     root occupies the complete final 241 MiB; there is no separate scratch partition.
+//     The /dev/mtdN numbering is pinned by the mtd1..mtd5 aliases below, not counted off
+//     node order, so it survives a kernel-config change: boot=1 kernel=2 dtb=3
+//     "parameter tags"=4 root=5, and mtd0 is the SPI-NAND master if
+//     CONFIG_MTD_PARTITIONED_MASTER is enabled and absent if it is not.
+//     (`root` must stay index 5 - the installed U-Boot bootargs hard-code
+//      root=/dev/mtdblock5 - *and* must start at 0xf00000, because that is where the
+//      system that does the flashing puts its own `root`: the vendor 4.19 table is
+//      whole/boot/kernel/dtb/param/root@0xf00000 (one 241 MiB root), and /sbin/mtd
+//      on it can only erase and write a whole partition by label. An image that
+//      satisfied one constraint but not the other boots as a VFS panic with no
+//      serial to read.)
+//   - console is the PL011-compatible zte,zx279133-uart at 0x10d0d000, 115200n8
+//   - memory is 512 MiB at 0x80000000 (stock DTB: reg = <0x0 0x80000000 0x0 0x20000000>)
+//
+// OPEN ITEMS (deliberately copied from the validated SR1010 board file, to be
+// re-probed on this unit before the image is ever flashed):
+//   * Only the RTL8226 port below is reachable in mainline. The four GE LAN ports
+//     sit behind the SoC-internal "9132" UNI switch, which the vendor drives
+//     without phylib or DSA at all: switch.ko writes the port/VLAN tables directly
+//     at module init. The /dev/ethdriver ioctl is an 8-byte stub, NOT a config
+//     interface (docs/07 补九十七); do not use it as the bring-up path. There is no
+//     mainline equivalent, so SR1010's RTL8372N DSA node is dropped and the LAN-side
+//     zte,zx279133-lan-conduit child is left out too (it is the CPU port of an
+//     external switch this board does not have).
+//     mainline registers eth0 but never moves traffic through it; the vendor 4.19
+//     also sends 0 bytes on this jack (docs/07 补九十四). Only U-Boot has moved
+//     traffic (11 MB) - so jack 4 is optional, not the bring-up gate.
+//     This unit has **no WAN/uplink jack at all** - the front panel is 4x LAN plus
+//     the fibre PON - so eth0 (NPPT + RTL8226) is one of those four LAN jacks, and
+//     the running image only calls it `wan` because the community config came from
+//     a router default (lan bridge = eth1 eth2 eth3, wan.device = eth0). Which jack
+//     it is can be read straight off the vendor driver, which logs the port number
+//     per netdev: `[eth0] port 4 link up` / `[eth1] port 1 link up:1000M`, i.e.
+//     move a cable and watch dmesg. Anyone testing over the wire has to be in
+//     *that* jack, because no LAN port driven by the 9132 exists in mainline.
+//   * MAC address: the ZTE "parameter tags" nvmem layout of SR1010 does not
+//     apply, so no MAC source is given; see the comment on &nppt.
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+
+#include "zx279133.dtsi"
+
+/ {
+	model = "Skyworth SK-D840N";
+	compatible = "skyworth,sk-d840n", "zte,zx279133";
+
+	aliases {
+		serial0 = &uart0;
+		watchdog0 = &watchdog0;
+		watchdog1 = &watchdog1;
+		/* Pin the /dev/mtdN numbering (drivers/mtd/mtdcore.c add_mtd_device():
+		 * `ofidx = of_alias_get_id(np, "mtd")` then idr_alloc(ofidx, ofidx+1)).
+		 * Without this the numbers depend on CONFIG_MTD_PARTITIONED_MASTER, which
+		 * decides whether the SPI-NAND master itself occupies mtd0 - and a wrong
+		 * guess boots as a VFS panic on the wrong partition, with no serial to read.
+		 */
+		mtd1 = &bootpart;
+		mtd2 = &kernelpart;
+		mtd3 = &dtbpart;
+		mtd4 = &tagspart;
+		mtd5 = &rootpart;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+		/* Same string the build script pins into CONFIG_CMDLINE. It belongs here as
+		 * well because the kernel's built-in-vs-bootloader precedence (FROM_BOOTLOADER,
+		 * EXTEND, FORCE) is a config choice nobody is looking at, and the two spellings
+		 * agreeing is what makes the root device the same in all three. mtdblock5 is
+		 * pinned by the mtd5 alias below, and jffs2 is what the root partition holds.
+		 */
+		bootargs = "console=ttyAMA0,115200n8 root=/dev/mtdblock5 rootfstype=jffs2 ro rootwait";
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x20000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		se_hash_reserved: buffer@9e100000 {
+			reg = <0x0 0x9e100000 0x0 0x1000000>;
+			no-map;
+		};
+
+		idm_reserved: buffer@9d700000 {
+			reg = <0x0 0x9d700000 0x0 0xa00000>;
+			no-map;
+		};
+
+		/*
+		 * The BMU's pool: the BPPE tables, the normal buffers, the jumbo
+		 * buffers and the descriptor area, in that order.  Its size has to
+		 * cover ZX279133_BMU_REQUIRED_SIZE (0x101e000), which grew when
+		 * the buffer size went to the vendor's 0x900 bytes.
+		 *
+		 * It used to sit at 0x9f100000, in the top 15 MiB, and it does
+		 * not fit there any more.  The gap between the ramoops area and
+		 * the IDM's pool - 0x9c200000..0x9d700000 - is the only space
+		 * left that the marker test says U-Boot does not own (0x9c000000
+		 * and 0x9d000000 both survived the reboot) and that the trial
+		 * kernel's own text never reaches (trial-kexec.sh caps the
+		 * placement below 0x9c000000).
+		 */
+		bmu_reserved: buffer@9c200000 {
+			reg = <0x0 0x9c200000 0x0 0x1500000>;
+			no-map;
+		};
+
+		/* pstore/ramoops: the console log written here survives a *warm* reset, which is
+		 * the only way this board can hand back a boot log with no serial port. The
+		 * trial round that uses it does not mask CRM 0x10e10208, so the vendor's
+		 * already-armed zx_wdt (8 s, fed in-kernel by 4.19) bites some tens of seconds
+		 * after the jump; the reset lands back in the flashed system, which dumps this
+		 * region from /dev/mem within its first seconds.
+		 *
+		 * The address is measured, not guessed. Markers were written at nine addresses,
+		 * the board was rebooted normally, and the readback says:
+		 *   0x90000000 0x94000000 0x98000000 0x9c000000 0x9d000000   survived
+		 *   0x9e100000 0x9f100000 0x9fa00000 0x9ff00000              rewritten
+		 * so U-Boot owns roughly the top 32 MiB and everything from 0x9d700000 up is
+		 * off limits (that is also where idm/se_hash/bmu live). Below that the vendor's
+		 * page allocator works from the bottom up, so a dump taken seconds after boot
+		 * still has the high end intact - which is the whole race, and why the read has
+		 * to happen the moment the flashed system answers.
+		 *
+		 * 0x9c000000 rather than 0x9d000000 because the first round caught the loader:
+		 * kexec's arm64 placement put the trial kernel's own *text* at 0x9d000000 (the
+		 * bytes read back there are a literal substring of the Image), and no-map binds
+		 * the new kernel, not the loader. trial-kexec.sh now caps the placement below
+		 * this region with --mem-max.
+		 */
+		ramoops: buffer@9c000000 {
+			compatible = "ramoops";
+			no-map;
+			reg = <0x0 0x9c000000 0x0 0x00200000>;
+			console-size = <0x100000>;
+			record-size = <0x4000>;
+			pmsg-size = <0x40000>;
+		};
+	};
+
+	/* The vendor kernel's boot log selects /soc/leds_5. Its active-low GPIO
+	 * descriptions, corroborated by the stock driver, are:
+	 *
+	 *   10d10000 = &gpio0:  9 led_los, 10 led_power
+	 *   10d10040 = &gpio1:  5 led_usb1, 8 led_wan
+	 *   10d10080 = &gpio2:  3 led_phone1
+	 *   10d100c0 = &gpio3: 15 led_pon
+	 *
+	 * These declarations do not prove continuity to each panel lamp. On
+	 * 2026-11-03 the owner reported LAN1 and USB dark with all ten LED class
+	 * devices set to default-on/1; debugfs reported their GPIOs as out low.
+	 * Later single-lamp tests confirmed USB on GPIO1_5 and panel LAN1 on
+	 * the external PHY's factory force word, not on this GPIO4_2 backend.
+	 * Do not treat a brightness readback or GPIO claim as physical acceptance.
+	 * led_phone1 retains its existing sysfs name for FXS. This SKU has no WPS
+	 * or WLAN lamp; vendor-only names are not evidence of fitted hardware.
+	 *
+	 * LAN LEDs can also use GPIO control. The stock zx_led_probe() releases their
+	 * GPIO descriptors after selecting the PHY pinmux; zx_led_set() acquires them
+	 * again for manual brightness. Their absence from debugfs/gpio therefore does
+	 * not prove that a separate LED engine driver is required.
+	 * Panel LAN1 was physically verified on external PHY 5/MMD 1f channel 0:
+	 * masked d032/d040 event disable plus d044 bit 0 gives stable off/on.
+	 * Its LED now belongs under switch port 8; do not reserve GPIO4_2 for it.
+	 * LAN2..4 retain GPIO4 offsets 3..5 (p4-7..9), USB retains GPIO1_5.
+	 */
+	leds {
+		compatible = "gpio-leds";
+
+		led-lan2 {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			function = LED_FUNCTION_LAN;
+			gpios = <&gpio4 3 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:lan2";
+		};
+
+		led-lan3 {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			function = LED_FUNCTION_LAN;
+			gpios = <&gpio4 4 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:lan3";
+		};
+
+		led-lan4 {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			function = LED_FUNCTION_LAN;
+			gpios = <&gpio4 5 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:lan4";
+		};
+
+		led-power {
+			color = <LED_COLOR_ID_GREEN>;
+			/* "on" rather than "keep" is the point, not a style choice: with no
+			 * serial port the panel is the only witness that exists before
+			 * userspace, and the vendor leaves every lamp dark, so a kernel that
+			 * reaches gpio-leds probe lights it by itself. That gives three states
+			 * to read off the case - dark = never got here, solid = probe done but
+			 * /init never ran, blinking = userspace alive.
+			 */
+			default-state = "on";
+			function = LED_FUNCTION_POWER;
+			gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:power";
+		};
+
+		led-pon {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			linux,default-trigger = "zx279133-pon";
+			function = LED_FUNCTION_WAN;
+			gpios = <&gpio3 15 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:pon";
+		};
+
+		led-los {
+			color = <LED_COLOR_ID_RED>;
+			/* "on" is the fail-safe, not the final state: with no fiber the
+			 * panel has to be red before the NPPT driver's first poll.  The
+			 * NPPT owns opsd-gpio (the optical RX signal detect, gpio2 pin 1)
+			 * and publishes its state through an optional LED trigger. A user
+			 * selecting "none" must not be overridden by the polling worker.
+			 */
+			default-state = "on";
+			linux,default-trigger = "zx279133-los";
+			function = LED_FUNCTION_WAN;
+			gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+			label = "skyworth:red:los";
+		};
+
+		led-wan {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			function = LED_FUNCTION_LAN;
+			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:wan";
+		};
+
+		led-usb1 {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			function = LED_FUNCTION_USB;
+			gpios = <&gpio1 5 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:usb1";
+		};
+
+		led-phone1 {
+			color = <LED_COLOR_ID_GREEN>;
+			default-state = "off";
+			function = "phone";
+			gpios = <&gpio2 3 GPIO_ACTIVE_LOW>;
+			label = "skyworth:green:phone1";
+		};
+	};
+
+	thermal-zones {
+		soc-thermal {
+			thermal-sensors = <&pvt>;
+		};
+	};
+
+	/*
+	 * The SoC's RGMII MAC.
+	 *
+	 * This block is DEAD on this unit.  From the board's U-Boot prompt:
+	 *
+	 *	=> md 0x15900000 0x10
+	 *	15900000: 00000000 00000000 00000000 00000000    ................
+	 *	=> md 0x15900700 0x10
+	 *	15900700: 00000000 00000000 00000000 00000000    ................
+	 *
+	 * all zeros, including the 41 counters the vendor's smac_get_stat()
+	 * reads.  The vendor's own Linux maps the window ("rgmii_base is
+	 * 0xffffff800a100000") but never brings it up ("enter rgmii_init"
+	 * never appears in its boot log).
+	 *
+	 * The 2.5G jack is NOT behind this block.  It is a copper port of the
+	 * 9132 with the RTL8226 as its external PHY: U-Boot's network
+	 * bring-up prints "xmac 0 speed set 2 in sgmii(xmac speed 3)" (the
+	 * 9132's CPU port, over the Uni SerDes) and then "mac 4 phy status
+	 * changed: 1000M full-duplex" for the RTL8226 on port 4, and U-Boot
+	 * then answers a ping from the test PC, which is plugged into that
+	 * jack.
+	 *
+	 * The vendor's own device tree declares the node the same way
+	 * (decompiled/sk-d840n-community-4.19.dts):
+	 *
+	 *	rgmii@15900000 {
+	 *		compatible = "zte,zx279133-rgmii";
+	 *		reg = <0x00 0x15900000 0x00 0x100000>;
+	 *	};
+	 *
+	 * The tree this CI builds against (cnjn/linux-mainline-zte-zxslc-sr1010
+	 * at 96e5a241) has no such node, so it is declared here instead, in
+	 * the root's address space (the root has #address-cells = <2>, like
+	 * the soc bus in zx279133.dtsi, so the reg is the same two-cell form).
+	 *
+	 * The driver that binds it (zx279133-rgmii.c) only reads the block, so
+	 * that the zeros above stay reproducible instead of being a one-off
+	 * observation from a U-Boot prompt.
+	 */
+	rgmii@15900000 {
+		compatible = "zte,zx279133-rgmii";
+		reg = <0x00 0x15900000 0x00 0x100000>;
+		status = "okay";
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&pvt {
+	status = "okay";
+};
+
+&usb3 {
+	status = "okay";
+};
+
+&pon_serdes {
+	status = "okay";
+};
+
+&uni_serdes {
+	status = "okay";
+};
+
+&nppt {
+	/*
+	 * The NPPT's own MAC is XMAC1 and its lane is the PON SerDes with XPCS1.
+	 * That is what zx279133.dtsi says, and it is what the vendor bootloader
+	 * does: "pon serdes init succeed", and separately "mode_eth_1gbase_x_cfg"
+	 * + "uni serdes init succeed" + "xmac 0 speed set 2 in sgmii" on the
+	 * *other* lane, the one that reaches jack 4's RTL8226.
+	 *
+	 * An earlier round of this file re-aimed the NPPT at the Uni SerDes and
+	 * XPCS0, on the theory that jack 4's RTL8226 sits on the Uni lane.  That
+	 * is wrong twice over, and both halves matter:
+	 *
+	 *   - phy-zx279133-uni-serdes.c only accepts USXGMII/10GBASE-R, so
+	 *     phy_set_mode_ext() with the "sgmii" below answers -EOPNOTSUPP and
+	 *     zx279133_hardware_prepare() fails at that step.  Everything after
+	 *     it in that function - including zx279133_np_prepare(), which is
+	 *     where the 9132's port attributes and its PHY enable are
+	 *     programmed - is then never reached, the datapath is never
+	 *     acquired and no netdev ever comes up.  That is why every trial so
+	 *     far moved no bytes at all, and it was not the PHY.
+	 *   - the Uni SerDes and XPCS0 are the 9132's CPU port lane
+	 *     (docs/16-9132-topology-and-driver-design-20261021.md): the vendor
+	 *     prints "xmac0_pcs_base is 0x140000" and "xmac0 is used" before it
+	 *     declares its MII devices, and the first of those is "sw", which is
+	 *     the 9132's CPU port.  The 9132's own driver owns that lane, the
+	 *     same way the RTL8372N driver owns it on the SR1010.
+	 *
+ * xgpon_nsyn is not selected here: mode_xgpon_nsyn_cfg_133 did not
+ * yield a 49-word image, so this lane stays SGMII and the state machine
+ * does not invent a SerDes profile.
+	 * The PON SerDes driver accepts both SGMII and 2.5GBASE-X, so "sgmii"
+	 * is a mode it can actually be put into.  The Uni SerDes and XPCS0 are
+	 * left for the switch driver below.
+	 */
+	phy-mode = "sgmii";
+	phys = <&pon_serdes>, <&uni_serdes>;
+	phy-names = "serdes", "lan-serdes";
+	/*
+	 * The panel's red LOS lamp follows the optical RX signal detect, not
+	 * the PON SerDes.  On this board the vendor's pon_plat puts the
+	 * optical RX_SD on gpio2 pin 1, and its PON thread treats a low level
+	 * as loss of signal. The NPPT driver polls it even when the LOS LED's
+	 * automatic trigger is disabled; optical detection is not a lamp setting.
+	 * see docs/91.
+	 */
+	opsd-gpios = <&gpio2 1 GPIO_ACTIVE_HIGH>;
+	pcs-handle = <&xpcs1>;
+	/* The NP's own memory. Not a guess and not a leftover: in the one U-Boot session
+	 * that carried 11,471,728 bytes across this jack while this PC counted +469,482 of
+	 * them, every address handed to the NP - TX ring 0xb0008000, RX ring 0xb0028000,
+	 * RX buffers from 0xb00e8000, and the TX payload buffer 0xb0328000 named by each
+	 * descriptor - was inside 0xb0000000..0xb0400000. It is 256 MiB above the top of
+	 * the CPU's DRAM, so no allocator here can ever hand the driver such an address. */
+	zte,np-pool-base = <0xb0000000>;
+	zte,np-pool-size = <0x400000>;
+	memory-region = <&bmu_reserved>, <&se_hash_reserved>, <&idm_reserved>;
+	memory-region-names = "bmu", "se-hash", "idm";
+	/* No /delete-property/ phy-handle here, and that is a measured choice, not an oversight:
+	 * the base node has no such property to delete. Read from upstream-read/zx279133.dtsi:462
+	 * (nppt: ethernet@19000000) on 2026-10-19, the SoC include gives this node
+	 * `compatible`, `reg`, `reg-names = "nppt", "pps"`, `interrupts`/`interrupt-names`,
+	 * `pcs-handle = <&xpcs1>`, `zte,lan-pcs-handle = <&xpcs0>`,
+	 * `phy-names = "serdes", "lan-serdes"` and `status = "disabled"` - and no `phy-handle`.
+	 * The only `phy-handle` this port ever had was the one this file itself wrote, and that
+	 * line is gone. Deleting a property that does not exist is also what run 56 died on
+	 * (4m 29s into the DTS gate, "does not compile while sr1010.dts does"), so the guard lives
+	 * where it can be checked instead: the CI content gate asserts against the compiled blob
+	 * that this node has `fixed-link` and has no `phy-handle`, which fails loudly if a future
+	 * SoC include ever starts handing this port a PHY.
+	 */
+	/* fixed-link, and it is the PHY half of the inherit decision the uni_serdes
+	 * driver made in run 52. Measured 2026-10-18 22:20 (run 53, the round after
+	 * the lane was finally left alone):
+	 *   [    4.230596] ... Uni SerDes 1G inherited: mode 0x1 already, image differs in 0/49 word(s)
+	 *   [    4.258513] ... eth0: PHY [14f02000.mdio:05] driver [RTL8221B-VB-CG 2.5Gbps PHY (C22)] (irq=POLL)
+	 *   [    4.259470] ... eth0: configuring for phy/sgmii link mode
+	 *   ethtool: Supported link modes: 10baseT/Half 10baseT/Full | Link detected: no
+	 *   rx_packets 0 in all four readings, and tx_packets 0 as well.
+	 * So the SoC half of the lane is now provably byte-identical to the state that
+	 * moved 11 MB through this jack in U-Boot, and the port is still silent. What
+	 * is *not* inherited is the other end of the SerDes: attaching the PHY runs
+	 * phy_attach_direct() -> phy_init_hw(), which soft-resets the RTL8226B and
+	 * replays realtek's config_init over C22 extended registers, and the mask that
+	 * came back is the tell - a PHY U-Boot had running at 1000M/full on this very
+	 * jack reports 10baseT only, i.e. it was left in a mode none of the recovered
+	 * tables describe. Link down also means phylink never reaches mac_link_up(),
+	 * which is why tx fell to 0 where run 50 counted xmac_tx_good_frames 12.
+	 *
+	 * A fixed link removes the whole PHY state machine: phylink_parse_mode() sees
+	 * this child node and sets MLO_AN_FIXED, phylink_expects_phy() then answers
+	 * false, phylink_fwnode_phy_connect() returns before phy_attach_direct(), and
+	 * phy_init_hw() has no other caller on a boot that never suspends. So no
+	 * *write* reaches the chip - no soft reset, no config_init replay - and it keeps
+	 * exactly what U-Boot left, including the copper-side auto-negotiation with the
+	 * peer, which is what the 11 MB download already proved works. Reads are a
+	 * different matter, and on 2026-10-29 this turned out to be the whole
+	 * defect: of_mdiobus instantiated 14f02000.mdio:05, bound RTL8221B-VB-CG,
+	 * and phy_probe() called .probe and .get_features on that bus - and that
+	 * driver's config_init() rewrites the RTL8226's SerDes option.  So the
+	 * node itself was the problem, not phy-handle: it is gone now (see the
+	 * &mdio1 block below).  Nothing attaches this PHY and nothing configures
+	 * it; the chip keeps exactly what the bootloader left, and the lane's
+	 * "block lock / RX valid" bit comes back.
+	 *
+	 * What still runs is mainline's own zx279133_xmac_sgmii_init() and
+	 * zx279133_wan_port_bringup() from mac_link_up(), so this round separates the
+	 * last two causes: frames both ways = the PHY re-init was what killed the
+	 * lane; TX-only again = the MAC bring-up is the second thing that has to
+	 * inherit.
+	 */
+	/*
+	 * The board's MAC address.
+	 *
+	 * SR1010 reads its MAC from an nvmem-layout over its own "tags"
+	 * partition, whose zte,sr1010-tags parser does not describe this unit's
+	 * "parameter tags" layout, so there is no nvmem-cells to point at here.
+	 * Without a MAC source the driver falls back to a generated random MAC,
+	 * which is usable for a lab image but not for anything else: the MAC is
+	 * what the 9132's SPA (its MAC table) is programmed with
+	 * (zx279133_program_spa_cpu_mac() writes the netdev's address into the
+	 * SPA's ONU slots) and what the XMAC0 in front of the CPU port
+	 * compares an incoming frame's destination against.  A random address
+	 * therefore makes every frame the outside world sends to this board
+	 * unroutable, which is exactly what the bench saw: the PC's frames
+	 * reached the 9132 and were dropped there, and the RED's counters moved
+	 * while no netdev ever counted a byte.
+	 *
+	 * d0:45:8d:84:09:00 is the address this board answers on.  It is the
+	 * address the vendor firmware puts on the wire for 192.168.9.1: the
+	 * vendor's own `ip -o link show` shows eth0 = d0:45:8d:84:08:ff and
+	 * br-lan = d0:45:8d:84:09:00, and 192.168.9.1 lives on br-lan.
+	 *
+	 * Measured on 2026-10-23 with the board running its vendor firmware and
+	 * the PC on its wired adapter:
+	 *
+	 *	arp entry d0:45:8d:84:09:00 -> ping 192.168.9.1: 0% loss
+	 *	arp entry d0:45:8d:84:08:ff -> ping 192.168.9.1: 100% loss
+	 *
+	 * so :09:00 is the address the outside world has to use, and :08:ff is
+	 * eth0's own address and answers for nothing.
+	 *
+	 * The address 3e:8e:98:91:64:2a that this node carried before was not a
+	 * factory address at all: it was read out of one trial boot's
+	 * /proc/net/dev, where the kernel had already made a random one (the
+	 * locally-administered bit is set).  A random address is unroutable from
+	 * the outside, which is what the bench saw.
+	 *
+	 * It is a per-device address, so a build for another unit has to have
+	 * its own; the production answer is to parse the vendor's "parameter
+	 * tags" partition, which is not done yet.
+	 */
+	local-mac-address = [d0 45 8d 84 09 00];
+	status = "okay";
+
+	/*
+	 * The 9132's four UNI ports have their own internal PHYs, and the
+	 * vendor enables them over MDIO controller #0: np_133.ko's
+	 * smac_set_port_enable() calls zte_set_gephy_enable(), which reads the
+	 * PHY's BMCR, clears bit 11 (POWERDOWN) and writes it back over
+	 * zx_mdio_0_read/write().  The addresses are not a guess: the running
+	 * vendor system's device tree carries a `uni-phy` property on both
+	 * MDIO controllers and it is the u32 array
+	 *
+	 *	{ 0x0a, 0x0b, 0x0c, 0x0d, 0x05, 0x1c, 0x02 }
+	 *
+	 * where 0x0a..0x0d are the four internal UNI PHYs and 0x05 is the
+	 * RTL8226 on jack 4, which &mdio1 below already declares at address 5.
+	 *
+	 * Naming the bus here is what lets the driver reach them; nothing
+	 * attaches a PHY to them, because phylib would have no netdev to give
+	 * them to and would never call phy_start() on them.
+	 */
+	zx279133,uni-phy-bus = <&mdio0>;
+
+	/* The controller the RTL8226 is actually on.
+	 *
+	 * The vendor's board file names it, and it is not the one above:
+	 * `mdio_8226_id = <0x01>` (decompiled/sk-d840n-community-4.19.dts:1810)
+	 * with that controller's `reg = <0x00 0x14f02000 0x00 0x1000>`, so the
+	 * PHY at address 5 is on &mdio1 and controller #0 answers 0xffff for it
+	 * (measured 2026-10-26 21:16: "9132 mdio: addr 05 reg 01 = 0xffff",
+	 * while /sys/bus/mdio_bus/devices/14f02000.mdio:05/phy_id reads
+	 * 0x001cc849). Naming the second bus is what lets the console read and
+	 * write the Clause-45 registers of the PHY's SoC-facing SerDes, which is
+	 * the one part of this lane's bring-up mainline never runs.
+	 */
+	zx279133,outer-phy-bus = <&mdio1>;
+
+	/* LAST of this node's properties, and it has to be: dtc orders a node as
+	 * properties-then-subnodes ("Properties must precede subnodes", run 60 at
+	 * 393.2-18), so a `fixed-link {}` written among the properties kills the
+	 * build - and runs 56-59 died on exactly that before the DEVMEM change
+	 * ever got measured. devtools/dtslint.py now checks this rule locally.
+	 */
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+
+	/*
+	 * The 9132 is this board's LAN switch, and it sits on the XMAC0 LAN
+	 * lane - the same place the RTL8372N's CPU port sits on the SR1010.
+	 * The evidence is in docs/16-9132-topology-and-driver-design-20261021.md:
+	 * the vendor prints "xmac0_pcs_base is 0x140000" and "xmac0 is used"
+	 * before it declares its MII devices, and the first of those is "sw",
+	 * which is the 9132's CPU port.
+	 *
+	 * The LAN conduit is the netdev on that CPU port.  It is a child of the
+	 * NPPT controller on the SR1010 too, and the NPPT driver keeps the
+	 * shared datapath; the switch driver takes it with
+	 * zx279133_lan_service_datapath_get().
+	 *
+	 * Both are subnodes of &nppt, so they come after the properties and
+	 * after the fixed-link child - dtc orders a node as properties-then-
+	 * subnodes, and a property written among the subnodes kills the build.
+	 */
+	lan_cpu: ethernet-lan-cpu {
+		compatible = "zte,zx279133-lan-conduit";
+
+		/*
+		 * The address the board answers on, and the one the vendor
+		 * firmware puts on the wire for 192.168.9.1: d0:45:8d:84:09:00.
+		 *
+		 * It has to be *here* and not on the parent.  The driver reads it
+		 * with of_get_ethdev_address(dev->of_node, ndev), and dev->of_node
+		 * is this node - the one the driver probes.  With the property
+		 * on the parent the read fails and the driver falls back to
+		 * eth_hw_addr_random(), so the board answers on a different
+		 * address on every boot.  The address then never reaches the
+		 * switch's own table, a frame addressed to it finds no entry,
+		 * and the switch floods it - and the CPU trap is in no flood
+		 * group, so the frame is dropped inside the chip: the RED's
+		 * counters move and no netdev ever counts a byte.
+		 *
+		 * Measured 2026-10-23: with the vendor firmware the same PC
+		 * reaches 192.168.9.1 with 0% loss on this address.
+		 */
+		local-mac-address = [d0 45 8d 84 09 00];
+	};
+
+	switch {
+		compatible = "zte,zx279133-switch";
+
+		/*
+		 * The four UNI ports as DSA ports, and the CPU port on the
+		 * conduit.
+		 *
+		 * The port numbers are the tree's RTL8372N numbers on purpose.
+		 * The tagger the tree ships for this SoC's LAN conduit puts the
+		 * transport VID 55 + port on the conduit - 59..62 for ports
+		 * 4..7 - and those are exactly the VIDs the NPPT driver programs
+		 * as the untagged SVID (the PVID) of the 9132's PPU ports 1..4.
+		 * So the tree's tagger, the tree's VIDs and this board's PVIDs
+		 * are one scheme, and DSA port N + 3 is the 9132's PPU port N.
+		 *
+		 * The labels name the 9132's own UNI ports.  Which of the four
+		 * jacks each of them is does not claim a panel order: the
+		 * vendor's own table says only that the test PC is in switch
+		 * port 1, and the panel order is not established.
+		 */
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			/*
+			 * The four UNI ports.
+			 *
+			 * These have internal PHYs (the 9132's own, at MDIO
+			 * 0x0a..0x0d on controller #0), and the tree's DSA
+			 * contract for a user port with no phy-handle is to
+			 * take them from ds->user_mii_bus at an address equal
+			 * to the port number (net/dsa/port.c: "User ports with
+			 * no phy-handle or fixed-link are expected to connect
+			 * to an internal PHY located on the ds->user_mii_bus
+			 * at an MDIO address equal to the port number").
+			 *
+			 * That path needs two things this tree does not have
+			 * for this chip: a mii_bus of our own (the 9132's PHYs
+			 * are not on a bus of the switch's, they are on the
+			 * SoC's controller #0) and a PHY driver that matches
+			 * them.  The chip answers 0x84b9:0x5032, and no
+			 * driver in this tree claims that id - the tree's own
+			 * zx279051.c expects 0x000084b9 and reads it over
+			 * Clause 45, while these are Clause 22.
+			 *
+			 * So the ports carry a fixed-link for now.  It is the
+			 * one thing phylink needs no PHY for:
+			 * phylink_fwnode_phy_connect() returns 0 as soon as
+			 * cfg_link_an_mode is MLO_AN_FIXED, before it looks
+			 * for a PHY at all, so the four netdevs appear and
+			 * the switch registration completes.
+			 *
+			 * What this costs, and it is not nothing: a port in
+			 * fixed-link mode has no carrier of its own, so it
+			 * claims 1G/full whether or not a cable is in it.
+			 * The PHYs themselves are untouched - the NPPT driver
+			 * still powers them and enables auto-negotiation
+			 * (zx279133_9132_phy_enable()), and the 9132 reads
+			 * their link state itself, so traffic still only
+			 * moves when a cable is really there.  What is lost
+			 * is the *software's* view of the link, and with it
+			 * the per-port speed and duplex that a real PHY
+			 * would report.
+			 *
+			 * The replacement is a PHY driver of our own and a
+			 * mii_bus of our own; until that exists this is the
+			 * honest way to say "1G, full duplex, and the PHY on
+			 * the other end negotiates as it always did".
+			 */
+			port@4 {
+				reg = <4>;
+				label = "lan0";
+				phy-mode = "internal";
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+
+			port@5 {
+				reg = <5>;
+				label = "lan2";
+				phy-mode = "internal";
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+
+			port@6 {
+				reg = <6>;
+				label = "lan3";
+				phy-mode = "internal";
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+
+			port@7 {
+				reg = <7>;
+				label = "lan4";
+				phy-mode = "internal";
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+
+			/*
+			 * The 2.5G jack: the panel's LAN1.
+			 *
+			 * It is the 9132's fifth user port - the one the
+			 * vendor calls the outerphy - and its PHY is the
+			 * external RTL8226, which is on &mdio1 at address 5
+			 * and not on the 9132's own bus.  The port is behind
+			 * the switch's fabric like the four UNI ports, and
+			 * the SoC reaches it the same way it reaches them:
+			 * over the 9132's CPU port.
+			 *
+			 * The port runs base-X to that PHY (the vendor's
+			 * mode_eth_2p5gbase_x_cfg, measured at 2500BASE-X)
+			 * and carries the transport VID 63, which is 55 + this
+			 * port number - the same scheme the four jacks use,
+			 * and the untag SVID the NPPT driver gives PPU 5.
+			 *
+			 * It is a fixed-link port: the RTL8226 is not a PHY
+			 * of this switch's own bus, so the core must not go
+			 * looking for one there.
+			 *
+			 * The fixed-link below is the boot ceiling phylink
+			 * copies in first. The rate and carrier the user
+			 * netdev publishes come from the RTL8226 copper
+			 * status (1f.0xa434) via phylink_fixed_state(). On
+			 * this 6.18 tree that callback is installed for the
+			 * user port, so a 1G peer is reported as 1G.
+			 */
+			port@8 {
+				reg = <8>;
+				label = "lan1";
+				/*
+				 * The lane runs 2500BASE-X (docs/92 §96.31):
+				 * the far end's SerDes mode word reads 0x9416
+				 * (mode field 0x16 = 2500BASE-X) and the
+				 * board's own kernel reached a host behind
+				 * this jack with 0% loss.
+				 *
+				 * speed = <2500> is the ceiling, not the
+				 * negotiated rate. phylink copies it into the
+				 * state and the driver's fixed-state callback
+				 * then overwrites speed, duplex, link and the
+				 * interface (1000base-x or 2500base-x) from
+				 * PHYSR 1f.0xa434. A peer that only offers 1G
+				 * must not stay advertised as 2.5G.
+				 */
+				phy-mode = "2500base-x";
+
+				/* Panel LAN1 is PHY 5/MMD 1f channel 0, not GPIO4_2.
+				 * The switch owns only the verified LED event/polarity
+				 * fields; no phy_device is created or reinitialized.
+				 */
+				leds {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					led@0 {
+						reg = <0>;
+						color = <LED_COLOR_ID_GREEN>;
+						default-state = "off";
+						function = LED_FUNCTION_LAN;
+						label = "skyworth:green:lan1";
+					};
+				};
+
+				fixed-link {
+					speed = <2500>;
+					full-duplex;
+				};
+			};
+
+			/*
+			 * The CPU port: the one that faces the conduit, on
+			 * the SoC's own SGMII lane at 1G.
+			 *
+			 * It is port 9 and not 8 because the 2.5G jack took
+			 * 8 - the user ports are a run and the CPU port is
+			 * the one after them, which is the shape the tree's
+			 * RTL8372N node has (ports 4..7 and the CPU port at
+			 * 8).
+			 */
+			port@9 {
+				reg = <9>;
+				ethernet = <&lan_cpu>;
+				phy-mode = "sgmii";
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+		};
+	};
+};
+
+&mdio0 {
+	status = "okay";
+};
+
+&mdio1 {
+	status = "okay";
+
+	/* The one external PHY on this board. Evidence from the running unit:
+	 *  - /lib/modules/4.19.136+/rlt8226b.ko + /sys/module/rlt8226b, dmesg
+	 *    "Start insmod R8226b_init!" / "r8226b_phy_probe: 576: rtl8226b Phy
+	 *    Driver Probe Done", and its outerphy table names index 5 phy_RTL8226.
+	 *  - /sys/firmware/devicetree/base/soc/pon_plat/mdio_8226_id = <1>, and
+	 *    dmesg labels 14f02000.mdio "MDIO id = 1" -> this bus, address 5
+	 *    (SR1010 has its PHY at address 1 on the same bus).
+	 *
+	 * There is deliberately **no node for it**.  It was there until
+	 * 2026-10-29, and it was the reason this lane never carried a frame:
+	 *
+	 *  - With a node, of_mdiobus makes a phy_device for address 5.  The node
+	 *    carried no compatible, so phylib matched the chip's own ID
+	 *    (0x001cc849) against CONFIG_REALTEK_PHY and bound the tree's generic
+	 *    Realtek driver to it - "RTL8221B-VB-CG 2.5Gbps PHY (C22)", confirmed
+	 *    on the running board.  (A compatible would have been worse: the
+	 *    first mainline trial bound the ZX279051 driver to this Realtek chip
+	 *    and wrote ZX279051 registers into it, docs/92 and this file's
+	 *    history.)
+	 *
+	 *  - With the node gone, nothing binds to the chip at all, and that was
+	 *    confirmed on the running board on 2026-10-29 06:34 and 06:55:
+	 *    /sys/bus/mdio_bus/devices holds the four internal PHYs and the two
+	 *    dwxpcs and nothing else, and the boot log has no realtek probe
+	 *    message in it.  So the tree's rtl822x_set_serdes_option_mode() -
+	 *    which is what that driver's config_init() runs and which rewrites
+	 *    the RTL8226's SerDes option (devad 0x1e registers 0x697a, 0x6a04,
+	 *    0x6f10 and 0x6f11) - does not run.  The four registers still hold
+	 *    the loader's own values (0x697a = 0x0000, 0x6a04 = 0x0503,
+	 *    0x6f10 = 0x086a, 0x6f11 = 0x0021, measured 2026-10-29 06:47).
+	 *
+	 *  - The one register that says whether the base-X lane still delivers
+	 *    frames - devad 7 register 1, whose four good bits are link up,
+	 *    block lock, block sync and RX valid (docs/92 §78.3) - reads 0x00e9
+	 *    under the vendor's U-Boot and 0x00ad under mainline: exactly one of
+	 *    those four bits is missing.  Same board, same power cycle, same
+	 *    register, read the same way (mdiobus_c45_read, zx279133-switch.c).
+	 *    The loader's value was measured again on 2026-10-29 06:51-06:52,
+	 *    at the loader's prompt before and after its net init: 0x00e9 both
+	 *    times.
+	 *
+	 *  - The DSP patch window (devad 0x1f reg 0xa438) is a *streaming* one:
+	 *    every read advances it, so reading it twice gives two different
+	 *    values.  The "mainline reads 0x0038 against the loader's 0x0002"
+	 *    of docs/92 §94.2 is that artifact and nothing else (writing 0x0002
+	 *    and reading it twice gave 0x0002 and then 0x0100, 2026-10-29
+	 *    06:57).  Nothing had written it.
+	 *
+	 * Nothing else in the tree touches this chip and nothing needs to:
+	 * zx279133_switch_outerphy_link() reads its link straight out of the
+	 * chip with mdiobus_c45_read(bus, 5, 7, 1), the port is fixed-link, and
+	 * the chip is already out of reset and configured when the kernel starts,
+	 * because the vendor bootloader configured it (see the note on
+	 * reset-gpios below, which is now moot for the same reason).
+	 */
+};
+
+&xpcs0 {
+	status = "okay";
+};
+
+&xpcs1 {
+	status = "okay";
+};
+
+/* Both watchdogs are switched off for the trials, and the reason is the window
+ * they would cut, not a belief that nothing feeds them: zx279133.dtsi already
+ * ships watchdog0 (14f09000) as "okay" with timeout-sec = <10> and
+ * zte,restart-watchdog, and procd's watchdog_init() opens /dev/watchdog whenever
+ * the node exists (it is not gated on system.@system[0].watchdog_timeout), so an
+ * image that reaches procd does feed it. What has no feeder is everything before
+ * procd - driver probe, first-boot board detection - and a 10 s timeout armed the
+ * moment procd starts is what then bites, with no console to see it from.
+ *
+ * The ~43 s reset measured after kexec-ing this board's Image was *not* this
+ * watchdog: the 4.19 vendor kernel arms three zx_wdt instances at 8 s and feeds
+ * them in-kernel, that feeding stops when the old kernel dies, and the reset
+ * routing is the volatile CRM register 0x10e10208 (writing it to 0x0 keeps the
+ * board up; 0x101 only delays the bite).
+ *
+ * To be settled from a shell on mainline, then re-enabled for the flashed image:
+ * with watchdog0 "okay", a flashed mainline that hangs early at least resets
+ * instead of wedging - which is not recovery (there is no A/B and no serial), but
+ * it is better than a board that has to be power-cycled to notice anything.
+ */
+&watchdog0 {
+	status = "disabled";
+};
+
+&watchdog1 {
+	status = "disabled";
+};
+
+/* Two constraints, and they only fit together one way.
+ *
+ * 1. No env edit is needed to boot this image: U-Boot's bootargs say
+ *    `root=/dev/mtdblock5`, so `root` has to end up as /dev/mtdblock5. That is now
+ *    *pinned* rather than counted - see the mtd1..mtd6 aliases above. Counting nodes
+ *    was the old approach and it was not safe: whether the SPI-NAND master itself takes
+ *    mtd0 depends on CONFIG_MTD_PARTITIONED_MASTER (mtdcore.c: `if
+ *    IS_ENABLED(CONFIG_MTD_PARTITIONED_MASTER) add_mtd_device(mtd)` runs before the
+ *    partitions are registered), so the same blob is mtd4 or mtd5 depending on a kernel
+ *    config nobody is looking at. A pin cannot drift.
+ * 2. The image has to be programmable from the system that is installed now.
+ *    That flasher runs on the vendor 4.19 and writes by partition LABEL,
+ *    because `/sbin/mtd` can only erase/write a whole partition - there is no
+ *    tool on this image that erases a sub-range. The 4.19's own mtd table puts
+ *    `root` at 0xf00000, so `root` here must start at 0xf00000 too: an offset
+ *    of 0x1000000 would have the flasher write the jffs2 one erase block
+ *    *below* where the new kernel looks for it, which boots as a panic on an
+ *    empty root and leaves no way back without a serial cable.
+ *
+ * The pin also frees the table from the hack that used to satisfy (1): U-Boot's single
+ * 4096k `parameter tags` region is no longer split in two to fill a slot, so it is one
+ * read-only node again and still covers the bytes U-Boot keeps its MAC/calibration in.
+ * The final MiB belongs to root. Never use that range as a raw NAND test area.
+ *
+ * Offsets/labels otherwise mirror the community U-Boot env
+ * (boot 2048k@0x0, kernel 8192k@0x200000, dtb 1024k@0xa00000,
+ *  "parameter tags" 4096k@0xb00000, root 246784k@0xf00000).
+ */
+&spifc {
+	spi-max-frequency = <25000000>;
+	status = "okay";
+
+	flash@0 {
+		partitions-only;
+		spi-max-frequency = <25000000>;
+
+		/delete-node/ partitions;
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			bootpart: partition@0 {
+				label = "boot";
+				reg = <0x000000 0x200000>;
+				read-only;
+			};
+
+			kernelpart: partition@200000 {
+				label = "kernel";
+				reg = <0x200000 0x800000>;
+			};
+
+			dtbpart: partition@a00000 {
+				label = "dtb";
+				reg = <0xa00000 0x100000>;
+			};
+
+			tagspart: partition@b00000 {
+				label = "parameter tags";
+				reg = <0xb00000 0x400000>;
+				read-only;
+			};
+
+			rootpart: partition@f00000 {
+				label = "root";
+				reg = <0xf00000 0xf100000>;
+			};
+		};
+	};
+};

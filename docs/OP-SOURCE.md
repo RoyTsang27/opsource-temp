@@ -80,6 +80,34 @@ by the owner's [XG-040G-MD reference project](https://github.com/xiangtailiang/O
 It records the exact source revisions, TF adaptation, preserved stock/UBI
 menuconfig entries and local validation for the owner's six main devices.
 
+## Skyworth SK-D840N
+
+Select `sk-d840n` in **Actions → OpenWrt Device Build → Run workflow**. For
+a local build, install the pinned feeds and the host `zopfli` package on the
+Linux build machine.
+
+```sh
+python3 scripts/device-build.py configure sk-d840n
+make download -j4
+make -j"$(nproc)"
+python3 scripts/device-build.py check-images sk-d840n bin/targets/zte/zx279133
+```
+
+The preset uses a pinned ZX279133 kernel with checksum-verified updates to
+Linux 6.18.60. The firmware artifact includes the kernel provenance, a signed
+sysupgrade archive, and a standalone JFFS2 root filesystem. The sysupgrade
+archive contains a gzip uImage, a separate DTB, and the JFFS2 root filesystem.
+It requires an SK-D840N already running a compatible bootloader and the
+`native241` NAND layout. Fresh configurations use `192.168.9.1` on the four
+RJ45 LAN ports. Boot, upgrades, and optical service still require hardware
+validation for this build.
+
+The [community OpenWrt project](https://github.com/huxiangjs/SK-D840N-OpenWRT)
+documents the NAND layout that the [ZX279133 board port](https://github.com/woodnaonly/zx279133-ponwrt-build/tree/7995c29197b8dc47d9282892520693cf060cb964)
+uses. The board port documents the compatible bootloader, first installation,
+and recovery procedures. The device manifest pins the board and kernel source
+commits used here.
+
 ## Linux 6.18.55 to 6.18.56
 
 The official source snapshot selects Linux 6.18.55 for MediaTek and Ralink.

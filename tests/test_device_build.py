@@ -1,11 +1,15 @@
+import gzip
 import hashlib
+from io import BytesIO
 import importlib.util
 import json
 from pathlib import Path
+import struct
 import subprocess
 import tarfile
 import tempfile
 import unittest
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('device_build', ROOT / 'scripts/device-build.py')
@@ -23,7 +27,7 @@ class SelectionTests(unittest.TestCase):
 
     def test_optional_layouts_are_explicit_single_device_choices(self):
         for name in ['ax3000t-ubootmod', 'tr3000-256mb', 'tr3000-ubootmod',
-                     'xg-040g-md-tcboot', 'xg-140g-tf-tcboot']:
+                     'xg-040g-md-tcboot', 'xg-140g-tf-tcboot', 'sk-d840n']:
             with self.subTest(name=name):
                 self.assertEqual([e['device'] for e in builder.matrix(name)['include']], [name])
 
@@ -60,6 +64,29 @@ class SelectionTests(unittest.TestCase):
                 with self.subTest(text=text):
                     path.write_text(text)
                     with self.assertRaises(ValueError): builder.check_config('tr1200', path)
+
+    def test_sk_d840n_requires_jffs2_and_external_kernel(self):
+        settings = '\n'.join([
+            'CONFIG_TARGET_zte=y', 'CONFIG_TARGET_zte_zx279133=y',
+            'CONFIG_TARGET_zte_zx279133_DEVICE_skyworth_sk-d840n=y',
+            'CONFIG_TARGET_ROOTFS_JFFS2=y', 'CONFIG_SIGN_FIRMWARE=y',
+            'CONFIG_DOWNLOAD_CHECK_CERTIFICATE=y', 'CONFIG_USE_APK=y',
+            'CONFIG_KERNEL_CC_OPTIMIZE_FOR_SIZE=y',
+            'CONFIG_PACKAGE_sk-layout-check=y', 'CONFIG_PACKAGE_luci-ssl-openssl=y',
+            'CONFIG_EXTERNAL_KERNEL_TREE="/build/kernel"',
+        ])
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / '.config'
+            path.write_text(settings)
+            builder.check_config('sk-d840n', path)
+            for text in (
+                settings.replace('CONFIG_TARGET_ROOTFS_JFFS2=y', ''),
+                settings.replace('="/build/kernel"', '=""'),
+                settings + '\nCONFIG_TARGET_ROOTFS_SQUASHFS=y',
+            ):
+                with self.subTest(text=text), self.assertRaises(ValueError):
+                    path.write_text(text)
+                    builder.check_config('sk-d840n', path)
 
     def test_tr1200_backup_partition_matches_its_address(self):
         source = (ROOT / 'target/linux/ramips/dts/mt7628an_cudy_tr1200-v1.dts').read_text()
@@ -120,6 +147,56 @@ class ImageTests(unittest.TestCase):
                        'sha256': hashlib.sha256(factory.read_bytes()).hexdigest()})
         self.write_info()
         builder.check_images('xg-040g-md-tcboot', self.output)
+
+
+class SkD840nImageTests(unittest.TestCase):
+    def test_sysupgrade_requires_matching_boot_and_root_components(self):
+        root = b'\x85\x19test rootfs'
+        payload = gzip.compress(b'Linux version 6.18.60 (builder)\0')
+        header = struct.pack('>7I4B32s', 0x27051956, 0, 0, len(payload),
+                             0x80200000, 0x80200000, zlib.crc32(payload),
+                             5, 22, 2, 1, b'SK-D840N')
+        header = header[:4] + struct.pack('>I', zlib.crc32(header)) + header[8:]
+        parts = {
+            'CONTROL': b'BOARD=skyworth_sk-d840n\n',
+            'kernel': header + payload,
+            'dtb': b'\xd0\x0d\xfe\xed' + bytes(36) + b'skyworth,sk-d840n\0',
+            'root': root,
+        }
+
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            image = output / 'sysupgrade.bin'
+            rootfs = output / 'rootfs.jffs2'
+            rootfs.write_bytes(root)
+
+            def write_image(parts):
+                with tarfile.open(image, 'w:') as archive:
+                    for name, data in parts.items():
+                        member = tarfile.TarInfo('sysupgrade-skyworth_sk-d840n/' + name)
+                        member.size = len(data)
+                        archive.addfile(member, BytesIO(data))
+                # OpenWrt appends its image metadata after the tar stream.
+                with image.open('ab') as stream:
+                    stream.write(b'fwtool trailer')
+                profile = builder.device('sk-d840n')['profile']
+                info = {
+                    'target': 'zte/zx279133', 'linux_kernel': {'version': '6.18.60'},
+                    'profiles': {profile: {'images': [
+                        {'type': kind, 'name': path.name, 'size': path.stat().st_size,
+                         'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+                        for kind, path in (('sysupgrade', image), ('rootfs', rootfs))
+                    ]}},
+                }
+                (output / 'profiles.json').write_text(json.dumps(info))
+
+            write_image(parts)
+            builder.check_images('sk-d840n', output)
+            for name, data in (('kernel', header + payload[:-1]), ('root', root + b'x'),
+                               ('dtb', bytes(64)), ('CONTROL', b'BOARD=another_board\n')):
+                with self.subTest(member=name), self.assertRaises(ValueError):
+                    write_image(dict(parts, **{name: data}))
+                    builder.check_images('sk-d840n', output)
 
 
 class TcbootUpgradeTests(unittest.TestCase):

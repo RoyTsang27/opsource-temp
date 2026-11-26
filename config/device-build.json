@@ -79,6 +79,23 @@
       "dts": "an7581-nokia_xg-140g-tf-tcboot",
       "compatible": "nokia,xg-140g-tf-tcboot",
       "factory_image": true
+    },
+    "sk-d840n": {
+      "name": "Skyworth SK-D840N (native241 layout)",
+      "target": "zte",
+      "subtarget": "zx279133",
+      "profile": "skyworth_sk-d840n",
+      "dts": "zx279133-sk-d840n",
+      "compatible": "skyworth,sk-d840n",
+      "kernel": "6.18.60",
+      "board_source": {
+        "url": "https://github.com/woodnaonly/zx279133-ponwrt-build.git",
+        "commit": "7995c29197b8dc47d9282892520693cf060cb964"
+      },
+      "kernel_source": {
+        "url": "https://github.com/cnjn/linux-mainline-zte-zxslc-sr1010.git",
+        "commit": "96e5a2413524742e177e383fe523ef21de5ed238"
+      }
     }
   },
   "visibility": "public",
