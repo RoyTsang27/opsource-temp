@@ -1,0 +1,24 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Fri, 20 Nov 2026 18:44:40 +0100
+Subject: [PATCH] wifi: mt76: mt7925: free the vif links when all links go
+
+Upstream: https://github.com/openwrt/mt76/commit/9d4499ccd1dc402be55c87cc5d62895c27edde92
+Fixes: 69acd6d910b0 ("wifi: mt76: mt7925: add mt7925_change_vif_links")
+Link: https://patch.msgid.link/20261120174459.1657382-1-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/main.c b/mt7925/main.c
+index 962e428..c303813 100644
+--- a/mt7925/main.c
++++ b/mt7925/main.c
+@@ -2265,8 +2265,8 @@ mt7925_change_vif_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	mt792x_mutex_acquire(dev);
+ 
+ 	for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
+-		mconf = mt792x_vif_to_link(mvif, link_id);
+-		mlink = mt792x_sta_to_link(&mvif->sta, link_id);
++		mconf = mt76_dereference(mvif->link_conf[link_id], &dev->mt76);
++		mlink = mt76_dereference(mvif->sta.link[link_id], &dev->mt76);
+ 
+ 		if (!mconf || !mlink)
+ 			continue;

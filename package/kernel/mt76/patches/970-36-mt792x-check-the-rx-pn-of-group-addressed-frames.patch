@@ -1,0 +1,104 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:20 +0100
+Subject: [PATCH] wifi: mt76: mt792x: check the RX PN of group addressed frames
+
+Upstream: https://github.com/openwrt/mt76/commit/86d8fbc94408a411778dd25601d8dcff01d57826
+Fixes: 163f4d22c118 ("mt76: mt7921: add MAC support")
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Fixes: 86c051f2c418 ("wifi: mt76: mt7925: enabling MLO when the firmware supports it")
+Link: https://patch.msgid.link/20261126182325.2516607-11-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7921/mac.c b/mt7921/mac.c
+index a2d5778..a843b0a 100644
+--- a/mt7921/mac.c
++++ b/mt7921/mac.c
+@@ -212,6 +212,8 @@ mt7921_mac_fill_rx(struct mt792x_dev *dev, struct sk_buff *skb)
+ 
+ 	chfreq = FIELD_GET(MT_RXD3_NORMAL_CH_FREQ, rxd3);
+ 	unicast = FIELD_GET(MT_RXD3_NORMAL_ADDR_TYPE, rxd3) == MT_RXD3_NORMAL_U2M;
++	status->group = !unicast;
++	status->key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
+ 	idx = FIELD_GET(MT_RXD1_NORMAL_WLAN_IDX, rxd1);
+ 	status->wcid = mt792x_rx_get_wcid(dev, idx, unicast);
+ 
+@@ -385,7 +387,7 @@ mt7921_mac_fill_rx(struct mt792x_dev *dev, struct sk_buff *skb)
+ 		struct ieee80211_vif *vif;
+ 		int err;
+ 
+-		if (!msta || !msta->vif)
++		if (!msta || !msta->vif || !status->wcid->sta)
+ 			return -EINVAL;
+ 
+ 		vif = container_of((void *)msta->vif, struct ieee80211_vif,
+diff --git a/mt7921/main.c b/mt7921/main.c
+index 6207a87..cf9766a 100644
+--- a/mt7921/main.c
++++ b/mt7921/main.c
+@@ -317,6 +317,7 @@ mt7921_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	mvif->bss_conf.mt76.omac_idx = mvif->bss_conf.mt76.idx;
+ 	mvif->phy = phy;
+ 	mvif->bss_conf.vif = mvif;
++	mvif->sta.vif = mvif;
+ 	mvif->bss_conf.mt76.band_idx = 0;
+ 	mvif->bss_conf.mt76.wmm_idx = mvif->bss_conf.mt76.idx % MT76_CONNAC_MAX_WMM_SETS;
+ 
+@@ -335,6 +336,8 @@ mt7921_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	mvif->sta.deflink.wcid.idx = idx;
+ 	mvif->sta.deflink.wcid.tx_info |= MT_WCID_TX_INFO_SET;
+ 	mt76_wcid_init(&mvif->sta.deflink.wcid, mvif->bss_conf.mt76.band_idx);
++	mt76_wcid_rx_group_pn_set(&mvif->sta.deflink.wcid, vif,
++				  &mvif->bss_conf.mt76.rx_group_pn);
+ 
+ 	mt7921_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+diff --git a/mt7925/mac.c b/mt7925/mac.c
+index 5dfa1ab..d0e207f 100644
+--- a/mt7925/mac.c
++++ b/mt7925/mac.c
+@@ -422,6 +422,8 @@ mt7925_mac_fill_rx(struct mt792x_dev *dev, struct sk_buff *skb)
+ 
+ 	chfreq = FIELD_GET(MT_RXD3_NORMAL_CH_FREQ, rxd3);
+ 	unicast = FIELD_GET(MT_RXD3_NORMAL_ADDR_TYPE, rxd3) == MT_RXD3_NORMAL_U2M;
++	status->group = !unicast;
++	status->key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
+ 	idx = FIELD_GET(MT_RXD1_NORMAL_WLAN_IDX, rxd1);
+ 	status->wcid = mt792x_rx_get_wcid(dev, idx, unicast);
+ 
+diff --git a/mt7925/main.c b/mt7925/main.c
+index b64fc7d..7734352 100644
+--- a/mt7925/main.c
++++ b/mt7925/main.c
+@@ -429,6 +429,7 @@ static int mt7925_mac_link_bss_add(struct mt792x_dev *dev,
+ 	mlink->wcid.idx = idx;
+ 	mlink->wcid.tx_info |= MT_WCID_TX_INFO_SET;
+ 	mt76_wcid_init(&mlink->wcid, 0);
++	mt76_wcid_rx_group_pn_set(&mlink->wcid, vif, &mconf->mt76.rx_group_pn);
+ 
+ 	mt7925_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+diff --git a/mt792x_mac.c b/mt792x_mac.c
+index ebf4c32..d4ea214 100644
+--- a/mt792x_mac.c
++++ b/mt792x_mac.c
+@@ -147,14 +147,18 @@ struct mt76_wcid *mt792x_rx_get_wcid(struct mt792x_dev *dev, u16 idx,
+ 		return wcid;
+ 
+ 	if (!wcid->sta)
+-		return NULL;
++		return mt76_rx_group_wcid(wcid);
+ 
+ 	link = container_of(wcid, struct mt792x_link_sta, wcid);
+ 	sta = link->sta;
+ 	if (!sta->vif)
+ 		return NULL;
+ 
+-	return &sta->vif->sta.deflink.wcid;
++	link = mt792x_sta_to_link_rcu(&sta->vif->sta, wcid->link_id);
++	if (!link)
++		link = &sta->vif->sta.deflink;
++
++	return &link->wcid;
+ }
+ EXPORT_SYMBOL_GPL(mt792x_rx_get_wcid);
+ 

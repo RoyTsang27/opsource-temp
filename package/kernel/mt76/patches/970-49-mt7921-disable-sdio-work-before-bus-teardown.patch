@@ -1,0 +1,52 @@
+From: Yin-Ming Li <evan-ym.li@mediatek.com>
+Date: Tue, 3 Nov 2026 17:10:10 +0800
+Subject: [PATCH] wifi: mt76: mt7921: disable SDIO work before bus teardown
+
+Upstream: https://github.com/openwrt/mt76/commit/cfa6b9010af1220c847082c3c5ed4f6f8c4bf28b
+Fixes: 48fab5bbef40 ("mt76: mt7921: introduce mt7921s support")
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Yin-Ming Li <evan-ym.li@mediatek.com>
+Link: https://patch.msgid.link/20261103091010.1148974-3-jb.tsai@mediatek.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7921/sdio.c b/mt7921/sdio.c
+index 9150f18..d20892d 100644
+--- a/mt7921/sdio.c
++++ b/mt7921/sdio.c
+@@ -32,7 +32,9 @@ static void mt7921s_txrx_worker(struct mt76_worker *w)
+ 	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
+ 
+ 	if (!mt76_connac_pm_ref(&dev->mphy, &dev->pm)) {
+-		queue_work(mdev->wq, &dev->pm.wake_work);
++		/* The bus worker can run until mt76s_deinit(). */
++		if (!test_bit(MT76_REMOVED, &dev->mphy.state))
++			queue_work(mdev->wq, &dev->pm.wake_work);
+ 		return;
+ 	}
+ 
+@@ -42,17 +44,18 @@ static void mt7921s_txrx_worker(struct mt76_worker *w)
+ 
+ static void mt7921s_unregister_device(struct mt792x_dev *dev)
+ {
+-	struct mt76_connac_pm *pm = &dev->pm;
+-
+-	cancel_work_sync(&dev->init_work);
+-	mt76_unregister_device(&dev->mt76);
+-	cancel_delayed_work_sync(&pm->ps_work);
+-	cancel_work_sync(&pm->wake_work);
++	mt7921_unregister_device(dev);
++	set_bit(MT76_REMOVED, &dev->mphy.state);
+ 
+ 	mt76s_deinit(&dev->mt76);
+ 	mt7921s_wfsys_reset(dev);
+ 	skb_queue_purge(&dev->mt76.mcu.res_q);
+ 
++	/* Event producers and scan_work are stopped before purging queues. */
++	skb_queue_purge(&dev->phy.scan_event_list);
++	cancel_delayed_work_sync(&dev->coredump.work);
++	skb_queue_purge(&dev->coredump.msg_list);
++
+ 	mt76_free_device(&dev->mt76);
+ }
+ 

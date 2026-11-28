@@ -1,0 +1,26 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 19 Nov 2026 13:43:35 +0100
+Subject: [PATCH] wifi: mt76: take the remaining wcids off the phy tx_list at reset
+
+Upstream: https://github.com/openwrt/mt76/commit/2c2df658a5575060816e3e970699f87c332119ec
+Fixes: 065c79df595a ("wifi: mt76: mt7915: fix list corruption after hardware restart")
+Link: https://patch.msgid.link/20261119124352.1842164-3-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mac80211.c b/mac80211.c
+index a07eac5..07af69b 100644
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -893,7 +893,11 @@ static void mt76_reset_phy(struct mt76_phy *phy)
+ 	if (!phy)
+ 		return;
+ 
+-	INIT_LIST_HEAD(&phy->tx_list);
++	spin_lock_bh(&phy->dev->tx_lock);
++	while (!list_empty(&phy->tx_list))
++		list_del_init(phy->tx_list.next);
++	spin_unlock_bh(&phy->dev->tx_lock);
++
+ 	phy->num_sta = 0;
+ 	phy->chanctx = NULL;
+ 	mt76_roc_complete(phy);

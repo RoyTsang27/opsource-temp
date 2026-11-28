@@ -1,0 +1,40 @@
+From: Zhao Li <enderaoelyther@gmail.com>
+Date: Mon, 16 Nov 2026 01:27:22 +0800
+Subject: [PATCH] wifi: mt76: mt7996: check the RX WCID before using its station link
+
+Upstream: https://github.com/openwrt/mt76/commit/8f2975b18a5e9fd20891ebe2e42182efa2a8865d
+Fixes: a3ea1c309bf3 ("wifi: mt76: mt7996: Fix mt7996_reverse_frag0_hdr_trans for MLO")
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Link: https://patch.msgid.link/20261115172723.34964-1-enderaoelyther@gmail.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7996/mac.c b/mt7996/mac.c
+index b0e2516..d17e1ea 100644
+--- a/mt7996/mac.c
++++ b/mt7996/mac.c
+@@ -191,12 +191,12 @@ static int mt7996_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_gap)
+ 	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
+ 	struct ethhdr *eth_hdr = (struct ethhdr *)(skb->data + hdr_gap);
+ 	struct mt7996_sta_link *msta_link = (void *)status->wcid;
+-	struct mt7996_sta *msta = msta_link->sta;
+ 	struct ieee80211_bss_conf *link_conf;
+ 	__le32 *rxd = (__le32 *)skb->data;
+ 	struct ieee80211_sta *sta;
+ 	struct ieee80211_vif *vif;
+ 	struct ieee80211_hdr hdr;
++	struct mt7996_sta *msta;
+ 	u16 frame_control;
+ 
+ 	if (le32_get_bits(rxd[3], MT_RXD3_NORMAL_ADDR_TYPE) !=
+@@ -206,6 +206,10 @@ static int mt7996_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_gap)
+ 	if (!(le32_to_cpu(rxd[1]) & MT_RXD1_NORMAL_GROUP_4))
+ 		return -EINVAL;
+ 
++	if (!msta_link)
++		return -EINVAL;
++
++	msta = msta_link->sta;
+ 	if (!msta || !msta->vif)
+ 		return -EINVAL;
+ 

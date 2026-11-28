@@ -1,0 +1,23 @@
+From: Ian Rogers <irogers@google.com>
+Date: Thu, 19 Nov 2026 09:09:27 -0800
+Subject: [PATCH] wifi: mt76: mt7925: Initialize err in mt7925_set_key()
+
+Upstream: https://github.com/openwrt/mt76/commit/c244febfc9c616f55edb27af36c08d66943cb1e4
+Fixes: 3e758e9f777c ("wifi: mt76: mt7925: add link handling in mt7925_set_key")
+Signed-off-by: Ian Rogers <irogers@google.com>
+Link: https://patch.msgid.link/20261119170927.1532076-1-irogers@google.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/main.c b/mt7925/main.c
+index be62282..9f81204 100644
+--- a/mt7925/main.c
++++ b/mt7925/main.c
+@@ -759,7 +759,7 @@ static int mt7925_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	struct mt792x_sta *msta = sta ? (struct mt792x_sta *)sta->drv_priv :
+ 				  &mvif->sta;
+ 	struct mt792x_link_sta *mlink;
+-	int err;
++	int err = 0;
+ 
+ 	/* The hardware does not support per-STA RX GTK, fallback
+ 	 * to software mode for these.

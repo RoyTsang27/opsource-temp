@@ -1,0 +1,22 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Fri, 20 Nov 2026 18:44:46 +0100
+Subject: [PATCH] wifi: mt76: mt7925: skip a polled link without a station
+
+Upstream: https://github.com/openwrt/mt76/commit/268c4da0ab0029c5b2024e049f19a591438851fe
+Fixes: 52f088a2e6bf ("wifi: mt76: mt7925: move WCID teardown into link_sta_remove()")
+Link: https://patch.msgid.link/20261120174459.1657382-7-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/mac.c b/mt7925/mac.c
+index d0e207f..0e20dd6 100644
+--- a/mt7925/mac.c
++++ b/mt7925/mac.c
+@@ -87,7 +87,7 @@ static void mt7925_mac_sta_poll(struct mt792x_dev *dev)
+ 			memset(mlink->airtime_ac, 0, sizeof(mlink->airtime_ac));
+ 		}
+ 
+-		if (!mlink->wcid.sta)
++		if (!msta || !mlink->wcid.sta)
+ 			continue;
+ 
+ 		sta = container_of((void *)msta, struct ieee80211_sta,

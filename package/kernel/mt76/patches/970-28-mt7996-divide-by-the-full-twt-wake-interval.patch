@@ -1,0 +1,29 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Mon, 23 Nov 2026 14:49:15 +0100
+Subject: [PATCH] wifi: mt76: mt7996: divide by the full TWT wake interval
+
+Upstream: https://github.com/openwrt/mt76/commit/eab12d51cb1145f5b272b661d37fa58d62b07169
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Link: https://patch.msgid.link/20261123134920.154270-16-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7996/mac.c b/mt7996/mac.c
+index d17e1ea..a8ed7fa 100644
+--- a/mt7996/mac.c
++++ b/mt7996/mac.c
+@@ -3326,13 +3326,12 @@ void mt7996_mac_add_twt_setup(struct ieee80211_hw *hw,
+ 	if (sta_setup_cmd == TWT_SETUP_CMD_REQUEST ||
+ 	    sta_setup_cmd == TWT_SETUP_CMD_SUGGEST) {
+ 		u64 interval = (u64)le16_to_cpu(twt_agrt->mantissa) << exp;
+-		u64 flow_tsf, curr_tsf;
+-		u32 rem;
++		u64 flow_tsf, curr_tsf, rem;
+ 
+ 		flow->sched = true;
+ 		flow->start_tsf = mt7996_mac_twt_sched_list_add(dev, flow);
+ 		curr_tsf = __mt7996_get_tsf(hw, &msta->vif->deflink);
+-		div_u64_rem(curr_tsf - flow->start_tsf, interval, &rem);
++		div64_u64_rem(curr_tsf - flow->start_tsf, interval, &rem);
+ 		flow_tsf = curr_tsf + interval - rem;
+ 		twt_agrt->twt = cpu_to_le64(flow_tsf);
+ 	} else {

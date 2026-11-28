@@ -1,0 +1,57 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:16 +0100
+Subject: [PATCH] wifi: mt76: mt7996: check the RX PN of group addressed frames
+
+Upstream: https://github.com/openwrt/mt76/commit/9fd75d0bca93c691353627119e377b608d47b977
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Link: https://patch.msgid.link/20261126182325.2516607-7-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7996/mac.c b/mt7996/mac.c
+index a8ed7fa..b6d02c0 100644
+--- a/mt7996/mac.c
++++ b/mt7996/mac.c
+@@ -481,6 +481,8 @@ mt7996_mac_fill_rx(struct mt7996_dev *dev, enum mt76_rxq_id q,
+ 		status->flag |= RX_FLAG_ONLY_MONITOR;
+ 
+ 	unicast = FIELD_GET(MT_RXD3_NORMAL_ADDR_TYPE, rxd3) == MT_RXD3_NORMAL_U2M;
++	status->group = !unicast;
++	status->key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
+ 	idx = FIELD_GET(MT_RXD1_NORMAL_WLAN_IDX, rxd1);
+ 	status->wcid = mt7996_rx_get_wcid(dev, idx, band_idx);
+ 
+@@ -522,6 +524,9 @@ mt7996_mac_fill_rx(struct mt7996_dev *dev, enum mt76_rxq_id q,
+ 		status->flag |= RX_FLAG_MMIC_STRIPPED | RX_FLAG_MIC_STRIPPED;
+ 	}
+ 
++	if (!unicast && !status->wcid && (status->flag & RX_FLAG_DECRYPTED))
++		status->wcid = mt76_rx_group_wcid(mt76_wcid_ptr(dev, idx));
++
+ 	remove_pad = FIELD_GET(MT_RXD2_NORMAL_HDR_OFFSET, rxd2);
+ 
+ 	if (rxd2 & MT_RXD2_NORMAL_MAX_LEN_ERROR)
+diff --git a/mt7996/main.c b/mt7996/main.c
+index c9690d4..e6a967e 100644
+--- a/mt7996/main.c
++++ b/mt7996/main.c
+@@ -449,6 +449,7 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 	msta_link->wcid.link_valid = ieee80211_vif_is_mld(vif);
+ 	msta_link->wcid.tx_info |= MT_WCID_TX_INFO_SET;
+ 	mt76_wcid_init(&msta_link->wcid, band_idx);
++	mt76_wcid_rx_group_pn_set(&msta_link->wcid, vif, &mlink->rx_group_pn);
+ 
+ 	mt7996_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+@@ -848,6 +849,12 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	}
+ 
+ 	for_each_set_bit(link_id, &links, IEEE80211_MLD_MAX_NUM_LINKS) {
++		struct mt7996_vif_link *link = mt7996_vif_link(dev, vif, link_id);
++
++		/* a replay of the key at a link add must keep the counters */
++		if (!sta && link && cmd == SET_KEY)
++			mt76_wcid_key_setup(&dev->mt76, &link->msta_link.wcid, key);
++
+ 		err = mt7996_set_hw_key(hw, cmd, vif, sta, link_id, key);
+ 		if (err)
+ 			break;

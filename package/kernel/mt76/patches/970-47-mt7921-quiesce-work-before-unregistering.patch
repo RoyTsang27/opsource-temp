@@ -1,0 +1,151 @@
+From: Yin-Ming Li <evan-ym.li@mediatek.com>
+Date: Tue, 3 Nov 2026 17:10:08 +0800
+Subject: [PATCH] wifi: mt76: mt7921: quiesce work before unregistering
+
+Upstream: https://github.com/openwrt/mt76/commit/7e782a049a73d3b9b9af23d89975c860e9ec3ea6
+Fixes: 5c14a5f944b9 ("mt76: mt7921: introduce mt7921e support")
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Yin-Ming Li <evan-ym.li@mediatek.com>
+Link: https://patch.msgid.link/20261103091010.1148974-1-jb.tsai@mediatek.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7921/init.c b/mt7921/init.c
+index e3e8bd9..433afed 100644
+--- a/mt7921/init.c
++++ b/mt7921/init.c
+@@ -167,6 +167,36 @@ static void mt7921_init_work(struct work_struct *work)
+ 	mt76_connac_mcu_set_deep_sleep(&dev->mt76, dev->pm.ds_enable);
+ }
+ 
++void mt7921_unregister_device(struct mt792x_dev *dev)
++{
++	struct mt76_connac_pm *pm = &dev->pm;
++
++	cancel_work_sync(&dev->init_work);
++
++	/* Wait for accepted events and reject new unsolicited events. */
++	spin_lock_bh(&dev->mcu_event_lock);
++	dev->mcu_events_stopped = true;
++	spin_unlock_bh(&dev->mcu_event_lock);
++
++	/* Keep the bus and PM wake path available while running work drains. */
++	disable_work_sync(&dev->reset_work);
++	disable_delayed_work_sync(&dev->mphy.mac_work);
++	cancel_delayed_work_sync(&dev->phy.scan_work);
++	timer_shutdown_sync(&dev->phy.roc_timer);
++	cancel_work_sync(&dev->phy.roc_work);
++
++	/* Stop PM producers before mac80211 tears down its queues. */
++	disable_delayed_work_sync(&pm->ps_work);
++	disable_work_sync(&pm->wake_work);
++
++	/* Teardown commands need the wake request that disabling dropped. */
++	mt792x_pm_wake_work(&pm->wake_work);
++	pm->suspended = true;
++
++	mt76_unregister_device(&dev->mt76);
++}
++EXPORT_SYMBOL_GPL(mt7921_unregister_device);
++
+ int mt7921_register_device(struct mt792x_dev *dev)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+@@ -177,6 +207,7 @@ int mt7921_register_device(struct mt792x_dev *dev)
+ 	dev->mt76.phy.priv = &dev->phy;
+ 	dev->mt76.tx_worker.fn = mt792x_tx_worker;
+ 
++	spin_lock_init(&dev->mcu_event_lock);
+ 	INIT_DELAYED_WORK(&dev->pm.ps_work, mt792x_pm_power_save_work);
+ 	INIT_WORK(&dev->pm.wake_work, mt792x_pm_wake_work);
+ 	spin_lock_init(&dev->pm.wake.lock);
+diff --git a/mt7921/mcu.c b/mt7921/mcu.c
+index 3084aad..34f9ea0 100644
+--- a/mt7921/mcu.c
++++ b/mt7921/mcu.c
+@@ -305,7 +305,7 @@ mt7921_mcu_rssi_monitor_iter(void *priv, u8 *mac,
+ 	else
+ 		nl_event = NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW;
+ 
+-	ieee80211_cqm_rssi_notify(vif, nl_event, rssi, GFP_KERNEL);
++	ieee80211_cqm_rssi_notify(vif, nl_event, rssi, GFP_ATOMIC);
+ }
+ 
+ static void
+@@ -326,6 +326,12 @@ mt7921_mcu_rx_unsolicited_event(struct mt792x_dev *dev, struct sk_buff *skb)
+ {
+ 	struct mt76_connac2_mcu_rxd *rxd;
+ 
++	/* Serialize event side effects with mt7921_unregister_device(). */
++	spin_lock_bh(&dev->mcu_event_lock);
++	if (dev->mcu_events_stopped ||
++	    test_bit(MT76_REMOVED, &dev->mphy.state))
++		goto free_skb;
++
+ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
+ 	switch (rxd->eid) {
+ 	case MCU_EVENT_BSS_BEACON_LOSS:
+@@ -334,7 +340,7 @@ mt7921_mcu_rx_unsolicited_event(struct mt792x_dev *dev, struct sk_buff *skb)
+ 	case MCU_EVENT_SCHED_SCAN_DONE:
+ 	case MCU_EVENT_SCAN_DONE:
+ 		mt7921_mcu_scan_event(dev, skb);
+-		return;
++		goto out;
+ 	case MCU_EVENT_DBG_MSG:
+ 		mt7921_mcu_debug_msg_event(dev, skb);
+ 		break;
+@@ -342,7 +348,7 @@ mt7921_mcu_rx_unsolicited_event(struct mt792x_dev *dev, struct sk_buff *skb)
+ 		dev->fw_assert = true;
+ 		mt76_connac_mcu_coredump_event(&dev->mt76, skb,
+ 					       &dev->coredump);
+-		return;
++		goto out;
+ 	case MCU_EVENT_LP_INFO:
+ 		mt7921_mcu_low_power_event(dev, skb);
+ 		break;
+@@ -355,7 +361,10 @@ mt7921_mcu_rx_unsolicited_event(struct mt792x_dev *dev, struct sk_buff *skb)
+ 	default:
+ 		break;
+ 	}
++free_skb:
+ 	dev_kfree_skb(skb);
++out:
++	spin_unlock_bh(&dev->mcu_event_lock);
+ }
+ 
+ static void
+@@ -364,6 +373,11 @@ mt7921_mcu_uni_rx_unsolicited_event(struct mt792x_dev *dev,
+ {
+ 	struct mt76_connac2_mcu_rxd *rxd;
+ 
++	spin_lock_bh(&dev->mcu_event_lock);
++	if (dev->mcu_events_stopped ||
++	    test_bit(MT76_REMOVED, &dev->mphy.state))
++		goto out;
++
+ 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
+ 
+ 	switch (rxd->eid) {
+@@ -373,6 +387,8 @@ mt7921_mcu_uni_rx_unsolicited_event(struct mt792x_dev *dev,
+ 	default:
+ 		break;
+ 	}
++out:
++	spin_unlock_bh(&dev->mcu_event_lock);
+ 	dev_kfree_skb(skb);
+ }
+ 
+diff --git a/mt792x.h b/mt792x.h
+index 09a9349..7425948 100644
+--- a/mt792x.h
++++ b/mt792x.h
+@@ -328,6 +328,9 @@ struct mt792x_dev {
+ 
+ 	struct mt76_connac_pm pm;
+ 	struct mt76_connac_coredump coredump;
++	/* MT7921 unsolicited event dispatch versus unregister. */
++	spinlock_t mcu_event_lock;
++	bool mcu_events_stopped;
+ 	const struct mt792x_hif_ops *hif_ops;
+ 	const struct mt792x_irq_map *irq_map;
+ 	const struct mt792x_pcie_reg *pcie_reg;

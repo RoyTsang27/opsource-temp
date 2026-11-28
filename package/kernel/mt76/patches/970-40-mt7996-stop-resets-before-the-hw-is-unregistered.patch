@@ -1,0 +1,100 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:25 +0100
+Subject: [PATCH] wifi: mt76: mt7996: stop resets before the hw is unregistered
+
+Upstream: https://github.com/openwrt/mt76/commit/82c93c0ce7303160d2958928a538043f56d8a5d5
+Fixes: 27015b6fbcca ("wifi: mt76: mt7996: enable full system reset support")
+Fixes: d2b860454ea2 ("wifi: mt76: mt7996: reset device after MCU message timeout")
+Link: https://patch.msgid.link/20261126182325.2516607-16-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7996/init.c b/mt7996/init.c
+index 21840ce..6be1813 100644
+--- a/mt7996/init.c
++++ b/mt7996/init.c
+@@ -1764,6 +1764,13 @@ void mt7996_set_stream_he_eht_caps(struct mt7996_phy *phy)
+ 						NL80211_BAND_6GHZ);
+ }
+ 
++static void mt7996_set_hw_init_done(struct mt7996_dev *dev, bool done)
++{
++	spin_lock_bh(&dev->mt76.lock);
++	dev->recovery.hw_init_done = done;
++	spin_unlock_bh(&dev->mt76.lock);
++}
++
+ int mt7996_register_device(struct mt7996_dev *dev)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+@@ -1813,7 +1820,7 @@ int mt7996_register_device(struct mt7996_dev *dev)
+ 
+ 	ieee80211_queue_work(mt76_hw(dev), &dev->init_work);
+ 
+-	dev->recovery.hw_init_done = true;
++	mt7996_set_hw_init_done(dev, true);
+ 
+ 	ret = mt7996_init_debugfs(dev);
+ 	if (ret)
+@@ -1835,6 +1842,7 @@ void mt7996_unregister_device(struct mt7996_dev *dev)
+ {
+ 	int i;
+ 
++	mt7996_set_hw_init_done(dev, false);
+ 	cancel_work_sync(&dev->dump_work);
+ 	cancel_work_sync(&dev->wed_rro.work);
+ 	cancel_work_sync(&dev->reset_work);
+diff --git a/mt7996/mac.c b/mt7996/mac.c
+index b6d02c0..20bf9f8 100644
+--- a/mt7996/mac.c
++++ b/mt7996/mac.c
+@@ -2812,11 +2812,13 @@ skip_coredump:
+ 
+ void mt7996_reset(struct mt7996_dev *dev)
+ {
++	spin_lock_bh(&dev->mt76.lock);
++
+ 	if (!dev->recovery.hw_init_done)
+-		return;
++		goto out;
+ 
+ 	if (dev->recovery.hw_full_reset)
+-		return;
++		goto out;
+ 
+ 	/* wm/wa exception: do full recovery */
+ 	if (READ_ONCE(dev->recovery.state) & MT_MCU_CMD_WDT_MASK) {
+@@ -2827,7 +2829,7 @@ void mt7996_reset(struct mt7996_dev *dev)
+ 
+ 		mt7996_irq_disable(dev, MT_INT_MCU_CMD);
+ 		queue_work(dev->mt76.wq, &dev->dump_work);
+-		return;
++		goto out;
+ 	}
+ 
+ 	if (READ_ONCE(dev->recovery.state) & MT_MCU_CMD_STOP_DMA) {
+@@ -2837,6 +2839,8 @@ void mt7996_reset(struct mt7996_dev *dev)
+ 
+ 	queue_work(dev->mt76.wq, &dev->reset_work);
+ 	wake_up(&dev->reset_wait);
++out:
++	spin_unlock_bh(&dev->mt76.lock);
+ }
+ 
+ void mt7996_mac_update_stats(struct mt7996_phy *phy)
+diff --git a/mt7996/mt7996.h b/mt7996/mt7996.h
+index 0d36788..9e1a102 100644
+--- a/mt7996/mt7996.h
++++ b/mt7996/mt7996.h
+@@ -511,9 +511,9 @@ struct mt7996_dev {
+ 		u32 state;
+ 		u32 wa_reset_count;
+ 		u32 wm_reset_count;
+-		bool hw_full_reset:1;
+-		bool hw_init_done:1;
+-		bool restart:1;
++		bool hw_full_reset;
++		bool hw_init_done;
++		bool restart;
+ 	} recovery;
+ 
+ 	/* protects coredump data */

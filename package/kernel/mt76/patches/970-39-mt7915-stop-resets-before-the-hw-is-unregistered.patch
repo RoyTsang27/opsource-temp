@@ -1,0 +1,111 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:24 +0100
+Subject: [PATCH] wifi: mt76: mt7915: stop resets before the hw is unregistered
+
+Upstream: https://github.com/openwrt/mt76/commit/ea9165bbc199f83575e0fe84dee5be887b9c0871
+Fixes: 8a55712d124f ("wifi: mt76: mt7915: enable full system reset support")
+Fixes: 10f73bb3938f ("wifi: mt76: mt7915: reset the device after MCU timeout")
+Link: https://patch.msgid.link/20261126182325.2516607-15-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7915/init.c b/mt7915/init.c
+index 51e6f49..60bcff1 100644
+--- a/mt7915/init.c
++++ b/mt7915/init.c
+@@ -1297,6 +1297,13 @@ static void mt7915_stop_hardware(struct mt7915_dev *dev)
+ 		mt7986_wmac_disable(dev);
+ }
+ 
++static void mt7915_set_hw_init_done(struct mt7915_dev *dev, bool done)
++{
++	spin_lock_bh(&dev->mt76.lock);
++	dev->recovery.hw_init_done = done;
++	spin_unlock_bh(&dev->mt76.lock);
++}
++
+ int mt7915_register_device(struct mt7915_dev *dev)
+ {
+ 	struct mt7915_phy *phy2;
+@@ -1348,7 +1355,7 @@ int mt7915_register_device(struct mt7915_dev *dev)
+ 
+ 	ieee80211_queue_work(mt76_hw(dev), &dev->init_work);
+ 
+-	dev->recovery.hw_init_done = true;
++	mt7915_set_hw_init_done(dev, true);
+ 
+ 	ret = mt7915_init_debugfs(&dev->phy);
+ 	if (ret)
+@@ -1361,6 +1368,10 @@ int mt7915_register_device(struct mt7915_dev *dev)
+ 	return 0;
+ 
+ unreg_ext_phy:
++	mt7915_set_hw_init_done(dev, false);
++	cancel_work_sync(&dev->init_work);
++	cancel_work_sync(&dev->dump_work);
++	cancel_work_sync(&dev->reset_work);
+ 	if (phy2) {
+ 		mt7915_unregister_ext_phy(dev);
+ 		phy2 = NULL;
+@@ -1379,6 +1390,7 @@ free_phy2:
+ 
+ void mt7915_unregister_device(struct mt7915_dev *dev)
+ {
++	mt7915_set_hw_init_done(dev, false);
+ 	cancel_work_sync(&dev->dump_work);
+ 	cancel_work_sync(&dev->reset_work);
+ 	cancel_work_sync(&dev->rc_work);
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+index 8a09d54..c0455c3 100644
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -1792,11 +1792,13 @@ skip_coredump:
+ 
+ void mt7915_reset(struct mt7915_dev *dev)
+ {
++	spin_lock_bh(&dev->mt76.lock);
++
+ 	if (!dev->recovery.hw_init_done)
+-		return;
++		goto out;
+ 
+ 	if (dev->recovery.hw_full_reset)
+-		return;
++		goto out;
+ 
+ 	/* wm/wa exception: do full recovery */
+ 	if (READ_ONCE(dev->recovery.state) & MT_MCU_CMD_WDT_MASK) {
+@@ -1807,7 +1809,7 @@ void mt7915_reset(struct mt7915_dev *dev)
+ 
+ 		mt7915_irq_disable(dev, MT_INT_MCU_CMD);
+ 		queue_work(dev->mt76.wq, &dev->dump_work);
+-		return;
++		goto out;
+ 	}
+ 
+ 	if ((READ_ONCE(dev->recovery.state) & MT_MCU_CMD_STOP_DMA)) {
+@@ -1817,6 +1819,8 @@ void mt7915_reset(struct mt7915_dev *dev)
+ 
+ 	queue_work(dev->mt76.wq, &dev->reset_work);
+ 	wake_up(&dev->reset_wait);
++out:
++	spin_unlock_bh(&dev->mt76.lock);
+ }
+ 
+ void mt7915_mac_update_stats(struct mt7915_phy *phy)
+diff --git a/mt7915/mt7915.h b/mt7915/mt7915.h
+index 7ee9bed..29cec96 100644
+--- a/mt7915/mt7915.h
++++ b/mt7915/mt7915.h
+@@ -288,9 +288,9 @@ struct mt7915_dev {
+ 		u32 state;
+ 		u32 wa_reset_count;
+ 		u32 wm_reset_count;
+-		bool hw_full_reset:1;
+-		bool hw_init_done:1;
+-		bool restart:1;
++		bool hw_full_reset;
++		bool hw_init_done;
++		bool restart;
+ 	} recovery;
+ 
+ 	/* protects coredump data */

@@ -1,0 +1,32 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Tue, 17 Nov 2026 19:01:25 +0100
+Subject: [PATCH] wifi: mt76: mark all but the last subframe of an A-MSDU chain
+
+Upstream: https://github.com/openwrt/mt76/commit/06025c1cab20bb8aba788d502a43687882f120e7
+Fixes: cc4b3c139ad3 ("mt76: mt7915: enable hw rx-amsdu de-aggregation")
+Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Link: https://patch.msgid.link/20261117180134.2940930-10-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mac80211.c b/mac80211.c
+index 1e8ae05..4921666 100644
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -1642,6 +1642,8 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 		mt76_check_ccmp_pn(skb);
+ 		skb_shinfo(skb)->frag_list = NULL;
+ 		mt76_rx_convert(dev, skb, &hw, &sta);
++		if (nskb)
++			IEEE80211_SKB_RXCB(skb)->flag |= RX_FLAG_AMSDU_MORE;
+ 		ieee80211_rx_list(hw, sta, skb, &list);
+ 
+ 		/* subsequent amsdu frames */
+@@ -1651,6 +1653,8 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 			skb->next = NULL;
+ 
+ 			mt76_rx_convert(dev, skb, &hw, &sta);
++			if (nskb)
++				IEEE80211_SKB_RXCB(skb)->flag |= RX_FLAG_AMSDU_MORE;
+ 			ieee80211_rx_list(hw, sta, skb, &list);
+ 		}
+ 	}

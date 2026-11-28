@@ -1,0 +1,28 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Wed, 25 Nov 2026 18:35:59 +0100
+Subject: [PATCH] wifi: mt76: mt7925: keep the RX PN state of a station across a rekey
+
+Upstream: https://github.com/openwrt/mt76/commit/10983a4bdd412b8b047f8b6bb5160598627be2b7
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Link: https://patch.msgid.link/20261125173616.3776951-1-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/main.c b/mt7925/main.c
+index cc407a0..b64fc7d 100644
+--- a/mt7925/main.c
++++ b/mt7925/main.c
+@@ -707,11 +707,11 @@ static int mt7925_set_link_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	else
+ 		goto out;
+ 
+-	if (sta)
+-		mt76_wcid_key_link_setup(wcid, cmd == SET_KEY ? key : NULL);
+-	else
++	if (!sta)
+ 		mt76_wcid_key_setup(&dev->mt76, wcid,
+ 				    cmd == SET_KEY ? key : NULL);
++	else if (cmd == SET_KEY)
++		mt76_wcid_key_link_setup(wcid, key);
+ 
+ 	err = mt7925_mcu_add_key(&dev->mt76, vif, &mlink->bip,
+ 				 key, MCU_UNI_CMD(STA_REC_UPDATE),

@@ -1,0 +1,42 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Wed, 18 Nov 2026 17:18:17 +0100
+Subject: [PATCH] wifi: mt76: free a replayed 802.3 frame with all its subframes
+
+Upstream: https://github.com/openwrt/mt76/commit/3115dbc9eedfa2d37b1e14c0bfb396e58263efbf
+Fixes: 3c1032e12217 ("mt76: allow receiving frames with invalid CCMP PN via monitor interfaces")
+Link: https://patch.msgid.link/20261118161827.1208649-6-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mac80211.c b/mac80211.c
+index 1563cc4..9687e1b 100644
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -1646,9 +1646,17 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 
+ 	spin_lock(&dev->rx_lock);
+ 	while ((skb = __skb_dequeue(frames)) != NULL) {
++		struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
+ 		struct sk_buff *nskb = skb_shinfo(skb)->frag_list;
++		bool only_monitor;
+ 
+ 		mt76_check_ccmp_pn(skb);
++		only_monitor = status->flag & RX_FLAG_ONLY_MONITOR;
++		if (only_monitor && (status->flag & RX_FLAG_8023)) {
++			dev_kfree_skb(skb);
++			continue;
++		}
++
+ 		skb_shinfo(skb)->frag_list = NULL;
+ 		mt76_rx_convert(dev, skb, &hw, &sta);
+ 		if (nskb)
+@@ -1661,6 +1669,10 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 			nskb = nskb->next;
+ 			skb->next = NULL;
+ 
++			status = (struct mt76_rx_status *)skb->cb;
++			if (only_monitor)
++				status->flag |= RX_FLAG_ONLY_MONITOR;
++
+ 			mt76_rx_convert(dev, skb, &hw, &sta);
+ 			if (nskb)
+ 				IEEE80211_SKB_RXCB(skb)->flag |= RX_FLAG_AMSDU_MORE;
