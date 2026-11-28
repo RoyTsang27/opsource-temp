@@ -1563,53 +1563,50 @@ static void an8855_phylink_mac_link_up(struct phylink_config *config,
 	struct dsa_port *dp = dsa_phylink_to_port(config);
 	struct an8855_priv *priv = dp->ds->priv;
 	int port = dp->index;
-	u32 reg;
+	u32 val = AN8855_PMCR_TX_EN | AN8855_PMCR_RX_EN;
+	u32 mask = val | AN8855_PMCR_FORCE_MODE;
+	int ret;
 
-	reg = regmap_read(priv->regmap, AN8855_PMCR_P(port), &reg);
-	if (phylink_autoneg_inband(mode)) {
-		reg &= ~AN8855_PMCR_FORCE_MODE;
-	} else {
-		reg |= AN8855_PMCR_FORCE_MODE | AN8855_PMCR_FORCE_LNK;
+	if (!phylink_autoneg_inband(mode)) {
+		mask |= AN8855_PMCR_FORCE_LNK | AN8855_PMCR_FORCE_SPEED |
+			AN8855_PMCR_FORCE_FDX | AN8855_PMCR_RX_FC_EN |
+			AN8855_PMCR_TX_FC_EN | AN8855_PMCR_FORCE_EEE5G |
+			AN8855_PMCR_FORCE_EEE2P5G | AN8855_PMCR_FORCE_EEE1G |
+			AN8855_PMCR_FORCE_EEE100;
+		val |= AN8855_PMCR_FORCE_MODE | AN8855_PMCR_FORCE_LNK;
 
-		reg &= ~AN8855_PMCR_FORCE_SPEED;
 		switch (speed) {
 		case SPEED_10:
-			reg |= AN8855_PMCR_FORCE_SPEED_10;
+			val |= AN8855_PMCR_FORCE_SPEED_10;
 			break;
 		case SPEED_100:
-			reg |= AN8855_PMCR_FORCE_SPEED_100;
+			val |= AN8855_PMCR_FORCE_SPEED_100;
 			break;
 		case SPEED_1000:
-			reg |= AN8855_PMCR_FORCE_SPEED_1000;
+			val |= AN8855_PMCR_FORCE_SPEED_1000;
 			break;
 		case SPEED_2500:
-			reg |= AN8855_PMCR_FORCE_SPEED_2500;
+			val |= AN8855_PMCR_FORCE_SPEED_2500;
 			break;
-		case SPEED_5000:
-			dev_err(priv->dev, "Missing support for 5G speed. Aborting...\n");
+		default:
+			dev_err(priv->dev, "Unsupported speed %d on port %d\n",
+				speed, port);
 			return;
 		}
 
-		reg &= ~AN8855_PMCR_FORCE_FDX;
 		if (duplex == DUPLEX_FULL)
-			reg |= AN8855_PMCR_FORCE_FDX;
-
-		reg &= ~AN8855_PMCR_RX_FC_EN;
+			val |= AN8855_PMCR_FORCE_FDX;
 		if (rx_pause || dsa_port_is_cpu(dp))
-			reg |= AN8855_PMCR_RX_FC_EN;
-
-		reg &= ~AN8855_PMCR_TX_FC_EN;
-		if (rx_pause || dsa_port_is_cpu(dp))
-			reg |= AN8855_PMCR_TX_FC_EN;
-
-		/* Disable any EEE options */
-		reg &= ~(AN8855_PMCR_FORCE_EEE5G | AN8855_PMCR_FORCE_EEE2P5G |
-			 AN8855_PMCR_FORCE_EEE1G | AN8855_PMCR_FORCE_EEE100);
+			val |= AN8855_PMCR_RX_FC_EN;
+		if (tx_pause || dsa_port_is_cpu(dp))
+			val |= AN8855_PMCR_TX_FC_EN;
 	}
 
-	reg |= AN8855_PMCR_TX_EN | AN8855_PMCR_RX_EN;
-
-	regmap_write(priv->regmap, AN8855_PMCR_P(port), reg);
+	/* Preserve the MAC mode and timing set by mac_config(). */
+	ret = regmap_update_bits(priv->regmap, AN8855_PMCR_P(port), mask, val);
+	if (ret)
+		dev_err_ratelimited(priv->dev, "Failed to enable MAC on port %d: %d\n",
+				    port, ret);
 }
 
 static unsigned int an8855_pcs_inband_caps(struct phylink_pcs *pcs,
