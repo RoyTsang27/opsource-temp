@@ -1,0 +1,55 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:22 +0100
+Subject: [PATCH] wifi: mt76: mt7603: check the RX PN of group addressed frames
+
+Upstream: https://github.com/openwrt/mt76/commit/d5d79625077127633e65441cc23a7cd2705e4e5e
+Fixes: c8846e101502 ("mt76: add driver for MT7603E and MT7628/7688")
+Link: https://patch.msgid.link/20261126182325.2516607-13-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7603/mac.c b/mt7603/mac.c
+index fa0bf9a..e55f3f8 100644
+--- a/mt7603/mac.c
++++ b/mt7603/mac.c
+@@ -519,7 +519,7 @@ mt7603_rx_get_wcid(struct mt7603_dev *dev, u8 idx, bool unicast)
+ 		return wcid;
+ 
+ 	if (!wcid->sta)
+-		return NULL;
++		return mt76_rx_group_wcid(wcid);
+ 
+ 	sta = container_of(wcid, struct mt7603_sta, wcid);
+ 	if (!sta->vif)
+@@ -550,6 +550,8 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	sband = (i & 1) ? &dev->mphy.sband_5g.sband : &dev->mphy.sband_2g.sband;
+ 	i >>= 1;
+ 
++	status->group = !unicast;
++	status->key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
+ 	idx = FIELD_GET(MT_RXD2_NORMAL_WLAN_IDX, rxd2);
+ 	status->wcid = mt7603_rx_get_wcid(dev, idx, unicast);
+ 
+diff --git a/mt7603/main.c b/mt7603/main.c
+index 757664e..bec395a 100644
+--- a/mt7603/main.c
++++ b/mt7603/main.c
+@@ -69,6 +69,7 @@ mt7603_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	mvif->sta.wcid.idx = idx;
+ 	mvif->sta.vif = mvif;
+ 	mt76_wcid_init(&mvif->sta.wcid, 0);
++	mt76_wcid_rx_group_pn_set(&mvif->sta.wcid, vif, &mvif->rx_group_pn);
+ 
+ 	eth_broadcast_addr(bc_addr);
+ 	mt7603_wtbl_init(dev, idx, mvif->idx, bc_addr);
+diff --git a/mt7603/mt7603.h b/mt7603/mt7603.h
+index 5b0ecd0..42bced2 100644
+--- a/mt7603/mt7603.h
++++ b/mt7603/mt7603.h
+@@ -86,6 +86,7 @@ struct mt7603_sta {
+ struct mt7603_vif {
+ 	struct mt7603_sta sta; /* must be first */
+ 
++	struct mt76_rx_group_pn rx_group_pn;
+ 	u8 idx;
+ };
+ 

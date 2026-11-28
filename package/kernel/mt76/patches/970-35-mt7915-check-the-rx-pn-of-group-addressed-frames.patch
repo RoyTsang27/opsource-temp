@@ -1,0 +1,44 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:19 +0100
+Subject: [PATCH] wifi: mt76: mt7915: check the RX PN of group addressed frames
+
+Upstream: https://github.com/openwrt/mt76/commit/c6f1f415d74b0587ff945a847e5d94afe81c8993
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
+Link: https://patch.msgid.link/20261126182325.2516607-10-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+index 1a15f8d..8a09d54 100644
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -62,7 +62,7 @@ static struct mt76_wcid *mt7915_rx_get_wcid(struct mt7915_dev *dev,
+ 		return wcid;
+ 
+ 	if (!wcid->sta)
+-		return NULL;
++		return mt76_rx_group_wcid(wcid);
+ 
+ 	sta = container_of(wcid, struct mt7915_sta, wcid);
+ 	if (!sta->vif)
+@@ -330,6 +330,8 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb,
+ 		status->flag |= RX_FLAG_ONLY_MONITOR;
+ 
+ 	unicast = FIELD_GET(MT_RXD3_NORMAL_ADDR_TYPE, rxd3) == MT_RXD3_NORMAL_U2M;
++	status->group = !unicast;
++	status->key_id = FIELD_GET(MT_RXD1_NORMAL_KEY_ID, rxd1);
+ 	idx = FIELD_GET(MT_RXD1_NORMAL_WLAN_IDX, rxd1);
+ 	status->wcid = mt7915_rx_get_wcid(dev, idx, unicast);
+ 
+diff --git a/mt7915/main.c b/mt7915/main.c
+index da76185..fcb531c 100644
+--- a/mt7915/main.c
++++ b/mt7915/main.c
+@@ -256,6 +256,8 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
+ 	mvif->sta.wcid.idx = idx;
+ 	mvif->sta.wcid.tx_info |= MT_WCID_TX_INFO_SET;
+ 	mt76_wcid_init(&mvif->sta.wcid, phy->mt76->band_idx);
++	mt76_wcid_rx_group_pn_set(&mvif->sta.wcid, vif,
++				  &mvif->mt76.rx_group_pn);
+ 
+ 	mt7915_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);

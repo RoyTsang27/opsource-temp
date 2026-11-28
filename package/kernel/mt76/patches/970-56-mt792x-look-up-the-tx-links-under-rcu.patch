@@ -1,0 +1,169 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Sat, 21 Nov 2026 13:09:14 +0100
+Subject: [PATCH] wifi: mt76: mt792x: look up the TX links under RCU
+
+Upstream: https://github.com/openwrt/mt76/commit/ee8890300483b4524578ba7051435688a206bfdc
+Keep the previous P2P path and check both mac80211 link pointers before rewriting addresses.
+Fixes: ebb1406813c6 ("wifi: mt76: mt7925: add link handling to txwi")
+Link: https://patch.msgid.link/20261121120926.3603979-5-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/mac.c b/mt7925/mac.c
+index 0e20dd6..c81c1e5 100644
+--- a/mt7925/mac.c
++++ b/mt7925/mac.c
+@@ -777,8 +777,8 @@ mt7925_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 					 BSS_CHANGED_FILS_DISCOVERY));
+ 	struct mt792x_bss_conf *mconf;
+ 
+-	mconf = vif ? mt792x_vif_to_link((struct mt792x_vif *)vif->drv_priv,
+-					 wcid->link_id) : NULL;
++	mconf = vif ? mt792x_vif_to_link_rcu((struct mt792x_vif *)vif->drv_priv,
++					     wcid->link_id) : NULL;
+ 	mvif = mconf ? (struct mt76_vif_link *)&mconf->mt76 : NULL;
+ 
+ 	if (mvif) {
+diff --git a/mt792x.h b/mt792x.h
+index 7425948..0f66047 100644
+--- a/mt792x.h
++++ b/mt792x.h
+@@ -366,16 +366,23 @@ struct mt792x_dev {
+ 	} cached_cal;
+ };
+ 
+-static inline struct mt792x_bss_conf *
+-mt792x_vif_to_link(struct mt792x_vif *mvif, u8 link_id)
++static inline bool
++mt792x_vif_is_mld_link(struct mt792x_vif *mvif, u8 link_id)
+ {
+ 	struct ieee80211_vif *vif;
+-	struct mt792x_bss_conf *bss_conf;
+ 
+ 	vif = container_of((void *)mvif, struct ieee80211_vif, drv_priv);
+ 
+-	if (!ieee80211_vif_is_mld(vif) ||
+-	    link_id >= IEEE80211_LINK_UNSPECIFIED)
++	return ieee80211_vif_is_mld(vif) &&
++	       link_id < IEEE80211_LINK_UNSPECIFIED;
++}
++
++static inline struct mt792x_bss_conf *
++mt792x_vif_to_link(struct mt792x_vif *mvif, u8 link_id)
++{
++	struct mt792x_bss_conf *bss_conf;
++
++	if (!mt792x_vif_is_mld_link(mvif, link_id))
+ 		return &mvif->bss_conf;
+ 
+ 	bss_conf = rcu_dereference_protected(mvif->link_conf[link_id],
+@@ -384,21 +391,38 @@ mt792x_vif_to_link(struct mt792x_vif *mvif, u8 link_id)
+ 	return bss_conf ? bss_conf : &mvif->bss_conf;
+ }
+ 
+-static inline struct mt792x_link_sta *
+-mt792x_sta_to_link(struct mt792x_sta *msta, u8 link_id)
++static inline struct mt792x_bss_conf *
++mt792x_vif_to_link_rcu(struct mt792x_vif *mvif, u8 link_id)
+ {
+-	struct ieee80211_vif *vif;
++	struct mt792x_bss_conf *bss_conf;
+ 
+-	vif = container_of((void *)msta->vif, struct ieee80211_vif, drv_priv);
++	if (!mt792x_vif_is_mld_link(mvif, link_id))
++		return &mvif->bss_conf;
+ 
+-	if (!ieee80211_vif_is_mld(vif) ||
+-	    link_id >= IEEE80211_LINK_UNSPECIFIED)
++	bss_conf = rcu_dereference(mvif->link_conf[link_id]);
++
++	return bss_conf ? bss_conf : &mvif->bss_conf;
++}
++
++static inline struct mt792x_link_sta *
++mt792x_sta_to_link(struct mt792x_sta *msta, u8 link_id)
++{
++	if (!mt792x_vif_is_mld_link(msta->vif, link_id))
+ 		return &msta->deflink;
+ 
+ 	return rcu_dereference_protected(msta->link[link_id],
+ 		lockdep_is_held(&msta->vif->phy->dev->mt76.mutex));
+ }
+ 
++static inline struct mt792x_link_sta *
++mt792x_sta_to_link_rcu(struct mt792x_sta *msta, u8 link_id)
++{
++	if (!mt792x_vif_is_mld_link(msta->vif, link_id))
++		return &msta->deflink;
++
++	return rcu_dereference(msta->link[link_id]);
++}
++
+ static inline struct mt792x_bss_conf *
+ mt792x_link_conf_to_mconf(struct ieee80211_bss_conf *link_conf)
+ {
+diff --git a/mt792x_core.c b/mt792x_core.c
+index 581fbf7..0bccd76 100644
+--- a/mt792x_core.c
++++ b/mt792x_core.c
+@@ -177,13 +177,21 @@ void mt792x_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	u8 link_id;
+ 	int qid;
+ 
++	rcu_read_lock();
++
+ 	if (control->sta) {
+ 		struct mt792x_link_sta *mlink;
+ 		struct mt792x_sta *sta;
+ 		link_id = u32_get_bits(info->control.flags,
+ 				       IEEE80211_TX_CTRL_MLO_LINK);
+ 		sta = (struct mt792x_sta *)control->sta->drv_priv;
+-		mlink = mt792x_sta_to_link(sta, link_id);
++		if (link_id >= IEEE80211_LINK_UNSPECIFIED)
++			link_id = sta->deflink_id;
++		mlink = mt792x_sta_to_link_rcu(sta, link_id);
++		if (!mlink) {
++			ieee80211_free_txskb(hw, skb);
++			goto unlock;
++		}
+ 		wcid = &mlink->wcid;
+ 	}
+ 
+@@ -201,22 +209,24 @@ void mt792x_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 		struct ieee80211_bss_conf *conf;
+ 
+ 		link_id = wcid->link_id;
+-		rcu_read_lock();
+ 		conf = rcu_dereference(vif->link_conf[link_id]);
+-		memcpy(hdr->addr2, conf->addr, ETH_ALEN);
+-
+ 		link_sta = rcu_dereference(control->sta->link[link_id]);
++		if (!conf || !link_sta) {
++			ieee80211_free_txskb(hw, skb);
++			goto unlock;
++		}
++
++		memcpy(hdr->addr2, conf->addr, ETH_ALEN);
+ 		memcpy(hdr->addr1, link_sta->addr, ETH_ALEN);
+ 
+ 		if (vif->type == NL80211_IFTYPE_STATION)
+ 			memcpy(hdr->addr3, conf->bssid, ETH_ALEN);
+-		rcu_read_unlock();
+ 	}
+ 
+ 	if (mt76_connac_pm_ref(mphy, &dev->pm)) {
+ 		mt76_tx(mphy, control->sta, wcid, skb);
+ 		mt76_connac_pm_unref(mphy, &dev->pm);
+-		return;
++		goto unlock;
+ 	}
+ 
+ 	qid = skb_get_queue_mapping(skb);
+@@ -226,6 +236,8 @@ void mt792x_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	}
+ 
+ 	mt76_connac_pm_queue_skb(hw, &dev->pm, wcid, skb);
++unlock:
++	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL_GPL(mt792x_tx);
+ 

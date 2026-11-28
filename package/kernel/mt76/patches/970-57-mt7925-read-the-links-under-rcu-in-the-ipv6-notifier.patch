@@ -1,0 +1,36 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Sat, 21 Nov 2026 13:09:15 +0100
+Subject: [PATCH] wifi: mt76: mt7925: read the links under RCU in the IPv6 notifier
+
+Upstream: https://github.com/openwrt/mt76/commit/c0cf944974e192b62c70ec9037a634a366b4191c
+Fixes: 9f8f587cab69 ("wifi: mt76: mt7925: add link handling in the mt7925_ipv6_addr_change")
+Link: https://patch.msgid.link/20261121120926.3603979-6-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/main.c b/mt7925/main.c
+index 2c82245..e45372a 100644
+--- a/mt7925/main.c
++++ b/mt7925/main.c
+@@ -1836,7 +1836,9 @@ static void __mt7925_ipv6_addr_change(struct ieee80211_hw *hw,
+ 				      struct ieee80211_bss_conf *link_conf,
+ 				      struct inet6_dev *idev)
+ {
+-	struct mt792x_bss_conf *mconf = mt792x_link_conf_to_mconf(link_conf);
++	struct mt792x_vif *mvif = (struct mt792x_vif *)link_conf->vif->drv_priv;
++	struct mt792x_bss_conf *mconf =
++		mt792x_vif_to_link_rcu(mvif, link_conf->link_id);
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
+ 	struct inet6_ifaddr *ifa;
+ 	struct sk_buff *skb;
+@@ -1898,7 +1900,10 @@ static void mt7925_ipv6_addr_change(struct ieee80211_hw *hw,
+ 	int i;
+ 
+ 	for_each_set_bit(i, &valid, IEEE80211_MLD_MAX_NUM_LINKS) {
+-		bss_conf = mt792x_vif_to_bss_conf(vif, i);
++		bss_conf = rcu_dereference(vif->link_conf[i]);
++		if (!bss_conf)
++			continue;
++
+ 		__mt7925_ipv6_addr_change(hw, bss_conf, idev);
+ 	}
+ }

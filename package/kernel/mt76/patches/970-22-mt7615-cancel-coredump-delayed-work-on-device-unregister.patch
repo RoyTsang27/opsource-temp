@@ -1,0 +1,22 @@
+From: Tristan Madani <tristan@talencesecurity.com>
+Date: Mon, 2 Nov 2026 19:17:50 +0000
+Subject: [PATCH] wifi: mt76: mt7615: cancel coredump delayed work on device unregister
+
+Upstream: https://github.com/openwrt/mt76/commit/f79250da4135d401d7a58d1d1b17391f130dbc3a
+Fixes: d2bf7959d9c0 ("mt76: mt7663: introduce coredump support")
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+Link: https://patch.msgid.link/20261102191750.2308294-1-tristan@talencesecurity.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7615/pci_init.c b/mt7615/pci_init.c
+index 7d85807..15f7269 100644
+--- a/mt7615/pci_init.c
++++ b/mt7615/pci_init.c
+@@ -125,5 +125,7 @@ void mt7615_unregister_device(struct mt7615_dev *dev)
+ 	mt7615_dma_cleanup(dev);
+ 	tasklet_disable(&dev->mt76.irq_tasklet);
+ 
++	cancel_delayed_work_sync(&dev->coredump.work);
++	skb_queue_purge(&dev->coredump.msg_list);
+ 	mt76_free_device(&dev->mt76);
+ }

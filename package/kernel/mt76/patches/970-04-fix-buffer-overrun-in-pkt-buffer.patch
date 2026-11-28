@@ -1,0 +1,26 @@
+From: Anthony Liu <anthony.liu@mediatek.com>
+Date: Fri, 30 Oct 2026 17:05:54 +0800
+Subject: [PATCH] mt76: fix buffer overrun in pkt buffer
+
+Upstream: https://github.com/openwrt/mt76/commit/6a9b493f14946857dc37cdd2384692cffe546c92
+Fixes: d4e5ca3483a0 ("wifi: mt76: mt7928: makes struct beacon_tlv 4-byte aligned.")
+Signed-off-by: Anthony Liu <anthony.liu@mediatek.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Reviewed-by: Dan Carpenter <error27@gmail.com>
+Link: https://patch.msgid.link/bb9c40516e7379bf763b1ba7cec228c354494223.1793351111.git.anthony.liu@mediatek.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7925/mcu.c b/mt7925/mcu.c
+index f347e1d..dc9c45d 100644
+--- a/mt7925/mcu.c
++++ b/mt7925/mcu.c
+@@ -2537,7 +2537,7 @@ mt7925_mcu_uni_add_beacon_offload(struct mt792x_dev *dev,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (skb->len > 512) {
++	if (skb->len > sizeof(req.beacon_tlv.pkt)) {
+ 		dev_err(dev->mt76.dev, "beacon size limit exceed\n");
+ 		dev_kfree_skb(skb);
+ 		return -EINVAL;

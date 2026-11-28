@@ -1,0 +1,44 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Fri, 20 Nov 2026 18:44:49 +0100
+Subject: [PATCH] wifi: mt76: usb: do not park the TX worker again under MT76_RESET
+
+Upstream: https://github.com/openwrt/mt76/commit/52b3e1e77ca29d0975cc95c7142b8d719d3414db
+Fixes: 7910bd565d8b ("wifi: mt76: mt792x: quiesce USB paths on disconnect")
+Fixes: 0d2afe09fad5 ("mt76: mt7921: add mt7921u driver")
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Link: https://patch.msgid.link/20261120174459.1657382-10-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/usb.c b/usb.c
+index be48a88..9a70184 100644
+--- a/usb.c
++++ b/usb.c
+@@ -1070,6 +1070,7 @@ void mt76u_stop_tx(struct mt76_dev *dev)
+ 	if (!ret) {
+ 		struct mt76_queue_entry entry;
+ 		struct mt76_queue *q;
++		bool park;
+ 		int i, j;
+ 
+ 		dev_err(dev->dev, "timed out waiting for pending tx\n");
+@@ -1083,7 +1084,9 @@ void mt76u_stop_tx(struct mt76_dev *dev)
+ 				usb_kill_urb(q->entry[j].urb);
+ 		}
+ 
+-		mt76_worker_disable(&dev->tx_worker);
++		park = !test_bit(MT76_RESET, &dev->phy.state);
++		if (park)
++			mt76_worker_disable(&dev->tx_worker);
+ 
+ 		/* On device removal we maight queue skb's, but mt76u_tx_kick()
+ 		 * will fail to submit urb, cleanup those skb's manually.
+@@ -1100,7 +1103,8 @@ void mt76u_stop_tx(struct mt76_dev *dev)
+ 			}
+ 		}
+ 
+-		mt76_worker_enable(&dev->tx_worker);
++		if (park)
++			mt76_worker_enable(&dev->tx_worker);
+ 	}
+ 
+ 	cancel_work_sync(&dev->usb.stat_work);

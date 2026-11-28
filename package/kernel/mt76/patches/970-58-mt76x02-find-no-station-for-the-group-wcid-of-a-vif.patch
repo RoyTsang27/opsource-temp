@@ -1,0 +1,22 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:23 +0100
+Subject: [PATCH] wifi: mt76: mt76x02: find no station for the group wcid of a vif
+
+Upstream: https://github.com/openwrt/mt76/commit/dd33d3d581d8d08130da5d845d896ea7a3c341b5
+Fixes: dc66a129adf1 ("wifi: mt76: add a wrapper for wcid access with validation")
+Link: https://patch.msgid.link/20261126182325.2516607-14-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt76x02.h b/mt76x02.h
+index f5a2560..da35dae 100644
+--- a/mt76x02.h
++++ b/mt76x02.h
+@@ -265,7 +265,7 @@ mt76x02_rx_get_sta(struct mt76_dev *dev, u8 idx)
+ 	struct mt76_wcid *wcid;
+ 
+ 	wcid = __mt76_wcid_ptr(dev, idx);
+-	if (!wcid)
++	if (!wcid || !wcid->sta)
+ 		return NULL;
+ 
+ 	return container_of(wcid, struct mt76x02_sta, wcid);

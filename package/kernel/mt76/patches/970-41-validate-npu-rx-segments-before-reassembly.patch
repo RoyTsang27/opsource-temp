@@ -1,0 +1,78 @@
+From: Codex <codex@openai.com>
+Date: Sat, 28 Nov 2026 16:37:27 +0800
+Subject: [PATCH] wifi: mt76: validate NPU RX segments before reassembly
+
+Reject lengths that exceed the backing DMA buffer. Release every rejected buffer, discard incomplete packets, and retain discard state across polls until the rest of the packet is consumed.
+
+Signed-off-by: Codex <codex@openai.com>
+
+diff --git a/npu.c b/npu.c
+index c516935..f6f668c 100644
+--- a/npu.c
++++ b/npu.c
+@@ -59,8 +59,9 @@ void mt76_npu_queue_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
+ 	if (q->rx_head) {
+ 		dev_kfree_skb(q->rx_head);
+ 		q->rx_head = NULL;
+-		q->pending = 0;
+ 	}
++	q->pending = 0;
++	q->rx_drop = false;
+ 	spin_unlock_bh(&q->lock);
+ }
+ 
+@@ -100,10 +101,14 @@ static int mt76_npu_rx_process_entry(struct napi_struct *napi)
+ 					e->dma_len[0],
+ 					page_pool_get_dma_dir(q->page_pool));
+ 
++		/* Never deliver a packet with a missing or oversized segment. */
++		if (q->rx_drop || len <= 0 || len > e->dma_len[0])
++			goto drop;
++
+ 		if (!q->rx_head) {
+ 			q->rx_head = napi_build_skb(e->buf, q->buf_size);
+ 			if (!q->rx_head)
+-				return -ENOMEM;
++				goto drop;
+ 
+ 			__skb_put(q->rx_head, len);
+ 			skb_reset_mac_header(q->rx_head);
+@@ -113,20 +118,32 @@ static int mt76_npu_rx_process_entry(struct napi_struct *napi)
+ 			struct page *page = virt_to_head_page(e->buf);
+ 			int nr_frags = shinfo->nr_frags;
+ 
+-			if (nr_frags < ARRAY_SIZE(shinfo->frags))
+-				skb_add_rx_frag(q->rx_head, nr_frags, page,
+-						e->buf - page_address(page),
+-						len, q->buf_size);
++			if (nr_frags >= ARRAY_SIZE(shinfo->frags))
++				goto drop;
++			skb_add_rx_frag(q->rx_head, nr_frags, page,
++					e->buf - page_address(page),
++					len, q->buf_size);
+ 		}
+ 
++		goto next;
++
++drop:
++		mt76_put_page_pool_buf(e->buf, false);
++		dev_kfree_skb(q->rx_head);
++		q->rx_head = NULL;
++		q->rx_drop = true;
++next:
+ 		q->tail = (q->tail + 1) % q->ndesc;
+ 		q->queued--;
+ 	} while (--nframes > 0);
+ 
+-	dev->drv->rx_skb(dev, qid, q->rx_head, &info);
+-	mt76_rx_poll_complete(dev, qid, napi);
++	if (q->rx_head) {
++		dev->drv->rx_skb(dev, qid, q->rx_head, &info);
++		mt76_rx_poll_complete(dev, qid, napi);
++	}
+ 	q->rx_head = NULL;
+ 	q->pending = 0;
++	q->rx_drop = false;
+ 
+ 	Q_WRITE(q, dma_idx, q->tail);
+ 

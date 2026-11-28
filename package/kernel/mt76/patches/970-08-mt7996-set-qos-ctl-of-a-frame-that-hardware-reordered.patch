@@ -1,0 +1,32 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Tue, 17 Nov 2026 19:01:26 +0100
+Subject: [PATCH] wifi: mt76: mt7996: set qos_ctl of a frame that hardware reordered
+
+Upstream: https://github.com/openwrt/mt76/commit/028951c4bf7820a70669755d3f0519d19c0d5e49
+Fixes: 950d0abb5cd9 ("wifi: mt76: mt7996: add wed rx support")
+Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Link: https://patch.msgid.link/20261117180134.2940930-11-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7996/mac.c b/mt7996/mac.c
+index 8388014..dd292aa 100644
+--- a/mt7996/mac.c
++++ b/mt7996/mac.c
+@@ -714,12 +714,15 @@ mt7996_mac_fill_rx(struct mt7996_dev *dev, enum mt76_rxq_id q,
+ 		}
+ 	}
+ 
+-	if (!status->wcid || !ieee80211_is_data_qos(fc) || hw_aggr)
++	if (!status->wcid || !ieee80211_is_data_qos(fc))
++		return 0;
++
++	status->qos_ctl = qos_ctl;
++	if (hw_aggr)
+ 		return 0;
+ 
+ 	status->aggr = unicast &&
+ 		       !ieee80211_is_qos_nullfunc(fc);
+-	status->qos_ctl = qos_ctl;
+ 	status->seqno = IEEE80211_SEQ_TO_SN(seq_ctrl);
+ 
+ 	return 0;

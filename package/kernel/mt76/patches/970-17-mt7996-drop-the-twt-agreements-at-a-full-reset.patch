@@ -1,0 +1,47 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 19 Nov 2026 13:43:43 +0100
+Subject: [PATCH] wifi: mt76: mt7996: drop the TWT agreements at a full reset
+
+Upstream: https://github.com/openwrt/mt76/commit/8c5c04e07ae2722aea0a58e5a8b15d469b8d2961
+Includes upstream 7075c8d813d05c638fa2a358b3423fd8f8fe050 for the station rate-control list.
+Fixes: 27015b6fbcca ("wifi: mt76: mt7996: enable full system reset support")
+Fixes: ace5d3b6b49e ("wifi: mt76: mt7996: improve hardware restart reliability")
+Link: https://patch.msgid.link/20261119124352.1842164-11-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt7996/mac.c b/mt7996/mac.c
+index dd292aa..b0e2516 100644
+--- a/mt7996/mac.c
++++ b/mt7996/mac.c
+@@ -2488,6 +2488,7 @@ static void
+ mt7996_mac_full_reset(struct mt7996_dev *dev)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
++	struct mt7996_twt_flow *flow, *tmp;
+ 	struct mt7996_phy *phy;
+ 	LIST_HEAD(list);
+ 	int i;
+@@ -2527,8 +2528,21 @@ mt7996_mac_full_reset(struct mt7996_dev *dev)
+ 						   IEEE80211_IFACE_SKIP_SDATA_NOT_IN_DRIVER,
+ 						   mt7996_mac_reset_vif_iter, dev);
+ 
+-	INIT_LIST_HEAD(&dev->sta_rc_list);
+-	INIT_LIST_HEAD(&dev->twt_list);
++	spin_lock_bh(&dev->mt76.sta_poll_lock);
++	while (!list_empty(&dev->sta_rc_list))
++		list_del_init(dev->sta_rc_list.next);
++	spin_unlock_bh(&dev->mt76.sta_poll_lock);
++
++	list_for_each_entry_safe(flow, tmp, &dev->twt_list, list) {
++		struct mt7996_sta_link *msta_link;
++
++		msta_link = container_of(flow, struct mt7996_sta_link,
++					 twt.flow[flow->id]);
++		msta_link->twt.flowid_mask &= ~BIT(flow->id);
++		list_del_init(&flow->list);
++	}
++	dev->twt.table_mask = 0;
++	dev->twt.n_agrt = 0;
+ 
+ 	spin_lock_bh(&dev->wed_rro.lock);
+ 	list_splice_init(&dev->wed_rro.poll_list, &list);

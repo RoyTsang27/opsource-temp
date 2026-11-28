@@ -1,0 +1,117 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 26 Nov 2026 19:23:18 +0100
+Subject: [PATCH] wifi: mt76: mt7615: reset the group RX PN counters at WoWLAN resume
+
+Upstream: https://github.com/openwrt/mt76/commit/4863cc89209cbab91a0df22a7cb36c48c1e0a2c2
+Fixes: b47e21e75c80 ("mt76: mt7615: add gtk rekey offload support")
+Link: https://patch.msgid.link/20261126182325.2516607-9-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+diff --git a/mt76.h b/mt76.h
+index 4de6325..291d8f8 100644
+--- a/mt76.h
++++ b/mt76.h
+@@ -1655,6 +1655,16 @@ mt76_rx_group_wcid(struct mt76_wcid *wcid)
+ 	return wcid;
+ }
+ 
++static inline void
++mt76_rx_group_pn_reset(struct mt76_rx_group_pn *group_pn)
++{
++	memset(group_pn->pn, 0, sizeof(group_pn->pn));
++
++	/* the firmware can renew the GTK in suspend under another key id */
++	if (group_pn->key_mask)
++		group_pn->key_mask |= GENMASK(3, 1);
++}
++
+ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ 			 struct ieee80211_key_conf *key);
+ 
+diff --git a/mt7615/main.c b/mt7615/main.c
+index 7af5389..425640b 100644
+--- a/mt7615/main.c
++++ b/mt7615/main.c
+@@ -573,6 +573,7 @@ static void mt7615_bss_info_changed(struct ieee80211_hw *hw,
+ 				    struct ieee80211_bss_conf *info,
+ 				    u64 changed)
+ {
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
+ 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
+ 
+@@ -607,15 +608,17 @@ static void mt7615_bss_info_changed(struct ieee80211_hw *hw,
+ 		mt76_connac_mcu_set_vif_ps(&dev->mt76, vif);
+ 
+ 	if ((changed & BSS_CHANGED_ARP_FILTER) &&
+-	    mt7615_firmware_offload(dev)) {
+-		struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+-
++	    mt7615_firmware_offload(dev))
+ 		mt76_connac_mcu_update_arp_filter(&dev->mt76, &mvif->mt76,
+ 						  info);
+-	}
+ 
+-	if (changed & BSS_CHANGED_ASSOC)
++	if (changed & BSS_CHANGED_ASSOC) {
+ 		mt7615_mac_set_beacon_filter(phy, vif, vif->cfg.assoc);
++		if (!vif->cfg.assoc) {
++			mvif->gtk_rekey_offload = false;
++			mvif->mt76.rx_group_pn.key_mask = 0;
++		}
++	}
+ 
+ 	if (changed & BSS_CHANGED_MU_GROUPS)
+ 		 mt7615_update_mu_group(hw, vif, info);
+@@ -1264,6 +1267,15 @@ static int mt7615_suspend(struct ieee80211_hw *hw,
+ 	return err;
+ }
+ 
++static void
++mt7615_rx_group_pn_reset_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
++
++	if (mvif->gtk_rekey_offload)
++		mt76_rx_group_pn_reset(&mvif->mt76.rx_group_pn);
++}
++
+ static int mt7615_resume(struct ieee80211_hw *hw)
+ {
+ 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
+@@ -1287,6 +1299,10 @@ static int mt7615_resume(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	clear_bit(MT76_STATE_SUSPEND, &phy->mt76->state);
++	ieee80211_iterate_active_interfaces(hw,
++					    IEEE80211_IFACE_ITER_RESUME_ALL,
++					    mt7615_rx_group_pn_reset_iter,
++					    NULL);
+ 	ieee80211_iterate_active_interfaces(hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt76_connac_mcu_set_suspend_iter,
+@@ -1312,10 +1328,12 @@ static void mt7615_set_rekey_data(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  struct cfg80211_gtk_rekey_data *data)
+ {
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
+ 
+ 	mt7615_mutex_acquire(dev);
+ 	mt76_connac_mcu_update_gtk_rekey(hw, vif, data);
++	mvif->gtk_rekey_offload = true;
+ 	mt7615_mutex_release(dev);
+ }
+ #endif /* CONFIG_PM */
+diff --git a/mt7615/mt7615.h b/mt7615/mt7615.h
+index fac05d1..357114e 100644
+--- a/mt7615/mt7615.h
++++ b/mt7615/mt7615.h
+@@ -142,6 +142,7 @@ struct mt7615_vif {
+ 	struct mt76_vif_link mt76; /* must be first */
+ 	struct mt7615_sta sta;
+ 	bool sta_added;
++	bool gtk_rekey_offload;
+ };
+ 
+ struct mib_stats {
