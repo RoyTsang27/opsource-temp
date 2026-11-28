@@ -1,0 +1,59 @@
+Subject: net: mediatek: handle LynxI PCS creation errors
+
+The LynxI platform driver patch changes mtk_pcs_lynxi_create() to
+return an error pointer. Propagate those errors from the MT7531
+switch and Ethernet probe before storing the PCS. Run the Ethernet
+probe cleanup if SGMII setup fails after creating an earlier PCS.
+
+--- a/drivers/net/dsa/mt7530-mdio.c
++++ b/drivers/net/dsa/mt7530-mdio.c
+@@ -122,8 +122,8 @@
+ 		}
+ 		pcs = mtk_pcs_lynxi_create(priv->dev, NULL, regmap,
+ 					   MT7531_PHYA_CTRL_SIGNAL3);
+-		if (!pcs) {
+-			ret = -ENXIO;
++		if (IS_ERR(pcs)) {
++			ret = PTR_ERR(pcs);
+ 			break;
+ 		}
+ 		priv->ports[5 + i].sgmii_pcs = pcs;
+--- a/drivers/net/ethernet/mediatek/mtk_eth_soc.c
++++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
+@@ -5579,6 +5579,7 @@
+ static int mtk_sgmii_init(struct mtk_eth *eth)
+ {
+ 	struct device_node *np;
++	struct phylink_pcs *pcs;
+ 	struct regmap *regmap;
+ 	int i;
+ 
+@@ -5593,11 +5594,13 @@
+ 			return PTR_ERR(regmap);
+ 		}
+ 
+-		eth->sgmii_pcs[i] = mtk_pcs_lynxi_create(eth->dev,
+-							 of_fwnode_handle(np),
+-							 regmap,
+-							 eth->soc->ana_rgc3);
++		pcs = mtk_pcs_lynxi_create(eth->dev, of_fwnode_handle(np),
++					   regmap, eth->soc->ana_rgc3);
+ 		of_node_put(np);
++		if (IS_ERR(pcs))
++			return PTR_ERR(pcs);
++
++		eth->sgmii_pcs[i] = pcs;
+ 	}
+ 
+ 	return 0;
+@@ -5700,9 +5703,8 @@
+ 	if (MTK_HAS_CAPS(eth->soc->caps, MTK_SGMII) &&
+ 	    !mtk_is_netsys_v3_or_greater(eth)) {
+ 		err = mtk_sgmii_init(eth);
+-
+ 		if (err)
+-			return err;
++			goto err_destroy_sgmii;
+ 	}
+ 
+ 	if (eth->soc->required_pctl) {

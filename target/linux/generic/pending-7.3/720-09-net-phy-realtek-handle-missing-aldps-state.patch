@@ -1,0 +1,17 @@
+Subject: net: phy: realtek: handle missing ALDPS state
+
+Some RTL822x PHYs use rtl822x_init_phycr1() without a probe that
+allocates driver private data. Leave ALDPS disabled on these PHYs
+and continue applying the MDIO broadcast settings.
+
+--- a/drivers/net/phy/realtek/realtek_main.c
++++ b/drivers/net/phy/realtek/realtek_main.c
+@@ -2258,7 +2258,7 @@
+ 	if (!phydev->is_on_sfp_module)
+ 		mask |= RTL8221B_PHYCR1_PHYAD_0_EN;
+ 
+-	if (priv->enable_aldps && !no_aldps)
++	if (priv && priv->enable_aldps && !no_aldps)
+ 		val = RTL8221B_PHYCR1_ALDPS_EN | RTL8221B_PHYCR1_ALDPS_XTAL_OFF_EN;
+ 
+ 	return phy_modify_mmd_changed(phydev, MDIO_MMD_VEND2, RTL8221B_PHYCR1,
